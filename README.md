@@ -34,5 +34,3 @@ The form on the landing page is a Netlify Form named `access`. Submissions appea
 ## Deploy
 
 Netlify site `audiokit` (https://audiokit.netlify.app), linked to this repo: every push to `main` deploys, and pull requests get deploy previews.
-
-The previous Svelte app lives on in `epsilon-records/audiokit.ai`.
