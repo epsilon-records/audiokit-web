@@ -1,14 +1,180 @@
-<!-- {"title": "MCP", "description": "Status of the AudioKit MCP server for AI agents.", "layout": "docs", "nav": "mcp"} -->
+<!-- {"title": "MCP", "description": "Connect AI agents to AudioKit through the Model Context Protocol: endpoint, authentication, tools, waiting, errors and consent.", "layout": "docs", "nav": "mcp"} -->
 <section class="doc-intro">
-  <p class="kicker">MCP</p>
+  <p class="kicker">MCP · early access</p>
   <h1>AudioKit for agents</h1>
-  <p class="lede">An MCP server is being built so AI agents can use AudioKit through the Model Context Protocol, with the same jobs and the same API keys as the HTTP API.</p>
+  <p class="lede">AI agents can use AudioKit through the <a href="https://modelcontextprotocol.io">Model Context Protocol</a>. The MCP server is part of the API: the same API keys, the same validation and the same jobs as <code>/v1</code>, exposed as tools.</p>
+  <p class="note">MCP is rolling out, in early access like the rest of AudioKit. Until it reaches your base URL, agents can call the <a href="/docs/reference/">HTTP API</a> directly.</p>
+  {{BASE_URL_NOTE}}
 </section>
 
 <section>
-  <h2 id="status">Status</h2>
-  <div class="callout callout-soon">
-    <p><span class="tag tag-roadmap">Coming soon</span></p>
-    <p>The MCP server isn't available yet. This page will list its tools and how to connect once it ships. Until then, agents can call the <a href="/docs/reference/">HTTP API</a> directly.</p>
+  <h2 id="connect">Connect</h2>
+  <div class="table-box"><table class="fields no-head"><tbody>
+    <tr><td>Endpoint</td><td class="mono">POST {{API_BASE}}/mcp</td></tr>
+    <tr><td>Transport</td><td class="soft"><p>MCP Streamable HTTP, on the same host as <code>/v1</code>. Stateless: there is no <code>Mcp-Session-Id</code>, and responses are plain <code>application/json</code>.</p></td></tr>
+    <tr><td>Authentication</td><td class="soft"><p>Your AudioKit API key, as for the HTTP API: <code>Authorization: Bearer &lt;api key&gt;</code>. A missing or unknown key gets HTTP <code>401</code> with <code>{"error": {"code": "unauthorized", "message": …}}</code>, before any MCP handling.</p></td></tr>
+    <tr><td>Server</td><td class="soft"><p>Name <code>audiokit</code>, title <code>AudioKit</code>, version = the API version.</p></td></tr>
+  </tbody></table></div>
+  <p>Any client that supports Streamable HTTP with a custom header can connect. In a client's JSON config:</p>
+  <div class="panel">
+    <div class="panel-bar"><span>mcp config</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">{
+  "mcpServers": {
+    "audiokit": {
+      "type": "http",
+      "url": "{{API_BASE}}/mcp",
+      "headers": { "Authorization": "Bearer ak_..." }
+    }
+  }
+}</pre>
   </div>
+  <p>Or with Claude Code:</p>
+  <div class="panel">
+    <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">claude mcp add --transport http audiokit {{API_BASE}}/mcp \
+  --header "Authorization: Bearer ak_..."</pre>
+  </div>
+</section>
+
+<section>
+  <h2 id="inputs">Input files</h2>
+  <p>Files are passed as in the HTTP API: an https <code>url</code> AudioKit can download, plus the file's <code>sha256</code>. URLs must resolve to public addresses. See <a href="/docs/#before">Before you start</a>.</p>
+</section>
+
+<section>
+  <h2 id="tools">Tools</h2>
+  <div class="table-box"><table class="fields"><thead><tr><th scope="col">Tool</th><th scope="col">Does</th></tr></thead><tbody>
+    <tr><td class="mono"><a href="#tool-health">health</a></td><td class="soft"><p>Service status and version, as <code>GET /v1/health</code></p></td></tr>
+    <tr><td class="mono"><a href="#tool-list_operations">list_operations</a></td><td class="soft"><p>Operations this instance can run, as <code>GET /v1/capabilities</code></p></td></tr>
+    <tr><td class="mono"><a href="#tool-submit_job">submit_job</a></td><td class="soft"><p>Submit any job, as <code>POST /v1/jobs</code></p></td></tr>
+    <tr><td class="mono"><a href="#tool-get_job">get_job</a></td><td class="soft"><p>A job's status and result, as <code>GET /v1/jobs/{id}</code></p></td></tr>
+    <tr><td class="mono"><a href="#tool-cancel_job">cancel_job</a></td><td class="soft"><p>Cancel a job, as <code>POST /v1/jobs/{id}/cancel</code></p></td></tr>
+    <tr><td class="mono"><a href="#tool-tempo">tempo</a></td><td class="soft"><p>BPM and beat grid</p></td></tr>
+    <tr><td class="mono"><a href="#tool-key">key</a></td><td class="soft"><p>Musical key</p></td></tr>
+    <tr><td class="mono"><a href="#tool-fingerprint">fingerprint</a></td><td class="soft"><p>AcoustID-compatible Chromaprint</p></td></tr>
+    <tr><td class="mono"><a href="#tool-analyze">analyze</a></td><td class="soft"><p>Loudness, tempo, key, fingerprint and tags in one pass</p></td></tr>
+    <tr><td class="mono"><a href="#tool-tags">tags</a></td><td class="soft"><p>Genre, mood and vocals (CLAP). Listed only when the instance has the tag model</p></td></tr>
+  </tbody></table></div>
+  <p>There are no separate tools for <code>probe</code>, <code>loudness</code>, <code>waveform</code>, <code>transcode</code> or <code>preview</code>: use <code>submit_job</code> for those.</p>
+
+  <h3 class="tool-group" id="tools-service" data-toc="Service">Service</h3>
+  <div class="operation" id="tool-health">
+    <h3><code>health</code></h3>
+    <p>No input. Returns <code>{"status": "ok", "version": …}</code>, as <a href="/docs/reference/#schema-Health">Health</a>.</p>
+  </div>
+  <div class="operation" id="tool-list_operations">
+    <h3><code>list_operations</code></h3>
+    <p>No input. Returns <code>{"operations": [{"operation", "outputs", "async", "requires_consent"}]}</code>, as <a href="/docs/reference/#schema-Capabilities">Capabilities</a>.</p>
+  </div>
+
+  <h3 class="tool-group" id="tools-jobs" data-toc="Jobs">Jobs</h3>
+  <p>These mirror the HTTP API's job endpoints and return the <a href="#output">Job</a>.</p>
+  <div class="operation" id="tool-submit_job">
+    <h3><code>submit_job</code></h3>
+    <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+      <tr><td class="mono">operation</td><td class="type">string</td><td class="soft"><p>The operation to run. See <a href="/docs/reference/#operations">operations</a>.</p></td></tr>
+      <tr><td class="mono">input</td><td class="type">object</td><td class="soft"><p><code>url</code> and <code>sha256</code>, optional <code>filename</code>. As <a href="/docs/reference/#schema-InputFile">InputFile</a>.</p></td></tr>
+      <tr><td class="mono">params<span class="opt">optional</span></td><td class="type">object</td><td class="soft"><p>The operation's params.</p></td></tr>
+      <tr><td class="mono">outputs<span class="opt">optional</span></td><td class="type">object</td><td class="soft"><p><code>{name: {url, headers?}}</code>. <code>transcode</code> and <code>preview</code> need <code>audio</code>. See <a href="/docs/#files">Operations that write files</a>.</p></td></tr>
+      <tr><td class="mono">webhook<span class="opt">optional</span></td><td class="type">object</td><td class="soft"><p><code>{url}</code>, as in the HTTP API.</p></td></tr>
+      <tr><td class="mono">authorization<span class="opt">optional</span></td><td class="type">object</td><td class="soft"><p><code>{decision_id, purpose?}</code>. Needed for <a href="#consent">consent-gated</a> operations.</p></td></tr>
+      <tr><td class="mono">job_id<span class="opt">optional</span></td><td class="type">string</td><td class="soft"><p>Your ID and the idempotency key, as in the HTTP API. Generated as <code class="nowrap">mcp-&lt;uuid&gt;</code> if omitted.</p></td></tr>
+      <tr><td class="mono">wait_seconds<span class="opt">optional</span></td><td class="type">integer</td><td class="soft"><p>How long to <a href="#waiting">wait</a> for the result.</p><p class="constraints">0–300, default 0</p></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="operation" id="tool-get_job">
+    <h3><code>get_job</code></h3>
+    <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+      <tr><td class="mono">provider_job_id</td><td class="type">string</td><td class="soft"><p>AudioKit's ID for the job, from the Job.</p></td></tr>
+      <tr><td class="mono">wait_seconds<span class="opt">optional</span></td><td class="type">integer</td><td class="soft"><p>How long to <a href="#waiting">wait</a> for the job to finish.</p><p class="constraints">0–300, default 0</p></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="operation" id="tool-cancel_job">
+    <h3><code>cancel_job</code></h3>
+    <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+      <tr><td class="mono">provider_job_id</td><td class="type">string</td><td class="soft"><p>The job to cancel. See <a href="/docs/#cancel">Cancel a job</a>.</p></td></tr>
+    </tbody></table></div>
+  </div>
+
+  <h3 class="tool-group" id="tools-analysis" data-toc="Analysis">Analysis</h3>
+  <p>Shortcuts for <code>submit_job</code> plus waiting: each submits its operation and waits for the result, 60 seconds by default. They take no <code>webhook</code>, <code>outputs</code> or <code>authorization</code>. Each returns the <a href="#output">Job</a>, with <code>result</code> as that operation's result in <a href="/docs/reference/#operations">the reference</a>.</p>
+  <p>All of them take:</p>
+  <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+    <tr><td class="mono">url</td><td class="type">string</td><td class="soft"><p>https URL of the input file.</p></td></tr>
+    <tr><td class="mono">sha256</td><td class="type">string</td><td class="soft"><p>The file's sha256.</p></td></tr>
+    <tr><td class="mono">filename<span class="opt">optional</span></td><td class="type">string</td><td class="soft"><p>As in <a href="/docs/reference/#schema-InputFile">InputFile</a>.</p></td></tr>
+    <tr><td class="mono">job_id<span class="opt">optional</span></td><td class="type">string</td><td class="soft"><p>Your ID and the idempotency key.</p></td></tr>
+    <tr><td class="mono">wait_seconds<span class="opt">optional</span></td><td class="type">integer</td><td class="soft"><p>How long to <a href="#waiting">wait</a> for the result.</p><p class="constraints">default 60, max 300</p></td></tr>
+  </tbody></table></div>
+  <div class="operation" id="tool-tempo">
+    <h3><code>tempo</code></h3>
+    <p>BPM and beat grid. Result as <a href="/docs/reference/#operation-tempo"><code>tempo</code></a>. Also takes the BPM search range, as <a href="/docs/reference/#schema-TempoParams">TempoParams</a>:</p>
+    <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+      <tr><td class="mono">min_bpm<span class="opt">optional</span></td><td class="type">number</td><td class="soft"><p class="constraints">40–300, default 70</p></td></tr>
+      <tr><td class="mono">max_bpm<span class="opt">optional</span></td><td class="type">number</td><td class="soft"><p class="constraints">40–300, default 180</p></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="operation" id="tool-key">
+    <h3><code>key</code></h3>
+    <p>Musical key. No other fields. Result as <a href="/docs/reference/#operation-key"><code>key</code></a>.</p>
+  </div>
+  <div class="operation" id="tool-fingerprint">
+    <h3><code>fingerprint</code></h3>
+    <p>AcoustID-compatible Chromaprint. No other fields. Result as <a href="/docs/reference/#operation-fingerprint"><code>fingerprint</code></a>.</p>
+  </div>
+  <div class="operation" id="tool-analyze">
+    <h3><code>analyze</code></h3>
+    <p>Loudness, tempo, key, fingerprint and tags in one pass. Also takes <code>min_bpm</code> and <code>max_bpm</code>, as <a href="#tool-tempo"><code>tempo</code></a>. Result as <a href="/docs/reference/#operation-analyze"><code>analyze</code></a>; <code>tags</code> is <code>null</code> when the instance has no tag model.</p>
+  </div>
+  <div class="operation" id="tool-tags">
+    <h3><code>tags</code></h3>
+    <p>Genre, mood and vocals (CLAP). Listed only when the instance has the tag model. Result as <a href="/docs/reference/#operation-tags"><code>tags</code></a>. Also takes:</p>
+    <div class="table-box"><table class="fields tool-fields"><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Notes</th></tr></thead><tbody>
+      <tr><td class="mono">embedding<span class="opt">optional</span></td><td class="type">boolean</td><td class="soft"><p class="constraints">default false</p></td></tr>
+    </tbody></table></div>
+  </div>
+</section>
+
+<section>
+  <h2 id="output">Output</h2>
+  <p>A successful tool result carries the object in <code>structuredContent</code>, and the same object as JSON in its text content. Shapes match the HTTP API exactly: <code>health</code> returns <a href="/docs/reference/#schema-Health">Health</a>, <code>list_operations</code> returns <a href="/docs/reference/#schema-Capabilities">Capabilities</a>, and every job tool returns the <a href="/docs/reference/#schema-Job">Job</a>, as <code>GET /v1/jobs/{id}</code> does:</p>
+  <div class="panel">
+    <div class="panel-bar"><span>Job fields</span></div>
+<pre class="code">provider_job_id, job_id, operation,
+status        queued | running | succeeded | failed | canceled
+result, error, provenance,
+created_at, started_at, finished_at</pre>
+  </div>
+</section>
+
+<section>
+  <h2 id="waiting">Waiting for results</h2>
+  <p><code>wait_seconds</code> holds the tool call open until the job finishes or the time runs out. It is 60 seconds by default on the analysis tools and 0 on <code>submit_job</code> and <code>get_job</code>, up to 300.</p>
+  <p>If the time runs out first, the Job comes back <code>queued</code> or <code>running</code>. That isn't an error: call <code>get_job</code> with its <code>provider_job_id</code>, optionally with <code>wait_seconds</code>, until it finishes.</p>
+</section>
+
+<section>
+  <h2 id="errors">Errors</h2>
+  <p>A refused call is a tool result with <code>isError: true</code> and <code>structuredContent</code> holding the API's error body:</p>
+  <div class="panel">
+    <div class="panel-bar"><span>structuredContent</span></div>
+<pre class="code">{ "error": { "code": "not_found", "message": "…" } }</pre>
+  </div>
+  <p>The codes are the HTTP API's: <code>invalid_request</code>, <code>operation_unavailable</code>, <code>idempotency_conflict</code>, <code>not_found</code> and <code>unavailable</code>. Their meanings are in <a href="/docs/reference/#errors-api">the reference</a>. A missing or unknown key never reaches a tool: it gets HTTP <code>401</code> <code>unauthorized</code>, as described under <a href="#connect">Connect</a>.</p>
+  <p>A failed job is not a tool error. It comes back as a Job with <code>status: "failed"</code> and <code>error.code</code> set to one of the <a href="/docs/reference/#errors-job">job error codes</a>.</p>
+</section>
+
+<section>
+  <h2 id="consent">Consent</h2>
+  <p><code>list_operations</code> reports <code>requires_consent</code> for each operation. Submitting a consent-gated operation without <code>authorization</code> is refused with <code>invalid_request</code>, through MCP as through <code>/v1</code>.</p>
+  <p>No operation is consent-gated today. The future voice tools will be.</p>
+</section>
+
+<section>
+  <h2 id="next">Next</h2>
+  <ul class="next-links">
+    <li><a href="/docs/">Get started with the HTTP API</a></li>
+    <li><a href="/docs/reference/#operations">Every operation, its params and its result</a></li>
+    <li><a href="/docs/reference/#errors">Error codes</a></li>
+  </ul>
 </section>

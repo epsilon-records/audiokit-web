@@ -293,6 +293,12 @@ code { font-size: 0.9em; }
 .schema:target h3 code, .operation:target h3 code, .endpoint h3:target .path { color: var(--accent); }
 .schema h3:target code { color: var(--accent); }
 
+/* MCP page */
+.docs-main h3.tool-group { font-size: 24px; margin-top: 36px; }
+table.tool-fields td:first-child { width: 32%; }
+table.tool-fields td.type { width: 7.5rem; min-width: 0; }
+.nowrap { white-space: nowrap; }
+
 /* Tables */
 .table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
 table { width: 100%; border-collapse: collapse; font-size: 15px; }
