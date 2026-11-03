@@ -19,7 +19,9 @@ scripts/reference.mjs renders /docs/reference/ and the landing page's operation 
 scripts/pull-contract.mjs  refreshes contract/openapi.yaml
 contract/openapi.yaml the API contract the build falls back to; contract/SOURCE says where it came from
 site.config.mjs       the API base URL (one place)
-netlify.toml          build command, publish directory and headers
+netlify/functions/    submission-created.mjs: early-access confirmation email
+test/                 tests for the function (npm test)
+netlify.toml          build command, publish directory, functions directory and headers
 ```
 
 Each page starts with a `<!-- {json} -->` line: `title`, `description`, `layout` (`site` or `docs`), `nav` (which menu item is current), and optionally `noindex` and `mainClass`. Docs pages get an "On this page" list from their `<h2 id>` headings (and `<h3 id data-toc>`).
@@ -59,6 +61,23 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 ## Early-access form
 
 The form on the landing page is a Netlify Form named `access` (fields `email` and optional `use`). Submissions appear under the site's **Forms** tab in Netlify once form detection is enabled there (Forms › Enable form detection, then redeploy). A honeypot field filters simple bots; Netlify's spam filter handles the rest.
+
+### Confirmation email
+
+`netlify/functions/submission-created.mjs` runs on Netlify's `submission-created` event (each verified, non-spam submission). For the `access` form it emails the person a short confirmation through the [Resend](https://resend.com) API. It skips other forms, a filled honeypot and invalid addresses. It never breaks the submission: if configuration is missing or Resend returns an error, it logs the reason and returns.
+
+Set these in Netlify (Site configuration › Environment variables), scoped to Functions. Never commit them.
+
+| Variable | Value |
+| --- | --- |
+| `RESEND_API_KEY` | A Resend API key with sending access (ideally restricted to the sending domain) |
+| `AUDIOKIT_FROM_EMAIL` | The sender, e.g. `AudioKit <hello@mail.example.com>`. Its domain must be verified in Resend |
+
+Until both are set, signups are still stored and the function logs `not sent`. The email's wording is in `renderEmail()` in the function; it includes no text from the submission.
+
+```bash
+npm test           # runs the function against sample submissions with Resend mocked
+```
 
 ## Deploy
 
