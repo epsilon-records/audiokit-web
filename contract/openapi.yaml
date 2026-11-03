@@ -1,0 +1,899 @@
+openapi: 3.1.0
+info:
+  title: AudioKit API
+  version: 0.1.0
+  summary: API-first audio intelligence for creators, labels and agents.
+  description: |
+    Send AudioKit a file and a job type. It checks the file, does the work, writes new files
+    next to the original and reports the result to your webhook. Originals are never changed,
+    and every output records the sha256 of its input, the AudioKit version and the settings used.
+
+    All job endpoints need `Authorization: Bearer <api key>`. Errors look like
+    `{"error": {"code": "...", "message": "..."}}`.
+
+    Codes in `ApiErrorCode` and `JobErrorCode` are stable, but new ones may be added: treat a
+    code you don't recognise as `internal`.
+
+    This file is checked against the server in CI (`tests/openapi.rs` and `tests/api.rs`), so it
+    describes what the code does.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+tags:
+  - name: Service
+    description: Liveness, capabilities and this contract.
+  - name: Jobs
+    description: Submit, inspect and cancel jobs.
+
+security:
+  - apiKey: []
+
+paths:
+  /v1/health:
+    get:
+      tags: [Service]
+      operationId: getHealth
+      summary: Liveness and version
+      security: []
+      responses:
+        "200":
+          description: The service is up.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Health" }
+
+  /v1/capabilities:
+    get:
+      tags: [Service]
+      operationId: getCapabilities
+      summary: Operations that work end to end on this instance
+      description: |
+        `transcode` and `preview` are left out when the instance has no ffmpeg, and `tags`
+        when it has no tag model (`AUDIOKIT_MODELS_DIR`).
+      security: []
+      responses:
+        "200":
+          description: The operations you can submit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Capabilities" }
+
+  /v1/openapi.yaml:
+    get:
+      tags: [Service]
+      operationId: getOpenApi
+      summary: This contract
+      security: []
+      responses:
+        "200":
+          description: The OpenAPI document for this AudioKit version.
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /v1/jobs:
+    post:
+      tags: [Jobs]
+      operationId: submitJob
+      summary: Submit a job
+      description: |
+        `job_id` is yours and doubles as the idempotency key. Resubmitting the same request
+        returns the existing job with `200`; the same `job_id` with a different request is a
+        `409`. Each client's `job_id`s are separate from every other client's.
+
+        URLs must be https and resolve to public addresses, including after redirects.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JobRequest" }
+            examples:
+              loudness:
+                summary: Measure loudness
+                value:
+                  job_id: job-0193
+                  operation: loudness
+                  input:
+                    url: https://storage.example.com/master.wav?signature=abc
+                    sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                    filename: master.wav
+                  webhook: { url: https://example.com/audiokit/webhook }
+                  authorization: { decision_id: dec_42, purpose: analysis }
+              analyze:
+                summary: Loudness, tempo, key and fingerprint in one job
+                value:
+                  job_id: job-0195
+                  operation: analyze
+                  input:
+                    url: https://storage.example.com/master.wav?signature=abc
+                    sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                  params: { min_bpm: 110, max_bpm: 150 }
+                  webhook: { url: https://example.com/audiokit/webhook }
+              preview:
+                summary: Make a 30-second MP3 preview
+                value:
+                  job_id: job-0194
+                  operation: preview
+                  input:
+                    url: https://storage.example.com/master.wav?signature=abc
+                    sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                  params: { duration_seconds: 30 }
+                  outputs:
+                    audio:
+                      url: https://storage.example.com/upload/preview.mp3?signature=def
+                      headers: { x-upsert: "true" }
+                  webhook: { url: https://example.com/audiokit/webhook }
+      responses:
+        "202":
+          description: A new job was queued.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        "200":
+          description: The same request was already submitted; this is that job.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: "`idempotency_conflict`: this `job_id` was already used with a different request."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: |
+            `invalid_request`: the body, a URL or `params` is invalid.
+            `operation_unavailable`: this instance can't run the operation (no ffmpeg or no tag model).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/jobs/{provider_job_id}:
+    parameters:
+      - $ref: "#/components/parameters/ProviderJobId"
+    get:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Job status and result
+      description: Always has the final state, even if webhook delivery gave up.
+      responses:
+        "200":
+          description: The job.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/jobs/{provider_job_id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/ProviderJobId"
+    post:
+      tags: [Jobs]
+      operationId: cancelJob
+      summary: Cancel a job
+      responses:
+        "200":
+          description: Canceled, or it had already finished; the job is in its final state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        "202":
+          description: The job is running and has been asked to stop. A `job.canceled` webhook follows.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+webhooks:
+  jobFinished:
+    post:
+      summary: A job finished
+      description: |
+        Sent to the job's `webhook.url` when it succeeds, fails or is canceled. Any 2xx response
+        counts as delivered. Otherwise AudioKit retries after 10 s, 1 min, 5 min, 30 min, 2 h and
+        6 h, then gives up; `GET /v1/jobs/{provider_job_id}` always has the final state.
+        `event_id` is unique per event: drop ones you've seen.
+
+        Verify `X-Signature` before trusting the body: it is `t=<unix seconds>,v1=<hex>`, where
+        `<hex>` is HMAC-SHA256 of `"{t}.{raw_body}"` with your webhook secret. Reject timestamps
+        more than 300 seconds old. Check your implementation against `x-signature-test-vector`.
+      security: []
+      x-signature-test-vector:
+        secret: whsec_test
+        body: '{"event_id":"evt-1"}'
+        header: t=1793440800,v1=27d3e5b970e7b39136241354c673e7849a3bceccff29da0b09c76a1d9b73b822
+      parameters:
+        - name: X-Signature
+          in: header
+          required: true
+          schema: { type: string, pattern: "^t=[0-9]+,v1=[0-9a-f]{64}$" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WebhookEvent" }
+      responses:
+        "2XX":
+          description: Delivered.
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: An AudioKit API key, e.g. `ak_...`. Only its sha256 is stored server-side.
+
+  parameters:
+    ProviderJobId:
+      name: provider_job_id
+      in: path
+      required: true
+      description: The job ID AudioKit returned. Anything that isn't one of your jobs is a `404`.
+      schema: { type: string, format: uuid }
+
+  responses:
+    Unauthorized:
+      description: "`unauthorized`: missing or unknown API key."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: "`not_found`: no such job for this client."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unavailable:
+      description: "`unavailable`: storage is unavailable; retry."
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    # --- Service --------------------------------------------------------------------------
+
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, version]
+      properties:
+        status: { const: ok }
+        version: { type: string, description: AudioKit version. }
+
+    Capabilities:
+      type: object
+      additionalProperties: false
+      required: [operations]
+      properties:
+        operations:
+          type: array
+          items: { $ref: "#/components/schemas/Capability" }
+
+    Capability:
+      type: object
+      additionalProperties: false
+      required: [operation, outputs, async, requires_consent]
+      properties:
+        operation: { $ref: "#/components/schemas/Operation" }
+        outputs:
+          type: array
+          description: Output names the request must give upload targets for in `outputs`.
+          items: { $ref: "#/components/schemas/OutputName" }
+        async: { type: boolean, description: The result arrives later, by webhook or polling. }
+        requires_consent: { type: boolean }
+
+    # --- Errors ---------------------------------------------------------------------------
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code: { $ref: "#/components/schemas/ApiErrorCode" }
+            message: { type: string }
+
+    ApiErrorCode:
+      description: Why a request was refused. New codes may be added.
+      anyOf:
+        - enum:
+            - invalid_request
+            - operation_unavailable
+            - unauthorized
+            - not_found
+            - idempotency_conflict
+            - unavailable
+        - type: string
+
+    JobErrorCode:
+      description: |
+        Why a job failed. New codes may be added.
+
+        - `input_url_rejected`: the URL isn't https or points at a non-public address
+        - `input_unreachable`: the download failed or returned a non-2xx status
+        - `input_too_large`: larger than the instance's input limit (2 GiB by default)
+        - `input_hash_mismatch`: the downloaded bytes don't match `input.sha256`
+        - `unsupported_format` / `unsupported_codec`: not a readable audio file
+        - `corrupt_input`: decoding failed partway
+        - `invalid_params`: the params don't fit this file, e.g. a preview starting past the end
+        - `operation_unavailable`: this instance can't run the operation
+        - `encode_failed`: the encoder couldn't write the file, or its output didn't decode
+        - `output_url_rejected`: an output URL isn't https or points at a non-public address
+        - `output_upload_failed`: the upload failed or returned a non-2xx status
+        - `timeout`: encoding ran over 30 minutes
+        - `canceled`: the job was canceled while encoding
+        - `internal`: AudioKit's fault; safe to resubmit with a new `job_id`
+      anyOf:
+        - enum:
+            - input_url_rejected
+            - input_unreachable
+            - input_too_large
+            - input_hash_mismatch
+            - unsupported_format
+            - unsupported_codec
+            - corrupt_input
+            - invalid_params
+            - operation_unavailable
+            - encode_failed
+            - output_url_rejected
+            - output_upload_failed
+            - timeout
+            - canceled
+            - internal
+        - type: string
+
+    JobError:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code: { $ref: "#/components/schemas/JobErrorCode" }
+        message: { type: string }
+
+    # --- Requests -------------------------------------------------------------------------
+
+    Operation:
+      type: string
+      enum: [probe, loudness, waveform, transcode, preview, tempo, key, fingerprint, analyze, tags]
+      description: |
+        - `probe`: decode the whole file and report its container, codec, format and duration
+        - `loudness`: EBU R128 integrated loudness, loudness range, true peak and sample peak
+        - `waveform`: a peak envelope for drawing a waveform
+        - `transcode`: convert to WAV, FLAC, MP3 or AAC; writes the `audio` output
+        - `preview`: a short excerpt with fades; writes the `audio` output
+        - `tempo`: BPM and beat grid
+        - `key`: musical key, Camelot code and tuning
+        - `fingerprint`: a Chromaprint fingerprint for AcoustID
+        - `analyze`: loudness, tempo, key, fingerprint and (with a tag model) tags from one read of the file
+        - `tags`: genre, mood and vocal tags from a CLAP audio model
+
+    OutputName:
+      type: string
+      enum: [audio]
+
+    Sha256:
+      type: string
+      pattern: "^[0-9a-fA-F]{64}$"
+
+    HttpsUrl:
+      type: string
+      format: uri
+      description: An https URL that resolves to a public address.
+
+    JobRequest:
+      type: object
+      additionalProperties: false
+      required: [job_id, operation, input]
+      properties:
+        job_id:
+          type: string
+          pattern: "^[!-~]{1,200}$"
+          description: Yours, and the idempotency key. 1–200 printable ASCII characters, no spaces.
+        operation: { $ref: "#/components/schemas/Operation" }
+        input: { $ref: "#/components/schemas/InputFile" }
+        params:
+          type: [object, "null"]
+          description: Settings for the operation; see the matching `*Params` schema. Unknown keys are rejected.
+        outputs:
+          type: object
+          description: An upload target for each output the operation writes, and no others.
+          propertyNames: { $ref: "#/components/schemas/OutputName" }
+          additionalProperties: { $ref: "#/components/schemas/OutputTarget" }
+        webhook: { $ref: "#/components/schemas/WebhookTarget" }
+        authorization: { $ref: "#/components/schemas/AuthorizationRef" }
+      allOf:
+        - if: { properties: { operation: { enum: [probe, loudness, key, fingerprint] } } }
+          then: { properties: { params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/NoParams" }] } } }
+        - if: { properties: { operation: { const: waveform } } }
+          then: { properties: { params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/WaveformParams" }] } } }
+        - if: { properties: { operation: { const: tags } } }
+          then: { properties: { params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/TagsParams" }] } } }
+        - if: { properties: { operation: { enum: [tempo, analyze] } } }
+          then: { properties: { params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/TempoParams" }] } } }
+        - if: { properties: { operation: { const: transcode } } }
+          then:
+            required: [params, outputs]
+            properties:
+              params: { $ref: "#/components/schemas/TranscodeParams" }
+              outputs: { required: [audio] }
+        - if: { properties: { operation: { const: preview } } }
+          then:
+            required: [outputs]
+            properties:
+              params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/PreviewParams" }] }
+              outputs: { required: [audio] }
+        - if: { properties: { operation: { enum: [probe, loudness, waveform, tempo, key, fingerprint, analyze, tags] } } }
+          then: { properties: { outputs: { maxProperties: 0 } } }
+
+    InputFile:
+      type: object
+      required: [url, sha256]
+      properties:
+        url:
+          allOf: [{ $ref: "#/components/schemas/HttpsUrl" }]
+          description: Signed GET URL. AudioKit downloads it once and never stores it.
+        sha256:
+          allOf: [{ $ref: "#/components/schemas/Sha256" }]
+          description: The file's sha256. The job fails with `input_hash_mismatch` if the download differs.
+        filename: { type: string, description: Original filename, used only as a format hint. }
+
+    OutputTarget:
+      type: object
+      additionalProperties: false
+      required: [url]
+      description: |
+        Where AudioKit uploads one output: a signed PUT URL, plus any headers its signature
+        requires. AudioKit sets `Content-Type` and `Content-Length` itself, so don't send them
+        (or `Host` or `Transfer-Encoding`).
+      properties:
+        url: { $ref: "#/components/schemas/HttpsUrl" }
+        headers:
+          type: object
+          additionalProperties: { type: string }
+
+    WebhookTarget:
+      type: object
+      required: [url]
+      properties:
+        url: { $ref: "#/components/schemas/HttpsUrl" }
+
+    AuthorizationRef:
+      type: object
+      required: [decision_id]
+      description: Your authorization decision, stored with the job for provenance. AudioKit never needs the documents behind it.
+      properties:
+        decision_id: { type: string }
+        purpose: { type: string }
+
+    NoParams:
+      type: object
+      additionalProperties: false
+      description: "`probe`, `loudness`, `key` and `fingerprint` take no params."
+
+    WaveformParams:
+      type: object
+      additionalProperties: false
+      properties:
+        points: { type: integer, minimum: 10, maximum: 10000, default: 1000 }
+
+    TempoParams:
+      type: object
+      additionalProperties: false
+      description: |
+        The BPM search range for `tempo` and `analyze`. It also settles half- and double-time:
+        a track is reported at the tempo inside the range. `max_bpm` must be at least 10 above
+        `min_bpm`.
+      properties:
+        min_bpm: { type: number, minimum: 40, maximum: 300, default: 70 }
+        max_bpm: { type: number, minimum: 40, maximum: 300, default: 180 }
+
+    TagsParams:
+      type: object
+      additionalProperties: false
+      properties:
+        embedding:
+          type: boolean
+          default: false
+          description: Also return the audio embedding (512 values for the production model), for similarity search.
+
+    Format:
+      type: string
+      enum: [wav, flac, mp3, aac]
+      description: AAC is written as `.m4a` (MP4 container, `audio/mp4`).
+
+    SampleRate:
+      type: integer
+      enum: [22050, 24000, 32000, 44100, 48000, 96000]
+
+    TranscodeParams:
+      type: object
+      additionalProperties: false
+      required: [format]
+      description: |
+        Cover art and other non-audio streams are dropped; tags are kept. `bit_depth` is for
+        WAV and FLAC only; `bitrate_kbps` for MP3 and AAC only. MP3 goes up to 48000 Hz.
+      properties:
+        format: { $ref: "#/components/schemas/Format" }
+        sample_rate:
+          allOf: [{ $ref: "#/components/schemas/SampleRate" }]
+          description: Default the input's.
+        channels: { type: integer, enum: [1, 2], description: Default the input's. }
+        bit_depth: { type: integer, enum: [16, 24], default: 24 }
+        bitrate_kbps: { type: integer, minimum: 64, maximum: 320, description: Default 320 for MP3, 256 for AAC. }
+      allOf:
+        - if: { properties: { format: { enum: [mp3, aac] } } }
+          then: { not: { required: [bit_depth] } }
+          else: { not: { required: [bitrate_kbps] } }
+        - if: { properties: { format: { const: mp3 } } }
+          then: { properties: { sample_rate: { maximum: 48000 } } }
+
+    PreviewParams:
+      type: object
+      additionalProperties: false
+      properties:
+        start_seconds:
+          type: number
+          minimum: 0
+          description: Default a third of the way in, moved earlier so the excerpt fits.
+        duration_seconds: { type: number, minimum: 5, maximum: 120, default: 30 }
+        fade_seconds:
+          type: number
+          minimum: 0
+          maximum: 10
+          default: 1
+          description: Fade in and out. At most half of `duration_seconds`.
+        format:
+          allOf: [{ $ref: "#/components/schemas/Format" }]
+          default: mp3
+        bitrate_kbps: { type: integer, minimum: 64, maximum: 320, default: 192, description: MP3 and AAC only. }
+      if: { properties: { format: { enum: [wav, flac] } }, required: [format] }
+      then: { not: { required: [bitrate_kbps] } }
+
+    # --- Jobs -----------------------------------------------------------------------------
+
+    JobStatus:
+      type: string
+      enum: [queued, running, succeeded, failed, canceled]
+
+    Job:
+      type: object
+      additionalProperties: false
+      required: [provider_job_id, job_id, operation, status, created_at]
+      description: |
+        `result` and `provenance` are present when `status` is `succeeded`; `error` when it's
+        `failed`.
+      properties:
+        provider_job_id: { type: string, format: uuid }
+        job_id: { type: string }
+        operation: { $ref: "#/components/schemas/Operation" }
+        status: { $ref: "#/components/schemas/JobStatus" }
+        result: { type: object }
+        error: { $ref: "#/components/schemas/JobError" }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+        created_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: string, format: date-time }
+      allOf:
+        - if: { properties: { status: { const: succeeded } }, required: [status] }
+          then: { required: [result, provenance, finished_at] }
+          else: { not: { anyOf: [{ required: [result] }, { required: [provenance] }] } }
+        - if: { properties: { status: { const: failed } }, required: [status] }
+          then: { required: [error, finished_at] }
+          else: { not: { required: [error] } }
+        - if: { properties: { operation: { const: probe } } }
+          then: { properties: { result: { $ref: "#/components/schemas/ProbeResult" } } }
+        - if: { properties: { operation: { const: loudness } } }
+          then: { properties: { result: { $ref: "#/components/schemas/LoudnessResult" } } }
+        - if: { properties: { operation: { const: waveform } } }
+          then: { properties: { result: { $ref: "#/components/schemas/WaveformResult" } } }
+        - if: { properties: { operation: { const: transcode } } }
+          then: { properties: { result: { $ref: "#/components/schemas/TranscodeResult" } } }
+        - if: { properties: { operation: { const: preview } } }
+          then: { properties: { result: { $ref: "#/components/schemas/PreviewResult" } } }
+        - if: { properties: { operation: { const: tempo } } }
+          then: { properties: { result: { $ref: "#/components/schemas/TempoResult" } } }
+        - if: { properties: { operation: { const: key } } }
+          then: { properties: { result: { $ref: "#/components/schemas/KeyResult" } } }
+        - if: { properties: { operation: { const: fingerprint } } }
+          then: { properties: { result: { $ref: "#/components/schemas/FingerprintResult" } } }
+        - if: { properties: { operation: { const: analyze } } }
+          then: { properties: { result: { $ref: "#/components/schemas/AnalyzeResult" } } }
+        - if: { properties: { operation: { const: tags } } }
+          then: { properties: { result: { $ref: "#/components/schemas/TagsResult" } } }
+
+    Provenance:
+      type: object
+      additionalProperties: false
+      required: [input_sha256, audiokit_version, operation, params]
+      properties:
+        input_sha256: { $ref: "#/components/schemas/Sha256" }
+        audiokit_version: { type: string }
+        operation: { $ref: "#/components/schemas/Operation" }
+        params: { type: object, description: The params as submitted. }
+
+    WebhookEvent:
+      type: object
+      additionalProperties: false
+      required: [event_id, type, created_at, data]
+      properties:
+        event_id: { type: string, format: uuid, description: Unique per event. }
+        type: { type: string, enum: [job.succeeded, job.failed, job.canceled] }
+        created_at: { type: string, format: date-time }
+        data: { $ref: "#/components/schemas/Job" }
+
+    # --- Results --------------------------------------------------------------------------
+
+    Decibels:
+      type: [number, "null"]
+      description: Rounded to 0.01. `null` for silence.
+
+    ProbeResult:
+      type: object
+      additionalProperties: false
+      required: [container, codec, sample_rate, channels, bits_per_sample, frames, duration_seconds, size_bytes, decode_errors, valid]
+      properties:
+        container: { type: string, examples: [wave, flac, mp3] }
+        codec: { type: string }
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        bits_per_sample: { type: [integer, "null"] }
+        frames: { type: integer }
+        duration_seconds: { type: number }
+        size_bytes: { type: integer }
+        decode_errors: { type: integer }
+        valid: { type: boolean, description: True when the whole file decoded without errors. }
+
+    StreamFields:
+      type: object
+      required: [sample_rate, channels, duration_seconds]
+      description: The input's format, reported with every analysis result.
+      properties:
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        duration_seconds: { type: number }
+
+    LoudnessFields:
+      type: object
+      required: [integrated_lufs, loudness_range_lu, true_peak_dbtp, sample_peak_dbfs]
+      properties:
+        integrated_lufs: { $ref: "#/components/schemas/Decibels" }
+        loudness_range_lu: { $ref: "#/components/schemas/Decibels" }
+        true_peak_dbtp: { $ref: "#/components/schemas/Decibels" }
+        sample_peak_dbfs: { $ref: "#/components/schemas/Decibels" }
+
+    LoudnessResult:
+      allOf:
+        - $ref: "#/components/schemas/LoudnessFields"
+        - $ref: "#/components/schemas/StreamFields"
+      unevaluatedProperties: false
+
+    TempoFields:
+      type: object
+      required: [bpm, confidence, steady, beat_count, beats]
+      description: "`bpm` and `confidence` are `null` when no beat was found (e.g. silence or ambient audio)."
+      properties:
+        bpm: { type: [number, "null"], description: Rounded to 0.01. }
+        confidence: { type: [number, "null"], minimum: 0, maximum: 1 }
+        steady: { type: boolean, description: True when the tempo holds for the whole track. }
+        beat_count: { type: integer, minimum: 0 }
+        beats:
+          type: array
+          description: Beat times in seconds from the start, rounded to 0.001.
+          items: { type: number, minimum: 0 }
+
+    TempoResult:
+      allOf:
+        - $ref: "#/components/schemas/TempoFields"
+        - $ref: "#/components/schemas/StreamFields"
+      unevaluatedProperties: false
+
+    KeyName:
+      type: string
+      pattern: "^(C|C#|D|Eb|E|F|F#|G|Ab|A|Bb|B) (major|minor)$"
+      examples: [A minor, Eb major]
+
+    Camelot:
+      type: string
+      pattern: "^(1[0-2]|[1-9])[AB]$"
+      description: Camelot wheel code; `A` is minor, `B` is major.
+
+    KeyFields:
+      type: object
+      required: [key, tonic, mode, camelot, confidence, tuning_cents, candidates, chroma]
+      description: All fields except `candidates` are `null` when no key could be estimated.
+      properties:
+        key: { anyOf: [{ $ref: "#/components/schemas/KeyName" }, { type: "null" }] }
+        tonic: { anyOf: [{ enum: [C, C#, D, Eb, E, F, F#, G, Ab, A, Bb, B] }, { type: "null" }] }
+        mode: { anyOf: [{ enum: [major, minor] }, { type: "null" }] }
+        camelot: { anyOf: [{ $ref: "#/components/schemas/Camelot" }, { type: "null" }] }
+        confidence: { type: [number, "null"] }
+        tuning_cents: { type: [number, "null"], description: How far the track sits from A440, in cents. }
+        candidates:
+          type: array
+          maxItems: 3
+          description: The top keys, best first.
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, camelot, score]
+            properties:
+              key: { $ref: "#/components/schemas/KeyName" }
+              camelot: { $ref: "#/components/schemas/Camelot" }
+              score: { type: number }
+        chroma:
+          anyOf:
+            - type: array
+              minItems: 12
+              maxItems: 12
+              description: Average pitch-class profile, C to B.
+              items: { type: number }
+            - type: "null"
+
+    KeyResult:
+      allOf:
+        - $ref: "#/components/schemas/KeyFields"
+        - $ref: "#/components/schemas/StreamFields"
+      unevaluatedProperties: false
+
+    FingerprintFields:
+      type: object
+      required: [fingerprint, algorithm, fingerprint_seconds]
+      properties:
+        fingerprint:
+          type: [string, "null"]
+          description: |
+            AcoustID-compatible Chromaprint of the first 120 seconds, compressed and base64url
+            encoded (no padding), like `fpcalc` prints. `null` if the audio is too short.
+        algorithm: { const: chromaprint-2 }
+        fingerprint_seconds: { type: number, minimum: 0, description: Seconds of audio fingerprinted. }
+
+    FingerprintResult:
+      allOf:
+        - $ref: "#/components/schemas/FingerprintFields"
+        - $ref: "#/components/schemas/StreamFields"
+      unevaluatedProperties: false
+
+    AnalyzeResult:
+      allOf:
+        - $ref: "#/components/schemas/StreamFields"
+        - type: object
+          required: [loudness, tempo, key, fingerprint]
+          properties:
+            loudness:
+              allOf: [{ $ref: "#/components/schemas/LoudnessFields" }]
+              unevaluatedProperties: false
+            tempo:
+              allOf: [{ $ref: "#/components/schemas/TempoFields" }]
+              unevaluatedProperties: false
+            key:
+              allOf: [{ $ref: "#/components/schemas/KeyFields" }]
+              unevaluatedProperties: false
+            fingerprint:
+              allOf: [{ $ref: "#/components/schemas/FingerprintFields" }]
+              unevaluatedProperties: false
+            tags:
+              description: "`null` when the instance has no tag model."
+              anyOf:
+                - $ref: "#/components/schemas/TagsFields"
+                - type: "null"
+      unevaluatedProperties: false
+
+    TagScore:
+      type: object
+      additionalProperties: false
+      required: [tag, score]
+      properties:
+        tag: { type: string, examples: [techno, melancholic, instrumental] }
+        score: { type: number, minimum: 0, maximum: 1, description: Probability within its group. }
+
+    TagsFields:
+      type: object
+      required: [model, windows]
+      description: |
+        One array per label group (`genre`, `mood`, `vocals` with the production labels), each
+        holding that group's top tags, best first. Group names come from the instance's label
+        file.
+      properties:
+        model: { type: string, description: The tag model's name. }
+        windows: { type: integer, minimum: 1, description: Ten-second windows the embedding averages. }
+        embedding:
+          type: array
+          description: Present when `params.embedding` is true. Unit length.
+          items: { type: number }
+      additionalProperties:
+        type: array
+        items: { $ref: "#/components/schemas/TagScore" }
+
+    TagsResult:
+      type: object
+      description: "`TagsFields` plus `sample_rate`, `channels` and `duration_seconds`."
+      required: [model, windows, sample_rate, channels, duration_seconds]
+      properties:
+        model: { type: string }
+        windows: { type: integer, minimum: 1 }
+        embedding: { type: array, items: { type: number } }
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        duration_seconds: { type: number }
+      additionalProperties:
+        type: array
+        items: { $ref: "#/components/schemas/TagScore" }
+
+    WaveformResult:
+      type: object
+      additionalProperties: false
+      required: [points, peaks, sample_rate, channels, duration_seconds]
+      properties:
+        points: { type: integer }
+        peaks:
+          type: array
+          description: Largest absolute sample in each slice, 0–1.
+          items: { type: number, minimum: 0, maximum: 1 }
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        duration_seconds: { type: number }
+
+    AudioOutputFields:
+      type: object
+      required: [format, content_type, sample_rate, channels, duration_seconds, sha256, size_bytes]
+      description: What was uploaded. Re-hash what you stored and compare with `sha256` and `size_bytes`.
+      properties:
+        format: { $ref: "#/components/schemas/Format" }
+        content_type: { type: string, enum: [audio/wav, audio/flac, audio/mpeg, audio/mp4] }
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        duration_seconds: { type: number }
+        bit_depth: { type: integer, description: WAV and FLAC. }
+        bitrate_kbps: { type: integer, description: MP3 and AAC. }
+        sha256: { $ref: "#/components/schemas/Sha256" }
+        size_bytes: { type: integer }
+      oneOf:
+        - required: [bit_depth]
+        - required: [bitrate_kbps]
+
+    AudioOutput:
+      allOf: [{ $ref: "#/components/schemas/AudioOutputFields" }]
+      unevaluatedProperties: false
+
+    PreviewAudioOutput:
+      allOf:
+        - $ref: "#/components/schemas/AudioOutputFields"
+        - type: object
+          required: [start_seconds, fade_seconds]
+          properties:
+            start_seconds: { type: number }
+            fade_seconds: { type: number }
+      unevaluatedProperties: false
+
+    TranscodeResult:
+      type: object
+      additionalProperties: false
+      required: [outputs]
+      properties:
+        outputs:
+          type: object
+          additionalProperties: false
+          required: [audio]
+          properties:
+            audio: { $ref: "#/components/schemas/AudioOutput" }
+
+    PreviewResult:
+      type: object
+      additionalProperties: false
+      required: [outputs]
+      properties:
+        outputs:
+          type: object
+          additionalProperties: false
+          required: [audio]
+          properties:
+            audio: { $ref: "#/components/schemas/PreviewAudioOutput" }

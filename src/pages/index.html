@@ -1,0 +1,109 @@
+<!-- {"title": "Audio analysis and processing API", "description": "Send AudioKit a file and a job type. It checks the file, does the work and calls your webhook: loudness, tempo, key, fingerprints, genre and mood tags, transcodes and previews, with provenance on every result.", "layout": "site", "nav": "home"} -->
+<section class="wrap hero">
+  <div class="hero-copy">
+    <p class="kicker">API v{{API_VERSION}} · early access</p>
+    <h1>Audio analysis and processing, one job at a time.</h1>
+    <p class="lede">Send AudioKit a link to a file and the job you want done. It checks the file, does the work and calls your webhook. Originals are never changed, and every result records exactly what produced it.</p>
+    <div class="actions">
+      <a class="btn btn-primary btn-lg" href="#access">Request API access</a>
+      <a class="btn btn-ghost btn-lg" href="/docs/">Read the quickstart</a>
+    </div>
+  </div>
+
+  <figure class="console" aria-label="Example: submit an analyze job and receive the result by webhook">
+    <div class="console-bar"><span>analyze master.wav</span><span class="dim">example</span></div>
+    <div class="console-body">
+<pre class="code"><span class="prompt">$</span> curl {{API_BASE}}/v1/jobs \
+    -H "Authorization: Bearer $AUDIOKIT_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "job_id": "job-0195",
+      "operation": "analyze",
+      "input": {
+        "url": "https://storage.example.com/master.wav?signature=…",
+        "sha256": "837d2e9c…a3b4c5"
+      },
+      "webhook": { "url": "https://you.example/audiokit/webhook" }
+    }'
+<span class="res res-ok">202 Accepted</span>  <span class="dim">status</span> queued</pre>
+      <div class="console-event">
+        <p class="event-line"><span class="res res-ok">POST</span> you.example/audiokit/webhook <span class="dim">job.succeeded · signed</span></p>
+        <dl class="readout">
+          <div><dt>Tempo</dt><dd>124.00 <span>BPM</span></dd></div>
+          <div><dt>Key</dt><dd>A minor <span>8A</span></dd></div>
+          <div><dt>Loudness</dt><dd>−8.9 <span>LUFS</span></dd></div>
+          <div><dt>Fingerprint</dt><dd>AQADtEmS…</dd></div>
+        </dl>
+        <p class="caption">Example values.</p>
+      </div>
+    </div>
+  </figure>
+</section>
+
+<section class="band" aria-labelledby="how">
+  <div class="wrap">
+    <h2 id="how" class="sr-only">How a job runs</h2>
+    <ol class="steps">
+      <li><p class="num">1 · Submit</p><h3>One request per job</h3><p>Your <code>job_id</code> is the idempotency key. Retry freely: the same request never runs twice.</p></li>
+      <li><p class="num">2 · Verify</p><h3>Checked before it runs</h3><p>AudioKit downloads from your signed URL and rejects any file whose sha256 doesn't match.</p></li>
+      <li><p class="num">3 · Process</p><h3>Originals untouched</h3><p>New files go to upload URLs you give it. Results carry the input hash, AudioKit version and settings.</p></li>
+      <li><p class="num">4 · Deliver</p><h3>Signed webhooks</h3><p>HMAC-signed events, retried for hours if your endpoint is down. The job is always one GET away.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section id="operations" class="wrap section">
+  <div class="section-head">
+    <h2>{{OPERATION_COUNT}} operations</h2>
+    <p>Everything in API v{{API_VERSION}}. <a href="/docs/reference/#op-getCapabilities"><code>GET /v1/capabilities</code></a> lists what the server runs right now.</p>
+  </div>
+  {{OPERATION_LIST}}
+</section>
+
+<section id="agents" class="wrap section rule-top">
+  <div class="split">
+    <div class="split-copy">
+      <h2>For agents, too</h2>
+      <p>An MCP server is being built so AI agents can use AudioKit with the same jobs and the same API keys. It isn't available yet.</p>
+      <p><a class="link" href="/docs/mcp/">MCP status</a></p>
+    </div>
+    <div class="split-copy">
+      <h2>Built on a contract</h2>
+      <p>The API is described by an OpenAPI 3.1 contract that its tests check against the server, and these docs are generated from it. Generate your client from the same file.</p>
+      <p><a class="link" href="/docs/reference/">API reference</a> <a class="link" href="/docs/openapi.yaml">openapi.yaml</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap" class="wrap section rule-top">
+  <div class="section-head">
+    <h2>Roadmap</h2>
+    <p>Planned, not available yet. No dates.</p>
+  </div>
+  <ul class="roadmap-list">
+    <li><span>Denoise</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Stem separation</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Transcription</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Mastering</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Voice cloning, consent-gated</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>MIDI to audio</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Music generation</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Sound search</span><span class="tag tag-roadmap">Roadmap</span></li>
+    <li><span>Song ID</span><span class="tag tag-roadmap">Roadmap</span></li>
+  </ul>
+</section>
+
+<section id="access" class="band">
+  <div class="wrap section access">
+    <h2>Get an API key</h2>
+    <p>AudioKit is in early access for labels, distributors and developers. Tell us what you'd process.</p>
+    <form class="access-form" name="access" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field">
+      <p class="hidden"><label>Leave this empty: <input name="bot-field"></label></p>
+      <label for="email" class="sr-only">Work email</label>
+      <input class="input" id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required>
+      <label for="use" class="sr-only">What would you process? (optional)</label>
+      <input class="input input-wide" id="use" name="use" type="text" maxlength="500" placeholder="What would you process? (optional)">
+      <button class="btn btn-primary btn-lg" type="submit">Request access</button>
+    </form>
+  </div>
+</section>

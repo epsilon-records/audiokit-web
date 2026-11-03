@@ -1,0 +1,172 @@
+<!-- {"title": "Get started", "description": "Submit your first AudioKit job, get the result by webhook or polling, and verify webhook signatures.", "layout": "docs", "nav": "start"} -->
+<section class="doc-intro">
+  <p class="kicker">Get started</p>
+  <h1>Run your first job</h1>
+  <p class="lede">AudioKit works in jobs. You send a link to a file and the operation you want; AudioKit checks the file, runs the operation and sends the result to your webhook.</p>
+  {{BASE_URL_NOTE}}
+</section>
+
+<section>
+  <h2 id="before">Before you start</h2>
+  <ul class="checklist">
+    <li><strong>An API key.</strong> AudioKit is in early access: <a href="/#access">request a key</a>. Keys look like <code>ak_…</code>.</li>
+    <li><strong>A file AudioKit can download.</strong> An https URL to it, usually a signed GET URL from your storage. It must resolve to a public address, including after redirects.</li>
+    <li><strong>The file's sha256.</strong> Hash the exact bytes your URL serves, for example with <code>sha256sum master.wav</code>.</li>
+    <li><strong>Optional: a webhook endpoint.</strong> An https URL that accepts POST. Without one, you poll for the result.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="check">Check the service</h2>
+  <p>These two endpoints need no key. <code>/v1/capabilities</code> lists the operations the server runs right now.</p>
+  <div class="panel">
+    <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">curl {{API_BASE}}/v1/health
+curl {{API_BASE}}/v1/capabilities</pre>
+  </div>
+  <div class="panel">
+    <div class="panel-bar"><span>responses, shortened</span></div>
+<pre class="code">{ "status": "ok", "version": "{{API_VERSION}}" }
+
+{ "operations": [
+    { "operation": "loudness", "outputs": [], "async": true, "requires_consent": false },
+    { "operation": "preview", "outputs": ["audio"], "async": true, "requires_consent": false },
+    …
+] }</pre>
+  </div>
+</section>
+
+<section>
+  <h2 id="submit">Submit a job</h2>
+  <p>This measures a file's loudness. <code>job_id</code> is yours: use something you can look up later. It's also the idempotency key.</p>
+  <div class="panel">
+    <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">curl {{API_BASE}}/v1/jobs \
+  -H "Authorization: Bearer $AUDIOKIT_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "job_id": "job-0193",
+    "operation": "loudness",
+    "input": {
+      "url": "https://storage.example.com/master.wav?signature=abc",
+      "sha256": "837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5",
+      "filename": "master.wav"
+    },
+    "webhook": { "url": "https://you.example/audiokit/webhook" }
+  }'</pre>
+  </div>
+  <p>You get <code>202 Accepted</code> and the job, with <code>status: "queued"</code> and AudioKit's own <code>provider_job_id</code>. Keep that ID: it's how you fetch or cancel the job.</p>
+  <p>Other operations work the same way. Some take <code>params</code>; <a href="/docs/reference/#operations">the reference</a> lists them for each operation.</p>
+</section>
+
+<section>
+  <h2 id="result">Get the result</h2>
+  <p>When the job finishes, AudioKit POSTs a <code>job.succeeded</code>, <code>job.failed</code> or <code>job.canceled</code> event to your webhook, with the job as <code>data</code>. You can also fetch the job at any time:</p>
+  <div class="panel">
+    <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">curl {{API_BASE}}/v1/jobs/$PROVIDER_JOB_ID \
+  -H "Authorization: Bearer $AUDIOKIT_KEY"</pre>
+  </div>
+  <div class="panel">
+    <div class="panel-bar"><span>a succeeded loudness job</span></div>
+<pre class="code">{
+  "provider_job_id": "01a19981-fb9f-774e-b139-7cc6ac648659",
+  "job_id": "job-0193",
+  "operation": "loudness",
+  "status": "succeeded",
+  "result": {
+    "integrated_lufs": -22.02,
+    "loudness_range_lu": 0.0,
+    "true_peak_dbtp": -21.33,
+    "sample_peak_dbfs": -21.33,
+    "sample_rate": 44100,
+    "channels": 2,
+    "duration_seconds": 5.0
+  },
+  "provenance": {
+    "input_sha256": "837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5",
+    "audiokit_version": "{{API_VERSION}}",
+    "operation": "loudness",
+    "params": {}
+  },
+  "created_at": "2026-11-01T23:46:35.039517Z",
+  "started_at": "2026-11-01T23:46:35.044170Z",
+  "finished_at": "2026-11-01T23:46:35.730192Z"
+}</pre>
+  </div>
+  <p><code>status</code> moves from <code>queued</code> to <code>running</code> to <code>succeeded</code>, <code>failed</code> or <code>canceled</code>. A failed job has <code>error: { "code", "message" }</code> instead of <code>result</code>; the codes are in <a href="/docs/reference/#errors-job">the reference</a>.</p>
+</section>
+
+<section>
+  <h2 id="webhooks">Verify webhooks</h2>
+  <p>Every event carries <code>X-Signature: t=&lt;unix seconds&gt;,v1=&lt;hex&gt;</code>, an HMAC-SHA256 of <code>"{t}.{raw_body}"</code> keyed with your webhook secret. Verify it against the raw body before parsing, and reject timestamps more than 300 seconds old.</p>
+  <div class="panel">
+    <div class="panel-bar"><span>Node</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">import crypto from "node:crypto";
+
+export function verify(secret, rawBody, header, now = Date.now() / 1000) {
+  const parts = Object.fromEntries(header.split(",").map((p) =&gt; p.split("=")));
+  const t = Number(parts.t);
+  if (!t || Math.abs(now - t) &gt; 300) return false;
+  const mac = crypto.createHmac("sha256", secret).update(`${t}.${rawBody}`).digest("hex");
+  return mac.length === parts.v1?.length &amp;&amp;
+    crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(parts.v1));
+}</pre>
+  </div>
+  <div class="panel">
+    <div class="panel-bar"><span>Python</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">import hashlib, hmac, time
+
+def verify(secret: bytes, raw_body: bytes, header: str, now: float | None = None) -&gt; bool:
+    parts = dict(p.split("=", 1) for p in header.split(",") if "=" in p)
+    t = int(parts.get("t", 0))
+    if not t or abs((now or time.time()) - t) &gt; 300:
+        return False
+    mac = hmac.new(secret, f"{t}.".encode() + raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(mac, parts.get("v1", ""))</pre>
+  </div>
+  <p>Check your code against this vector. Its timestamp is fixed, so pass <code>now</code> as <code>1793440800</code> when testing with it.</p>
+  {{WEBHOOK_TEST_VECTOR}}
+  <p>Reply with any 2xx to acknowledge. Otherwise AudioKit retries after 10 s, 1 min, 5 min, 30 min, 2 h and 6 h, then stops; the job itself always has the final state. Each event has a unique <code>event_id</code>: ignore ones you've already handled.</p>
+</section>
+
+<section>
+  <h2 id="retries">Retries and idempotency</h2>
+  <p>If a submit times out, send the same request again. The same body with the same <code>job_id</code> returns the existing job with <code>200</code>, so nothing runs twice. The same <code>job_id</code> with a different body is refused with <code>409 idempotency_conflict</code>. To process a file again, use a new <code>job_id</code>.</p>
+</section>
+
+<section>
+  <h2 id="files">Operations that write files</h2>
+  <p><code>transcode</code> and <code>preview</code> write a new audio file. Give AudioKit somewhere to put it: a signed PUT URL in <code>outputs.audio</code>, with any headers the signature needs. AudioKit sets <code>Content-Type</code> and <code>Content-Length</code> itself.</p>
+  <div class="panel">
+    <div class="panel-bar"><span>request body</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">{
+  "job_id": "job-0194",
+  "operation": "preview",
+  "input": { "url": "https://storage.example.com/master.wav?signature=abc", "sha256": "837d2e9c…" },
+  "params": { "duration_seconds": 30 },
+  "outputs": {
+    "audio": {
+      "url": "https://storage.example.com/upload/preview.mp3?signature=def",
+      "headers": { "x-upsert": "true" }
+    }
+  },
+  "webhook": { "url": "https://you.example/audiokit/webhook" }
+}</pre>
+  </div>
+  <p>The result reports the uploaded file's <code>sha256</code> and <code>size_bytes</code>. Hash what you stored and compare.</p>
+</section>
+
+<section>
+  <h2 id="cancel">Cancel a job</h2>
+  <p><code>POST /v1/jobs/{provider_job_id}/cancel</code>. A queued job is canceled at once (<code>200</code>). A running job is asked to stop (<code>202</code>) and a <code>job.canceled</code> event follows. A finished job comes back unchanged (<code>200</code>).</p>
+</section>
+
+<section>
+  <h2 id="next">Next</h2>
+  <ul class="next-links">
+    <li><a href="/docs/reference/#operations">Every operation, its params and its result</a></li>
+    <li><a href="/docs/reference/#errors">Error codes</a></li>
+    <li><a href="/docs/openapi.yaml">Download openapi.yaml</a> to generate a client</li>
+  </ul>
+</section>
