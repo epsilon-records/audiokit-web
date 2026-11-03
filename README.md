@@ -54,7 +54,7 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 
 ## Base URL
 
-`site.config.mjs` holds the API's base URL. It is a placeholder (`https://api.audiokit.example`) until the API is hosted. When it is, set `apiBaseUrl` and `apiBaseUrlIsPlaceholder: false`: every example on the site updates, the placeholder notes disappear, and the build starts reading the hosted contract.
+`site.config.mjs` holds the API's base URL (`https://api-production-cd43.up.railway.app`). Every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
 
 ## Early-access form
 
