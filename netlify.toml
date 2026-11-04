@@ -1,7 +1,11 @@
-# Static site: no build step. Netlify publishes site/ as is.
+# The build renders src/ into dist/ and generates the API reference from the OpenAPI contract
+# (see scripts/build.mjs for where the contract comes from).
 [build]
-  publish = "site"
-  command = ""
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 [[headers]]
   for = "/*"
@@ -15,3 +19,13 @@
   for = "/styles.css"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/site.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/docs/openapi.yaml"
+  [headers.values]
+    Content-Type = "application/yaml; charset=utf-8"
