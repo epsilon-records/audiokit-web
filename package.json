@@ -5,7 +5,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs && python3 -m http.server 8000 -d dist",
-    "contract:pull": "node scripts/pull-contract.mjs"
+    "contract:pull": "node scripts/pull-contract.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=20"
