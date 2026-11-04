@@ -34,3 +34,11 @@
   for = "/docs/openapi.yaml"
   [headers.values]
     Content-Type = "application/yaml; charset=utf-8"
+
+# The site's address is https://audiokit.ai. Send the platform address there too.
+# Deploy previews (deploy-preview-N--audiokit.netlify.app) are on other hosts, so they're unaffected.
+[[redirects]]
+  from = "https://audiokit.netlify.app/*"
+  to = "https://audiokit.ai/:splat"
+  status = 301
+  force = true
