@@ -56,7 +56,7 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 
 ## Base URL
 
-`site.config.mjs` holds the API's base URL (`https://api-production-cd43.up.railway.app`). Every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
+`site.config.mjs` holds the API's base URL (`https://api.audiokit.ai`). Every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
 
 ## Early-access form
 
@@ -81,4 +81,4 @@ npm test           # runs the function against sample submissions with Resend mo
 
 ## Deploy
 
-Netlify site `audiokit` (https://audiokit.netlify.app), linked to this repo: every push to `main` deploys production, and pull requests get deploy previews.
+Netlify site `audiokit` (https://audiokit.ai; https://audiokit.netlify.app redirects there), linked to this repo: every push to `main` deploys production, and pull requests get deploy previews.

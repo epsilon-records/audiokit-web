@@ -26,7 +26,7 @@ const done = (reason) => {
 
 // The email has no user-supplied text in it, so a submitted value can't be echoed to a stranger.
 export function renderEmail(siteUrl) {
-  const site = siteUrl || "https://audiokit.netlify.app";
+  const site = siteUrl || "https://audiokit.ai";
   const host = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   const text = [
