@@ -62,6 +62,7 @@ const NAV = [
   { id: "start", href: "/docs/", label: "Get started" },
   { id: "reference", href: "/docs/reference/", label: "API reference" },
   { id: "mcp", href: "/docs/mcp/", label: "MCP" },
+  { id: "pricing", href: "/pricing/", label: "Pricing" },
 ];
 
 const LOGO = `<svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 14v0M9 9v10M14 4v20M19 9v10M24 12v4"/></svg>`;
@@ -86,6 +87,7 @@ function footer(meta, ctx) {
       <a href="/docs/">Get started</a>
       <a href="/docs/reference/">API reference</a>
       <a href="/docs/mcp/">MCP</a>
+      <a href="/pricing/">Pricing</a>
       <a href="/docs/openapi.yaml">openapi.yaml</a>
     </nav>
   </div>
