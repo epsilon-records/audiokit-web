@@ -1,0 +1,3 @@
+# The console is a signed-in app; keep it out of search results.
+User-agent: *
+Disallow: /
