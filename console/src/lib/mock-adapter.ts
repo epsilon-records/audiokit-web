@@ -1,11 +1,11 @@
 /**
  * The mock adapter for the typed console client.
  *
- * It is deliberately the only implementation: the billing service's HTTP API is
- * not settled (knowledge decision 0015; design open questions). Every method
- * returns fixtures or a small in-memory mutation, and no method touches the
- * network. When the service is hosted, add an HTTP adapter with the same
- * `ConsoleApi` shape and switch `createApiClient()` in `api-client.ts`.
+ * It is the default adapter: `api-client.ts` picks it whenever
+ * `PUBLIC_BILLING_API_URL` is unset, so local dev, tests and the build keep
+ * working with no service. Every method returns fixtures or a small in-memory
+ * mutation, and no method touches the network. The real adapter lives in
+ * `http-adapter.ts` and implements the same `ConsoleApi` shape.
  *
  * Mutations live in module memory: they survive navigation in `vite dev` and in
  * a single long-lived server, but reset on a cold start. That is enough for the
@@ -13,6 +13,7 @@
  */
 
 import * as fixtures from './fixtures';
+import { ApiError } from './errors';
 import type { ConsoleApi } from './api-client';
 import type {
 	Account,
@@ -28,12 +29,12 @@ import type {
 } from './types';
 
 /** A typed failure the screens can branch on, rather than a bare Error. */
-export class MockApiError extends Error {
-	constructor(
-		readonly code: 'invalid-email' | 'not-found' | 'enterprise-contact' | 'already-revoked',
-		message: string
-	) {
-		super(message);
+export type MockApiErrorCode =
+	'invalid-email' | 'not-found' | 'enterprise-contact' | 'already-revoked';
+
+export class MockApiError extends ApiError {
+	constructor(code: MockApiErrorCode, message: string) {
+		super(code, message);
 		this.name = 'MockApiError';
 	}
 }

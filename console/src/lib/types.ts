@@ -101,6 +101,8 @@ export type CheckoutResult = {
 	status: 'success' | 'processing' | 'cancelled' | 'failed';
 	plan?: PlanId;
 	renewsAt?: string;
+	/** Set when the service hands off to a hosted checkout page. */
+	url?: string;
 };
 
 /** A signed-in console session. The token is an opaque string owned by the service. */

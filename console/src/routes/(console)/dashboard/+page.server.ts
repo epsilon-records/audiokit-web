@@ -1,13 +1,14 @@
-import { api } from '#lib/api-client';
+import { apiFor } from '#lib/api-client';
 import { apiBaseUrl } from '#lib/fixtures';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
+	const client = apiFor(locals.sessionToken);
 	const [account, usage, jobs, keys] = await Promise.all([
-		api.getAccount(),
-		api.getUsage(),
-		api.getRecentJobs(5),
-		api.getApiKeys()
+		client.getAccount(),
+		client.getUsage(),
+		client.getRecentJobs(5),
+		client.getApiKeys()
 	]);
 
 	return {
