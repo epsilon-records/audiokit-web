@@ -1,0 +1,45 @@
+name: billing service
+
+# The billing service is built and tested on its own, separate from the
+# website build. Only changes under services/billing (or this workflow) run it.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/billing/**'
+      - '.github/workflows/billing.yml'
+  pull_request:
+    paths:
+      - 'services/billing/**'
+      - '.github/workflows/billing.yml'
+
+defaults:
+  run:
+    working-directory: services/billing
+
+jobs:
+  lint-build-test:
+    name: lint, build, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: services/billing/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  docker:
+    name: docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Validates the Dockerfile the Railway service is built from.
+      - run: docker build --tag audiokit-billing:ci .

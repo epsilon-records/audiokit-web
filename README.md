@@ -4,6 +4,8 @@ The AudioKit website: the landing page, the getting-started guide, the API refer
 
 Plain HTML and one stylesheet, plus a small Node build that wraps every page in one layout and generates the API reference from the API's OpenAPI contract.
 
+This repo also holds the [AudioKit billing service](services/billing/): a separate TypeScript/Node service for freemium accounts and usage (decision [0014](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0014-freemium-billing-service.md)). It has its own Dockerfile and deploys as its own Railway service; the Netlify build below does not build, bundle or deploy it.
+
 ## Layout
 
 ```
