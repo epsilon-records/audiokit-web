@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { api, MockApiError } from '#lib/api-client';
+import { api, ApiError } from '#lib/api-client';
 import { safeNext } from '#lib/session';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -20,7 +20,7 @@ export const actions: Actions = {
 			const result = await api.requestMagicLink(email, { next });
 			return { sent: true, email: result.email, devLink: result.devLink ?? null, next };
 		} catch (error) {
-			if (error instanceof MockApiError) {
+			if (error instanceof ApiError) {
 				return fail(400, { sent: false, email, next, error: error.message });
 			}
 			throw error;

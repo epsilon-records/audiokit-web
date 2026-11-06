@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { api } from '#lib/api-client';
+import { apiFor } from '#lib/api-client';
 import { apiVersion } from '#lib/fixtures';
 import type { LayoutServerLoad } from './$types';
 
@@ -13,6 +13,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		redirect(303, `/login?next=${encodeURIComponent(next)}`);
 	}
 
-	const [account, usage] = await Promise.all([api.getAccount(), api.getUsage()]);
+	const client = apiFor(locals.sessionToken);
+	const [account, usage] = await Promise.all([client.getAccount(), client.getUsage()]);
 	return { account, usage, apiVersion, session: locals.session };
 };

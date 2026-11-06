@@ -1,9 +1,10 @@
 # AudioKit console
 
 The signed-in customer console: dashboard, usage, API keys, plan and settings. This is the app
-the public site's "Console" direction advertises. It is a **scaffold**: every screen is built
-from the committed design, but all data is static fixtures behind a typed client and nothing
-talks to a backend yet.
+the public site's "Console" direction advertises. Every screen is built from the committed
+design behind a typed client. It runs against the real billing service when
+`PUBLIC_BILLING_API_URL` is set, and against in-memory fixtures otherwise, so local dev, tests
+and the build need no service.
 
 - Design source: [`docs/console/`](../docs/console/) (PR #9, `akw-console-design`).
 - Stack decision: AudioKit
@@ -46,20 +47,22 @@ talks to a backend yet.
 shell requires a session; the deep link is preserved through sign-in (`/login?next=…`) and
 validated with `safeNext()` so it can't become an open redirect.
 
-## Auth (mock-first)
+## Auth
 
 Auth is **email magic link through the billing service**, per decision 0016:
 
 1. `/login` posts an email to `api.requestMagicLink()`.
-2. The service would email a single-use link to `/auth/callback?token=…`.
+2. The service emails a single-use link to `/auth/callback?token=…` (in mock mode the link is
+   shown on the sign-in screen instead, so the flow can be walked without an inbox).
 3. `/auth/callback` calls `api.exchangeMagicLink(token)` and sets the `ak_console_session`
    cookie (httpOnly, `sameSite=lax`, short-lived).
-4. `hooks.server.ts` resolves the cookie into `locals.session`; the console layout redirects
-   signed-out requests to `/login?next=…`.
+4. `hooks.server.ts` resolves the cookie into `locals.session` and keeps the raw token on
+   `locals.sessionToken`; the console layout redirects signed-out requests to `/login?next=…`.
+   Server loads then call `apiFor(locals.sessionToken)`, which sends the token as a bearer.
 
-In mock mode the link is **shown on the sign-in screen** instead of being emailed, so the flow
-can be walked without an inbox or a live service. The session token format is mock-specific
-(`mock.<email>`); a real adapter will treat it as opaque and verify it with the service.
+In mock mode the token is `mock.<email>`. In HTTP mode it is the service's JWT: `apiFor` passes
+it to every authenticated call and the service verifies it; `parseSessionToken` only decodes it
+so the shell can resolve the session.
 
 ## Data
 
@@ -67,9 +70,9 @@ can be walked without an inbox or a live service. The session token format is mo
 It exports:
 
 - a `ConsoleApi` type (account, plans, jobs, usage, keys, billing, preferences, checkout, auth);
-- `createApiClient()`, which currently returns the mock adapter from
-  `src/lib/mock-adapter.ts`;
-- `api`, the app's instance.
+- `createApiClient()`, which selects the adapter (see **Billing API** below);
+- `apiFor(sessionToken)`, the signed-in client the server routes use;
+- `api`, the adapter for the unauthenticated auth flow.
 
 Fixtures are static, deterministic and generic (`you@example.com`, `ak_live_…`, `a1b2c3d4`) in
 `src/lib/fixtures.ts`. No client names and no real customer data.
@@ -77,6 +80,21 @@ Fixtures are static, deterministic and generic (`you@example.com`, `ak_live_…`
 The mock adapter keeps mutations (created/revoked keys, profile edits, plan changes) in module
 memory. They survive navigation in `vite dev` and in a single long-lived server, but reset on a
 cold start. That is deliberate for a scaffold: there is no database behind it.
+
+## Billing API
+
+`PUBLIC_BILLING_API_URL` is the billing service root, without a trailing `/v1` (for example
+`https://billing.audiokit.ai`). When it is set, `api-client.ts` uses the HTTP adapter in
+`src/lib/http-adapter.ts`; when it is unset (local dev, tests, the build) the mock adapter in
+`src/lib/mock-adapter.ts` is the default. Set it in the console Netlify site's environment
+(Netlify UI or `netlify.toml`); never commit it. See `console/.env.example`.
+
+`src/lib/http-adapter.ts` maps `ConsoleApi` onto the service's real routes (`src/routes/` in
+`epsilon-records/audiokit-billing`): `/v1/auth/me`, `/v1/subscriptions/current`,
+`/v1/usage/current`, `/v1/usage/history`, `/v1/api-keys` and `/v1/jobs`. Routes the service does
+not have yet (the magic-link endpoints, plans, notification preferences, profile update and
+checkout) are documented as `ASSUMED` at the top of the file and tracked on the knowledge board;
+the service's wire format is snake_case and the adapter translates it to the console's types.
 
 ## Develop
 
@@ -114,9 +132,10 @@ and does not run when only `src/`, `scripts/` or `contract/` change.
 
 These are the design's open questions, left as TODOs rather than guessed:
 
-- Auth: real service calls, session lifetime, email-change re-verification, rate limiting.
+- Auth: session lifetime, email-change re-verification, rate limiting.
 - API keys: real key format, scoping/expiry, per-account limits, "last used" semantics.
-- Usage: what counts as a job vs an operation, billing-period anchor, retention, timezone.
+- Usage: what counts as a job vs an operation, billing-period anchor, retention, timezone. The
+  HTTP adapter has no per-day data yet, so the daily chart is empty until the service exposes it.
 - Billing: Stripe approval, portal session, overage, dunning/grace, cancellation ownership,
   downgrade timing. The portal button is disabled until `portalUrl` exists.
 - Data retention: delete-account semantics and export (button disabled).
@@ -133,8 +152,10 @@ src/
   app.html               fonts, metadata shell
   hooks.server.ts        session resolution + security headers
   lib/
-    api-client.ts        typed client boundary (mock adapter today)
-    mock-adapter.ts      in-memory mock implementation
+    api-client.ts        typed client boundary and adapter selection
+    http-adapter.ts      the real billing-service client (selected by env)
+    mock-adapter.ts      in-memory mock implementation (the default)
+    errors.ts            the shared ApiError base
     fixtures.ts          static, generic demo data
     types.ts             account, plan, usage, keys, billing, auth types
     format.ts            dates, numbers, percentages, relative time

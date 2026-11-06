@@ -4,12 +4,15 @@ import { SESSION_COOKIE } from '#lib/session';
 
 /**
  * Resolves the session cookie on every request and adds a small set of security
- * headers. Mock-first: `parseSessionToken` reads the mock token format; when the
- * billing service is hosted this becomes a session/verification call and the
- * cookie stays opaque to the app.
+ * headers. The token is kept on `locals.sessionToken` for the HTTP adapter; the
+ * decoded `locals.session` is what pages render. The mock adapter reads its own
+ * token format; the HTTP adapter decodes the service's JWT without verifying it
+ * (the service verifies every authenticated call).
  */
 export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.session = api.parseSessionToken(event.cookies.get(SESSION_COOKIE));
+	const token = event.cookies.get(SESSION_COOKIE) ?? null;
+	event.locals.sessionToken = token;
+	event.locals.session = api.parseSessionToken(token);
 
 	const response = await resolve(event);
 

@@ -1,15 +1,22 @@
 /**
  * The typed client for the billing/accounts service.
  *
- * Auth is email magic link through the billing service (knowledge decision 0016),
- * and the service is not hosted yet (decision 0015), so the console is built
- * mock-first: screens import `api` (or a client passed to them) and never call
- * `fetch` directly. Swapping the mock adapter for an HTTP one is the only change
- * needed when the service's API is settled.
+ * This module is the only boundary between screens and the service. It picks an
+ * adapter:
  *
- * No live network calls are made from this module today.
+ * - `http` when `PUBLIC_BILLING_API_URL` is set (production and any deployed
+ *   environment). The real client lives in `http-adapter.ts`.
+ * - `mock` otherwise, so local dev, tests and the build work with no service.
+ *
+ * Auth is email magic link through the billing service (knowledge decision
+ * 0016). The mock shows the link on the sign-in screen; the HTTP adapter posts
+ * to the service and the session JWT is stored in the `ak_console_session`
+ * cookie. Screens import `apiFor(sessionToken)` for signed-in calls and `api`
+ * for the unauthenticated auth flow.
  */
 
+import { ApiError } from './errors';
+import { createHttpAdapter } from './http-adapter';
 import { createMockAdapter } from './mock-adapter';
 import type {
 	Account,
@@ -51,26 +58,75 @@ export type ConsoleApi = {
 	startCheckout(planId: PlanId): Promise<CheckoutResult>;
 };
 
-export type ApiAdapter = 'mock';
+export type ApiAdapter = 'mock' | 'http';
 
 export type ApiClientOptions = {
-	/** Only `mock` exists until the billing service is hosted. */
+	/** Force an adapter; defaults to `http` when a base URL is set, else `mock`. */
 	adapter?: ApiAdapter;
+	/** The billing service root. Defaults to `PUBLIC_BILLING_API_URL`. */
+	baseUrl?: string;
+	/** The service session token, for the HTTP adapter. */
+	sessionToken?: string | null;
+	/** Injectable fetch, used by tests. */
+	fetch?: typeof fetch;
 	/** Injectable clock, used by tests. */
 	now?: () => Date;
 };
 
+/**
+ * The billing service root from the environment, if configured.
+ *
+ * `import.meta.env.PUBLIC_BILLING_API_URL` is replaced at build time (Vite
+ * `envPrefix` includes `PUBLIC_`); `process.env` is the runtime fallback for the
+ * Netlify function and for tests.
+ */
+export function billingApiUrl(): string | undefined {
+	const fromVite = import.meta.env?.PUBLIC_BILLING_API_URL;
+	if (typeof fromVite === 'string' && fromVite.length > 0) return fromVite;
+	const fromProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+		.process?.env?.PUBLIC_BILLING_API_URL;
+	if (typeof fromProcess === 'string' && fromProcess.length > 0) return fromProcess;
+	return undefined;
+}
+
 export function createApiClient(options: ApiClientOptions = {}): ConsoleApi {
-	const adapter = options.adapter ?? 'mock';
+	const baseUrl = options.baseUrl ?? billingApiUrl();
+	const adapter = options.adapter ?? (baseUrl ? 'http' : 'mock');
+
 	switch (adapter) {
 		case 'mock':
 			return createMockAdapter({ now: options.now });
+		case 'http':
+			if (!baseUrl) {
+				throw new Error(
+					'The http adapter needs a billing service URL (PUBLIC_BILLING_API_URL or baseUrl).'
+				);
+			}
+			return createHttpAdapter({
+				baseUrl,
+				sessionToken: options.sessionToken,
+				fetch: options.fetch,
+				now: options.now
+			});
 		default:
 			throw new Error(`Unknown API adapter: ${String(adapter)}`);
 	}
 }
 
-/** The app's client. Mock-first; see the module comment. */
+/**
+ * A client for one signed-in request. In HTTP mode this is a fresh, stateless
+ * adapter carrying the session token; in mock mode it is the shared singleton
+ * so in-memory mutations survive navigation.
+ */
+export function apiFor(sessionToken?: string | null): ConsoleApi {
+	const baseUrl = billingApiUrl();
+	if (!baseUrl) return api;
+	return createHttpAdapter({ baseUrl, sessionToken });
+}
+
+/** The app's client. Mock when no billing URL is configured. */
 export const api: ConsoleApi = createApiClient();
 
+export { ApiError } from './errors';
+export { HttpApiError } from './http-adapter';
 export { MockApiError } from './mock-adapter';
