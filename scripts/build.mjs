@@ -122,23 +122,41 @@ function sidebar(meta, body) {
 </aside>`;
 }
 
-function page(meta, body, ctx) {
+function page(meta, body, ctx, route = "/") {
   const title = meta.title ? `${meta.title} · AudioKit` : "AudioKit";
   const desc = meta.description || "";
   const main =
     meta.layout === "docs"
       ? `<div class="wrap-wide docs">${sidebar(meta, body)}<main id="main" class="docs-main">${body}</main></div>`
       : `<main id="main"${meta.mainClass ? ` class="${meta.mainClass}"` : ""}>${body}</main>`;
+  // Canonical links and Open Graph URLs point at production, so deploy previews don't compete.
+  const canonical = meta.noindex ? "" : `${ctx.siteUrl}${route}`;
+  const head = [
+    desc ? `<meta name="description" content="${esc(desc)}">` : "",
+    canonical ? `<link rel="canonical" href="${esc(canonical)}">` : "",
+    '<meta name="color-scheme" content="dark">',
+    desc ? `<meta property="og:description" content="${esc(desc)}">` : "",
+    `<meta property="og:title" content="${esc(title)}">`,
+    '<meta property="og:type" content="website">',
+    '<meta property="og:site_name" content="AudioKit">',
+    '<meta property="og:locale" content="en">',
+    canonical ? `<meta property="og:url" content="${esc(canonical)}">` : "",
+    '<meta name="twitter:card" content="summary">',
+    `<meta name="twitter:title" content="${esc(title)}">`,
+    desc ? `<meta name="twitter:description" content="${esc(desc)}">` : "",
+    meta.noindex ? '<meta name="robots" content="noindex">' : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  // site.js only has work on pages with copy buttons or the docs "On this page" list.
+  const needsJs = /class="(copy|toc)"/.test(main);
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
-${desc ? `<meta name="description" content="${esc(desc)}">\n<meta property="og:description" content="${esc(desc)}">` : ""}
-<meta property="og:title" content="${esc(title)}">
-<meta property="og:type" content="website">
-${meta.noindex ? '<meta name="robots" content="noindex">' : ""}
+${head}
 <meta name="theme-color" content="#0c0e11">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -151,8 +169,7 @@ ${meta.noindex ? '<meta name="robots" content="noindex">' : ""}
 ${header(meta)}
 ${main}
 ${footer(meta, ctx)}
-<script src="/site.js" defer></script>
-</body>
+${needsJs ? `<script src="/site.js" defer></script>\n` : ""}</body>
 </html>
 `;
 }
@@ -189,10 +206,31 @@ function outPath(rel) {
   return rel.replace(/\.html$/, "/index.html");
 }
 
+// Built file → URL path, e.g. docs/mcp/index.html → /docs/mcp/.
+function routePath(rel) {
+  if (rel === "index.html") return "/";
+  if (rel.endsWith("/index.html")) return "/" + rel.slice(0, -"index.html".length);
+  return "/" + rel;
+}
+
 async function write(rel, content) {
   const file = join(out, rel);
   await mkdir(dirname(file), { recursive: true });
   await writeFile(file, content);
+}
+
+// sitemap.xml and robots.txt for the indexable pages, so search engines can find them.
+async function writeSitemap(urls) {
+  const abs = (path) => `${config.siteUrl}${path}`;
+  const unique = [...new Set(urls)].sort();
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${unique.map((u) => `  <url><loc>${esc(abs(u))}</loc></url>`).join("\n")}
+</urlset>
+`;
+  await write("sitemap.xml", xml);
+  await write("robots.txt", `User-agent: *\nAllow: /\n\nSitemap: ${abs("/sitemap.xml")}\n`);
+  console.log(`sitemap: ${unique.length} urls; robots.txt written`);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -238,8 +276,9 @@ async function main() {
   const contract = await loadContract();
   const { doc } = contract;
   const version = doc.info?.version ?? "?";
-  const ctx = { version };
+  const ctx = { version, siteUrl: config.siteUrl };
   const ops = operationModel(doc);
+  const urls = [];
 
   const tokens = {
     API_BASE: config.apiBaseUrl,
@@ -259,9 +298,13 @@ async function main() {
   for (const file of await walk(pagesDir)) {
     const rel = relative(pagesDir, file);
     const { meta, body } = parsePage(await readFile(file, "utf8"), rel);
-    await write(outPath(rel), page(meta, fill(body, tokens, rel), ctx));
+    const route = routePath(outPath(rel));
+    if (!meta.noindex) urls.push(route);
+    await write(outPath(rel), page(meta, fill(body, tokens, rel), ctx, route));
   }
 
+  const refRoute = "/docs/reference/";
+  urls.push(refRoute);
   const ref = renderReference(doc, ops, config);
   await write(
     "docs/reference/index.html",
@@ -274,10 +317,12 @@ async function main() {
       },
       ref,
       ctx,
+      refRoute,
     ),
   );
 
   await write("docs/openapi.yaml", contract.text);
+  await writeSitemap(urls);
   await checkLinks();
   console.log(`built dist/ from ${contract.source}`);
 }

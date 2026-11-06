@@ -14,7 +14,7 @@ src/pages/
   thanks.html         shown after the early-access form (→ /thanks/)
   404.html
 src/static/           copied as is: styles.css (design tokens at the top), site.js, favicon.svg
-scripts/build.mjs     layout, {{TOKENS}}, link check; writes dist/
+scripts/build.mjs     layout, {{TOKENS}}, link check; writes dist/, sitemap.xml and robots.txt
 scripts/reference.mjs renders /docs/reference/ and the landing page's operation list from the contract
 scripts/pull-contract.mjs  refreshes contract/openapi.yaml
 contract/openapi.yaml the API contract the build falls back to; contract/SOURCE says where it came from

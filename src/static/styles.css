@@ -1,6 +1,7 @@
 /* AudioKit site — direction A "Console". One stylesheet for every page. */
 
 :root {
+  color-scheme: dark;
   --bg: #0c0e11;
   --bg-band: #101318;
   --panel: #14171c;
