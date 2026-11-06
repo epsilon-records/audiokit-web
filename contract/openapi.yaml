@@ -387,6 +387,7 @@ components:
     HttpsUrl:
       type: string
       format: uri
+      pattern: "^https://"
       description: An https URL that resolves to a public address.
 
     JobRequest:
