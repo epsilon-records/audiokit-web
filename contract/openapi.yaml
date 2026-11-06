@@ -25,6 +25,8 @@ tags:
     description: Liveness, capabilities and this contract.
   - name: Jobs
     description: Submit, inspect and cancel jobs.
+  - name: Admin
+    description: Client key sync for the billing service. Needs its own token.
 
 security:
   - apiKey: []
@@ -150,6 +152,78 @@ paths:
               schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
+  /v1/admin/clients:
+    post:
+      tags: [Admin]
+      operationId: putClient
+      summary: Add or replace a client
+      description: |
+        How the billing service syncs API keys in: AudioKit verifies keys locally against the
+        stored hash, with no per-request callout. Needs `Authorization: Bearer
+        <AUDIOKIT_ADMIN_TOKEN>`, not a client API key; the endpoint is off when the token is
+        unset.
+
+        Adding a client with an existing `id` replaces it, so this is safe to retry. A key hash
+        belongs to one client: writing one that another client has takes it away from that one.
+        Clients listed in `AUDIOKIT_CLIENTS` still bootstrap the store; a client written here
+        overrides that entry.
+      security:
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientUpsert" }
+            examples:
+              billing:
+                summary: A client with a paid plan
+                value:
+                  id: client_0193
+                  api_key_sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                  webhook_secret: example_webhook_secret_replace_me
+      responses:
+        "204":
+          description: The client was added or replaced.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422":
+          description: |
+            `invalid_request`: `id`, `api_key_sha256` or `webhook_secret` is invalid. The id is
+            1-200 printable ASCII characters with no spaces, the hash is 64 hex characters and
+            the secret is 16+ characters.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/admin/clients/{client_id}:
+    parameters:
+      - $ref: "#/components/parameters/ClientId"
+    delete:
+      tags: [Admin]
+      operationId: deleteClient
+      summary: Revoke a client
+      description: |
+        Removes the client, so its API key stops working at once. A client that is listed in
+        `AUDIOKIT_CLIENTS` can't be removed here: the variable would keep it on, so remove it
+        there instead.
+      security:
+        - adminToken: []
+      responses:
+        "204":
+          description: The client is gone.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
+          description: "`not_found`: no client with this id."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: "`client_bootstrap`: this client comes from `AUDIOKIT_CLIENTS`; remove it there."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
   /v1/jobs/{provider_job_id}:
     parameters:
       - $ref: "#/components/parameters/ProviderJobId"
@@ -228,8 +302,21 @@ components:
       type: http
       scheme: bearer
       description: An AudioKit API key, e.g. `ak_...`. Only its sha256 is stored server-side.
+    adminToken:
+      type: http
+      scheme: bearer
+      description: |
+        The billing service's `AUDIOKIT_ADMIN_TOKEN`. Not a client API key, and never sent by
+        clients.
 
   parameters:
+    ClientId:
+      name: client_id
+      in: path
+      required: true
+      description: The client `id` the billing service synced.
+      schema: { type: string, minLength: 1, maxLength: 200 }
+
     ProviderJobId:
       name: provider_job_id
       in: path
@@ -311,8 +398,29 @@ components:
             - unauthorized
             - not_found
             - idempotency_conflict
+            - client_bootstrap
             - unavailable
         - type: string
+
+    ClientUpsert:
+      type: object
+      additionalProperties: false
+      required: [id, api_key_sha256, webhook_secret]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          maxLength: 200
+          pattern: "^[!-~]+$"
+          description: Stable client id, the one AudioKit stores on every job.
+        api_key_sha256:
+          type: string
+          pattern: "^[0-9a-fA-F]{64}$"
+          description: Hex sha256 of the client's API key. AudioKit never sees the key.
+        webhook_secret:
+          type: string
+          minLength: 16
+          description: Secret AudioKit signs this client's webhooks with.
 
     JobErrorCode:
       description: |

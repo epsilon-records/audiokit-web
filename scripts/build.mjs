@@ -122,6 +122,24 @@ function sidebar(meta, body) {
 </aside>`;
 }
 
+// Browser error monitoring (shared decision 0003). Injected into every page only when a
+// DSN is present at build time; the audiokit Netlify site provides SENTRY_DSN for builds.
+// The DSN is public, but it still comes from the environment rather than the source.
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN || "";
+const SENTRY_BUNDLE_VERSION = "11.11.0";
+
+function sentryHead() {
+  if (!SENTRY_DSN) return "";
+  const init = {
+    dsn: SENTRY_DSN,
+    environment: process.env.CONTEXT || process.env.NODE_ENV || "production",
+    tracesSampleRate: 0.1,
+  };
+  if (process.env.COMMIT_REF) init.release = process.env.COMMIT_REF;
+  return `<script src="https://browser.sentry-cdn.com/${SENTRY_BUNDLE_VERSION}/bundle.tracing.min.js" crossorigin="anonymous"></script>
+<script>Sentry.init(${JSON.stringify(init)});</script>`;
+}
+
 function page(meta, body, ctx, route = "/") {
   const title = meta.title ? `${meta.title} · AudioKit` : "AudioKit";
   const desc = meta.description || "";
@@ -163,6 +181,7 @@ ${head}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+${sentryHead()}
 </head>
 <body class="layout-${meta.layout || "site"}">
 <a class="skip" href="#main">Skip to content</a>
