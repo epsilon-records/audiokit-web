@@ -6,6 +6,8 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs && python3 -m http.server 8000 -d dist",
     "contract:pull": "node scripts/pull-contract.mjs",
+    "contract:check": "node scripts/check-contract.mjs",
+    "contract:check:strict": "node scripts/check-contract.mjs --strict",
     "test": "node --test test/*.test.mjs"
   },
   "engines": {

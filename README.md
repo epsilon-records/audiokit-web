@@ -17,6 +17,7 @@ src/static/           copied as is: styles.css (design tokens at the top), site.
 scripts/build.mjs     layout, {{TOKENS}}, link check; writes dist/
 scripts/reference.mjs renders /docs/reference/ and the landing page's operation list from the contract
 scripts/pull-contract.mjs  refreshes contract/openapi.yaml
+scripts/check-contract.mjs checks contract/openapi.yaml against the live contract (npm test)
 contract/openapi.yaml the API contract the build falls back to; contract/SOURCE says where it came from
 site.config.mjs       the API base URL (one place)
 netlify/functions/    submission-created.mjs: early-access confirmation email
@@ -45,12 +46,15 @@ The API reference and the landing page's list of operations are generated from t
 2. `<apiBaseUrl>/v1/openapi.yaml`, once `site.config.mjs` has a real base URL;
 3. `contract/openapi.yaml` in this repo.
 
-The API repo is private, so Netlify can't read it directly. Until the API is hosted, refresh the copy when the contract changes and commit it:
+The API repo is private, so Netlify can't read it directly, but the live API serves the contract publicly (decision [0011](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0011-api-contract-is-public.md)). The build reads the live contract first, so the site already follows it; `contract/openapi.yaml` is the copy the build falls back to when that fetch fails. Refresh it when the contract changes and commit it:
 
 ```bash
-npm run contract:pull -- ../audiokit                         # from a local clone
-npm run contract:pull -- https://<api host>/v1/openapi.yaml  # or from a running API
+npm run contract:pull -- https://api.audiokit.ai/v1/openapi.yaml  # from the live API
+npm run contract:pull -- ../audiokit                              # or from a local clone
+npm run build                                                     # regenerates dist/docs/openapi.yaml
 ```
+
+`npm test` includes a drift check (`scripts/check-contract.mjs`; also `npm run contract:check`, or `contract:check:strict` to fail instead of warn) that compares the bundled copy with the live one and reports when they differ. It skips with a warning when the API can't be reached, so an offline run doesn't fail.
 
 The getting-started guide (`src/pages/docs/index.html`) is hand-written. When the API changes, check it in the same week, and check the webhook examples still pass the test vector. Only describe an operation as available once it is in the contract.
 
