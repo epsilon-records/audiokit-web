@@ -1,0 +1,27 @@
+{
+  "name": "audiokit-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AudioKit customer console — signed-in dashboard, usage, API keys, plan and settings.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.2",
+    "@types/react-dom": "19.0.2",
+    "typescript": "5.7.2"
+  },
+  "engines": {
+    "node": ">=20.9"
+  }
+}
