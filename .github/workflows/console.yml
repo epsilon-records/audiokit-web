@@ -1,0 +1,46 @@
+name: Console
+
+# Path-filtered so the console is checked only when it changes. The static site in
+# src/ has its own build lifecycle and is not affected by this workflow.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'console/**'
+      - '.github/workflows/console.yml'
+  pull_request:
+    paths:
+      - 'console/**'
+      - '.github/workflows/console.yml'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: console
+
+jobs:
+  console:
+    name: Install, check, build and test the console
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test

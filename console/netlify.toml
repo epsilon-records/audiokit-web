@@ -1,0 +1,20 @@
+# The console is its own Netlify site. In the Netlify UI set the site's "Base directory"
+# to `console` so this file is used; the repo-root netlify.toml belongs to the static site.
+#
+# `npm run build` runs SvelteKit through @sveltejs/adapter-netlify: the adapter writes the
+# client and prerendered assets to build/ and the SSR function to .netlify/functions-internal/.
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Static assets are served by Netlify, so the app's handle() headers don't apply to them.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
