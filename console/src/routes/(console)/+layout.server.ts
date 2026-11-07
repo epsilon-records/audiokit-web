@@ -1,19 +1,30 @@
 import { redirect } from '@sveltejs/kit';
-import { apiFor } from '#lib/api-client';
+import { apiFor, HttpApiError } from '#lib/api-client';
 import { apiVersion } from '#lib/fixtures';
+import { SESSION_COOKIE } from '#lib/session';
 import type { LayoutServerLoad } from './$types';
 
 /**
  * The signed-in shell. Every route in this group requires a session; the deep
  * link is carried through sign-in so the user lands back where they started.
  */
-export const load: LayoutServerLoad = async ({ locals, url }) => {
+export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
+	const next = url.pathname + url.search;
 	if (!locals.session) {
-		const next = url.pathname + url.search;
 		redirect(303, `/login?next=${encodeURIComponent(next)}`);
 	}
 
 	const client = apiFor(locals.sessionToken);
-	const [account, usage] = await Promise.all([client.getAccount(), client.getUsage()]);
+	// The cookie is decoded without its signature, so the billing service is the
+	// authority: an invalid or expired token means "not signed in", not a crash
+	// (EPSILON-80).
+	const data = await Promise.all([client.getAccount(), client.getUsage()]).catch((error) => {
+		if (error instanceof HttpApiError && error.code === 'unauthorized') {
+			cookies.delete(SESSION_COOKIE, { path: '/' });
+			redirect(303, `/login?next=${encodeURIComponent(next)}`);
+		}
+		throw error;
+	});
+	const [account, usage] = data;
 	return { account, usage, apiVersion, session: locals.session };
 };
