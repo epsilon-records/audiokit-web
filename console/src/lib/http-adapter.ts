@@ -120,6 +120,8 @@ type WireUsageCurrent = {
 	overageCount: number;
 	periodStart: string;
 	periodEnd: string;
+	/** Jobs per calendar day in the period, from the service. */
+	daily?: { date: string; count: number }[];
 };
 
 type WireUsageHistory = {
@@ -285,8 +287,7 @@ function toUsage(current: WireUsageCurrent, history: WireUsageHistory[]): UsageS
 		periodEnd: current.periodEnd,
 		jobsUsed: current.jobCount,
 		jobLimit: limit,
-		// The service tracks jobs per period and per operation, not per day yet.
-		daily: [],
+		daily: (current.daily ?? []).map((day) => ({ date: day.date, jobs: Number(day.count) })),
 		byOperation,
 		history: history.map((record) => {
 			const recordLimit = record.quota_limit === -1 ? Number.POSITIVE_INFINITY : record.quota_limit;

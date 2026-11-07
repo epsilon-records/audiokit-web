@@ -227,7 +227,11 @@ describe('http adapter: reads', () => {
 					quotaLimit: 100,
 					overageCount: 0,
 					periodStart: '2026-11-01T00:00:00.000Z',
-					periodEnd: '2026-11-30T23:59:59.000Z'
+					periodEnd: '2026-11-30T23:59:59.000Z',
+					daily: [
+						{ date: '2026-11-01', count: 10 },
+						{ date: '2026-11-02', count: 4 }
+					]
 				});
 			}
 			return jsonResponse({
@@ -247,6 +251,10 @@ describe('http adapter: reads', () => {
 
 		expect(usage.jobsUsed).toBe(84);
 		expect(usage.jobLimit).toBe(100);
+		expect(usage.daily).toEqual([
+			{ date: '2026-11-01', jobs: 10 },
+			{ date: '2026-11-02', jobs: 4 }
+		]);
 		expect(usage.byOperation).toEqual([
 			{ operation: 'transcode', jobs: 50 },
 			{ operation: 'analyze', jobs: 34 }
