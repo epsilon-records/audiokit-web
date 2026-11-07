@@ -458,6 +458,23 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		return payload as T;
 	}
 
+/**
+ * Decision 0031: a success body names each resource under a key (`{ usage }`, `{ portal }`).
+ * The console ships first, so this reads the named shape *and* the pre-0031 shape it can still
+ * meet while the service is mid-deploy or rolled back.
+ *
+ * The discriminator is the value's type, not the key's presence. `POST /v1/api-keys` used to
+ * answer a bare object that already has an `api_key` member — the secret string — so unwrapping
+ * on `key in payload` would hand back the secret as if it were the resource.
+ */
+function unwrap<T>(payload: unknown, key: string): T {
+	if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+		const value = (payload as Record<string, unknown>)[key];
+		if (value !== undefined && value !== null && typeof value === 'object') return value as T;
+	}
+	return payload as T;
+}
+
 	function json(body: unknown): RequestInit {
 		return { body: JSON.stringify(body) };
 	}
@@ -542,11 +559,13 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		},
 
 		async getUsage() {
-			const [current, history] = await Promise.all([
-				request<WireUsageCurrent>('/v1/usage/current'),
+			const [currentPayload, history] = await Promise.all([
+				request<unknown>('/v1/usage/current'),
 				request<{ history: WireUsageHistory[] }>('/v1/usage/history?limit=12')
 			]);
-			return toUsage(current, history.history ?? []);
+			// 0031: `{ usage }` with daily inside it; previously the usage object was spread
+			// into the body with `daily` as a sibling.
+			return toUsage(unwrap<WireUsageCurrent>(currentPayload, 'usage'), history.history ?? []);
 		},
 
 		async getApiKeys() {
@@ -567,8 +586,8 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		},
 
 		async getNotificationPreferences() {
-			const payload = await request<WireNotificationPreferences>('/v1/account/notifications');
-			return toNotificationPreferences(payload);
+			const payload = await request<unknown>('/v1/account/notifications');
+			return toNotificationPreferences(unwrap<WireNotificationPreferences>(payload, 'notifications'));
 		},
 
 		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
@@ -587,28 +606,36 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		},
 
 		async createBillingPortal(): Promise<string> {
-			const payload = await request<WirePortal>('/v1/subscriptions/portal', { method: 'POST' });
-			return payload.url;
+			// 0031: `{ portal: { url } }` instead of a bare `{ url }`.
+			const payload = await request<unknown>('/v1/subscriptions/portal', { method: 'POST' });
+			const portal = unwrap<WirePortal>(payload, 'portal');
+			if (!portal?.url) throw new HttpApiError('server-error', 'No billing portal URL returned.');
+			return portal.url;
 		},
 
 		async createApiKey(label: string): Promise<CreatedApiKey> {
-			const payload = await request<WireCreatedApiKey>('/v1/api-keys', {
+			const payload = await request<unknown>('/v1/api-keys', {
 				method: 'POST',
 				...json({ name: label.trim() || 'untitled' })
 			});
+			// 0031: `{ api_key: { id, name, api_key, ... } }`. Note the inner object still holds a
+			// member called api_key (the secret), which is what unwrap's type check protects.
+			const created = unwrap<WireCreatedApiKey>(payload, 'api_key');
 			return {
-				id: payload.id,
-				label: payload.name ?? 'untitled',
-				prefix: payload.key_prefix,
-				createdAt: payload.created_at,
+				id: created.id,
+				label: created.name ?? 'untitled',
+				prefix: created.key_prefix,
+				createdAt: created.created_at,
 				lastUsedAt: null,
 				revoked: false,
-				secret: payload.api_key
+				secret: created.api_key
 			};
 		},
 
 		async revokeApiKey(id: string): Promise<ApiKey> {
-			await request<{ success: boolean }>(`/v1/api-keys/${encodeURIComponent(id)}`, {
+			// 0031 drops `{ success: true }` for 204, and readJson already turns an empty body
+			// into undefined; the authoritative list is re-read below either way.
+			await request<unknown>(`/v1/api-keys/${encodeURIComponent(id)}`, {
 				method: 'DELETE'
 			});
 			const payload = await request<{ api_keys: WireApiKey[] }>('/v1/api-keys');
@@ -630,7 +657,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		},
 
 		async updateNotificationPreferences(next: NotificationPreferences) {
-			const payload = await request<WireNotificationPreferences>('/v1/account/notifications', {
+			const payload = await request<unknown>('/v1/account/notifications', {
 				method: 'PATCH',
 				...json({
 					quota_warnings: next.quotaWarnings,
@@ -638,7 +665,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 					product_updates: next.productUpdates
 				})
 			});
-			return toNotificationPreferences(payload);
+			return toNotificationPreferences(unwrap<WireNotificationPreferences>(payload, 'notifications'));
 		},
 
 		async startCheckout(planId: PlanId, interval: 'month' | 'year' = 'month'): Promise<CheckoutResult> {
@@ -648,15 +675,17 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 					'Enterprise plans are arranged with sales, not checkout.'
 				);
 			}
-			const payload = await request<WireCheckout>('/v1/subscriptions/checkout', {
+			const payload = await request<unknown>('/v1/subscriptions/checkout', {
 				method: 'POST',
 				...json({ tier: planId, interval })
 			});
+			// 0031: `{ checkout: { status, tier, url, session_id } }`.
+			const checkout = unwrap<WireCheckout>(payload, 'checkout') ?? {};
 			return {
-				status: payload.status ?? 'processing',
-				plan: payload.tier ?? planId,
-				renewsAt: payload.current_period_end,
-				url: payload.url
+				status: checkout.status ?? 'processing',
+				plan: checkout.tier ?? planId,
+				renewsAt: checkout.current_period_end,
+				url: checkout.url
 			};
 		}
 	};
