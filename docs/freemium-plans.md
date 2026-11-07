@@ -1,11 +1,12 @@
 # AudioKit freemium plans
 
-**Status: approved — [audiokit 0023](../../knowledge/audiokit/decisions/0023-freemium-plans-and-prices.md).**
+**Status: approved — [audiokit 0023](../../knowledge/audiokit/decisions/0023-freemium-plans-and-prices.md), [audiokit 0024](../../knowledge/audiokit/decisions/0024-no-free-trial.md).**
 This document defines the Free, Pro and Enterprise plans that back the
 [pricing page](../src/pages/pricing.html). It exists so the plan rules, quotas, overage handling and
 upgrade/downgrade/cancellation behaviour are written down in one place.
 
 Prices, quotas, the payment vendor and the quota unit are settled by decision 0023 (Nate, 2026-11-06).
+Decision 0024 settles that paid plans have no trial; the Free plan remains the way to try AudioKit.
 Anything still marked **Decision needed** is genuinely open; do not treat it as approved.
 
 - Draft date: 2026-11-06; reconciled with 0023 on 2026-11-07
@@ -26,7 +27,6 @@ engineering one.
 | D5 | Free plan quota | `100 jobs/month`, of which `≤10 stems`, hard limit | Settled |
 | D6 | Enterprise quota | `5,000 jobs/month`, of which `1,500 stems` | Settled |
 | D7 | Enterprise price | from `$499/month`, annual and invoiced | Settled; volume overage ~`$0.08/stem` |
-| D8 | Trial | 14-day Pro trial, card required | Settled |
 | D9 | Billing period anchor | Calendar month | **Open** |
 | D10 | Upgrade timing | Takes effect next billing cycle | **Open** |
 | D11 | Downgrade timing and over-limit rule | Next billing cycle | **Open** |
@@ -67,7 +67,7 @@ Non-profit and education pricing is available on request (D14).
   community support. No credit card required.
 - **Over quota:** job submissions are rejected with `429 Too Many Requests` (error
   `quota_exceeded`) until the next billing period or an upgrade. No overages are incurred on Free.
-- **Purpose:** evaluation and small projects; the Free plan is the trial (D8).
+- **Purpose:** evaluation and small projects; the Free plan is how customers try AudioKit.
 
 ### Pro
 
@@ -121,13 +121,6 @@ transcode or fingerprint request — regardless of file size or processing time.
 - Enterprise: handled in the custom agreement.
 - Overage is only charged for jobs the service accepted, once D17 is settled.
 
-## Trial
-
-- Every new account starts on **Free** with 100 jobs/month and no credit card.
-- **Pro has a 14-day trial, card required** (D8). On expiry the account either converts to paid Pro or
-  reverts to Free and hard-stops over 100 jobs.
-- Enterprise has no self-serve trial; it is sales-assisted.
-
 ## Upgrade, downgrade and cancellation
 
 - **Upgrade (Free → Pro):** available at any time. Draft rule is that it takes effect at the start of
@@ -152,19 +145,18 @@ first; this is not legal text.
    rate (D3).
 4. **Billing** — Pro billed monthly by card; Enterprise by contract/invoice. Currency USD (D15).
    Taxes handled per jurisdiction (D15).
-5. **Trial** — new accounts start on Free; no card required (D8).
-6. **Upgrades, downgrades and cancellation** — as above (D10–D12).
-7. **Refunds** — policy undecided (D16).
-8. **Acceptable use** — no abuse, circumvention of quotas or resale without agreement.
-9. **Uptime and service credits** — 99.9% target for Pro/Enterprise (D13); credit schedule undecided.
-10. **Data and privacy** — retention of audio/job data and API keys; deletion on request (ties to D12).
-11. **Support** — community (Free), email (Pro), priority/account manager (Enterprise).
-12. **Termination** — either party may end; consequences for access and data (D12).
-13. **Changes to these terms** — notice period undecided.
+5. **Upgrades, downgrades and cancellation** — as above (D10–D12).
+6. **Refunds** — policy undecided (D16).
+7. **Acceptable use** — no abuse, circumvention of quotas or resale without agreement.
+8. **Uptime and service credits** — 99.9% target for Pro/Enterprise (D13); credit schedule undecided.
+9. **Data and privacy** — retention of audio/job data and API keys; deletion on request (ties to D12).
+10. **Support** — community (Free), email (Pro), priority/account manager (Enterprise).
+11. **Termination** — either party may end; consequences for access and data (D12).
+12. **Changes to these terms** — notice period undecided.
 
 ## Out of scope
 
 - No payment, subscription or billing code is written here; that is EPSILON-44 in
   `epsilon-records/audiokit-billing`.
-- The live pricing page and this document are reconciled with decision 0023. If they drift again,
-  0023 wins.
+- The live pricing page and this document are reconciled with decisions 0023 and 0024. If they drift,
+  those decisions win.
