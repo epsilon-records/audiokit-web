@@ -107,6 +107,10 @@ type WirePlan = {
 	price_monthly_cents: number;
 	monthly_job_quota: number;
 	overage_price_cents: number | null;
+	/** Stems allowed inside the job quota; null when the plan has no stem sub-cap (decision 0023). */
+	monthly_stem_quota?: number | null;
+	/** Cents per stem over the sub-cap; a stem over it is billed here only (decision 0027). */
+	stem_overage_price_cents?: number | null;
 	priority_processing: boolean;
 	email_support: boolean;
 	sla_uptime_percentage: number | string | null;
@@ -214,8 +218,23 @@ function toPlan(wire: WirePlan): Plan {
 	const features: string[] = [
 		quota === -1 ? 'Unlimited jobs' : `${quota.toLocaleString('en-GB')} jobs per month`
 	];
-	if (wire.overage_price_cents != null) {
-		features.push(`Overage at $${(wire.overage_price_cents / 100).toFixed(2)} per job`);
+	// Stems are a sub-cap of the job allowance (decision 0023). The service sends these columns from
+	// subscription_plans; dropping them made a Pro card read "1,000 jobs per month · Overage at
+	// $0.01 per job", which implies a stem separation costs a penny instead of $0.15.
+	if (wire.monthly_stem_quota != null) {
+		features.push(`${wire.monthly_stem_quota.toLocaleString('en-GB')} stem separations included`);
+	}
+	const jobOverageCents = wire.overage_price_cents;
+	const stemOverageCents = wire.stem_overage_price_cents;
+	if (jobOverageCents != null && stemOverageCents != null) {
+		// Decision 0027: an excess stem is billed at the stem rate only, never at both rates.
+		const jobRate = (jobOverageCents / 100).toFixed(2);
+		const stemRate = (stemOverageCents / 100).toFixed(2);
+		features.push(`Overage at $${stemRate} per stem and $${jobRate} per other job, never both on one stem`);
+	} else if (stemOverageCents != null) {
+		features.push(`Overage at $${(stemOverageCents / 100).toFixed(2)} per stem`);
+	} else if (jobOverageCents != null) {
+		features.push(`Overage at $${(jobOverageCents / 100).toFixed(2)} per job`);
 	}
 	if (wire.priority_processing) features.push('Priority processing');
 	if (wire.email_support) features.push('Email support');

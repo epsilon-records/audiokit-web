@@ -84,12 +84,13 @@
 <div class="section-block" style="margin-top: 32px">
 	<h2>What changes</h2>
 	<p class="muted">
-		The Free plan includes 100 jobs a month, of which 10 can be stem separations, and hard-stops at
-		the limit. Pro includes 1,000 jobs a month, of which 250 can be stem separations, plus priority
-		processing; overage is billed at the end of the period at $0.01 per job and $0.15 per stem.
-		Enterprise starts at $499 a month for 5,000 jobs and 1,500 stems. Plan changes are applied at
-		the period boundary by the billing service; this scaffold applies them immediately so the flow
-		can be walked.
+		Free includes 100 jobs a month, of which 10 can be stem separations, and hard-stops at the
+		limit. Pro includes 1,000 jobs a month, of which 250 can be stem separations, plus priority
+		processing; overage is billed at the end of the period at $0.15 per stem over the stem allowance
+		and $0.01 per other job over the job allowance. A stem uses a slot in both allowances but is
+		billed once — never at both rates. Enterprise starts at $499 a month for 5,000 jobs and 1,500
+		stems. Plan changes are applied at the period boundary by the billing service; this scaffold
+		applies them immediately so the flow can be walked.
 	</p>
 	<p class="faint">
 		Already paid? Manage payment details and invoices in <a class="link" href="/settings/billing"

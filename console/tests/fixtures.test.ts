@@ -19,6 +19,16 @@ describe('plans', () => {
 		expect(plans.find((plan) => plan.id === 'enterprise')?.jobLimit).toBe(5_000);
 		expect(plans.find((plan) => plan.id === 'enterprise')?.priceMonthly).toBeNull();
 	});
+
+	// Decision 0027: a stem over the sub-cap is billed at the stem rate only. The mock and the
+	// service-backed card have to say the same thing.
+	it('prices stems at the stem rate and says they are not billed twice', () => {
+		const copy = (plans.find((plan) => plan.id === 'pro')?.features ?? []).join(' ');
+
+		expect(copy).toMatch(/\$0\.15 per stem and \$0\.01 per other job/);
+		expect(copy).toMatch(/never both on one stem/);
+		expect(copy).not.toMatch(/\$0\.16/);
+	});
 });
 
 describe('usage', () => {
