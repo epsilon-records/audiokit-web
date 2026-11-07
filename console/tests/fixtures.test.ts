@@ -15,7 +15,8 @@ describe('plans', () => {
 	it('matches the freemium Free / Pro / Enterprise catalogue', () => {
 		expect(plans.map((plan) => plan.id)).toEqual(['free', 'pro', 'enterprise']);
 		expect(plans.find((plan) => plan.id === 'free')?.jobLimit).toBe(100);
-		expect(plans.find((plan) => plan.id === 'pro')?.jobLimit).toBe(10_000);
+		expect(plans.find((plan) => plan.id === 'pro')?.jobLimit).toBe(1_000);
+		expect(plans.find((plan) => plan.id === 'enterprise')?.jobLimit).toBe(5_000);
 		expect(plans.find((plan) => plan.id === 'enterprise')?.priceMonthly).toBeNull();
 	});
 });

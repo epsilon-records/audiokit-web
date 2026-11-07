@@ -1,13 +1,14 @@
 # AudioKit freemium plans
 
-**Status: draft — not approved.** This document defines the Free, Pro and Enterprise plans that back the
+**Status: approved — [audiokit 0023](../../knowledge/audiokit/decisions/0023-freemium-plans-and-prices.md).**
+This document defines the Free, Pro and Enterprise plans that back the
 [pricing page](../src/pages/pricing.html). It exists so the plan rules, quotas, overage handling and
-upgrade/downgrade/cancellation behaviour are written down in one place before any billing work starts.
+upgrade/downgrade/cancellation behaviour are written down in one place.
 
-Everything marked **Decision needed** is a proposal only. Prices, overage rates and the payment vendor
-are Nate's calls and are *not* decided here. Nothing in this document adds a vendor or changes code.
+Prices, quotas, the payment vendor and the quota unit are settled by decision 0023 (Nate, 2026-11-06).
+Anything still marked **Decision needed** is genuinely open; do not treat it as approved.
 
-- Draft date: 2026-11-06
+- Draft date: 2026-11-06; reconciled with 0023 on 2026-11-07
 - Owner: product (Nate)
 - Related: pricing page, Linear EPSILON-44
 
@@ -16,36 +17,36 @@ are Nate's calls and are *not* decided here. Nothing in this document adds a ven
 These block a real billing implementation (EPSILON-44). Each is a product/pricing decision, not an
 engineering one.
 
-| # | Decision | Current draft / proposal | Notes |
+| # | Decision | Settled value | Notes |
 | --- | --- | --- | --- |
-| D1 | Approve a payment vendor | **Not approved.** EPSILON-44 assumes Stripe; that is a **new vendor** | Required before any payment code or integration |
-| D2 | Pro monthly price | `$99/month` (as shown on the live pricing page) | Confirm or change |
-| D3 | Pro overage rate | `$0.01/job` (as shown on the live pricing page) | Confirm or change |
-| D4 | Pro overage behaviour | Allow overages and bill them | Alternative: hard-stop like Free |
-| D5 | Free plan quota | `100 jobs/month`, hard limit | Confirm |
-| D6 | Enterprise quota | "Unlimited" | Decide whether a fair-use cap applies |
-| D7 | Enterprise price | `Custom` | Floor / volume-discount model undecided |
-| D8 | Trial | Free plan is the only trial (no card) | Decide whether to add a time-limited Pro trial |
-| D9 | Billing period anchor | Calendar month | Alternative: signup anniversary |
-| D10 | Upgrade timing | Takes effect next billing cycle | Decide whether upgrades apply immediately with proration |
-| D11 | Downgrade timing and over-limit rule | Next billing cycle | What if the account is already over the lower tier's quota at downgrade? |
-| D12 | Cancellation | Access to end of paid period | Decide data / API-key retention window after that |
-| D13 | SLA credits | 99.9% target for Pro/Enterprise | Credit schedule undecided |
-| D14 | Non-profit / education discount | Offered (per pricing FAQ) | Size of discount undecided |
-| D15 | Currency and tax | USD | Tax handling (VAT/sales tax) undecided |
-| D16 | Refunds | Undecided | Needed for terms |
-| D17 | What counts as a job | Every submitted operation counts once | Failed/canceled/retried jobs undecided (see below) |
+| D1 | Payment vendor | **Stripe** (0023, 0015) | Account region (EU vs US) still open |
+| D2 | Pro price | `$99/month` or `$990/year` | Settled |
+| D3 | Pro overage rate | `$0.15/stem`, `$0.01/other job` | Settled; billed as invoice items at period close |
+| D4 | Pro overage behaviour | Allow overages and bill them | Settled |
+| D5 | Free plan quota | `100 jobs/month`, of which `≤10 stems`, hard limit | Settled |
+| D6 | Enterprise quota | `5,000 jobs/month`, of which `1,500 stems` | Settled |
+| D7 | Enterprise price | from `$499/month`, annual and invoiced | Settled; volume overage ~`$0.08/stem` |
+| D8 | Trial | 14-day Pro trial, card required | Settled |
+| D9 | Billing period anchor | Calendar month | **Open** |
+| D10 | Upgrade timing | Takes effect next billing cycle | **Open** |
+| D11 | Downgrade timing and over-limit rule | Next billing cycle | **Open** |
+| D12 | Cancellation | Tier and keys kept until `current_period_end` | Settled; data retention window still open |
+| D13 | SLA credits | 99.9% target for Pro/Enterprise | **Open** |
+| D14 | Non-profit / education discount | Offered (per pricing FAQ) | **Open** |
+| D15 | Currency and tax | USD; **Stripe Tax enabled** | Settled |
+| D16 | Refunds | Undecided | **Open** |
+| D17 | What counts as a job | One accepted operation on one input file, per distinct `job_id` per period; an idempotent replay is not re-counted; stems are a separate sub-cap | Settled |
 
 ## Plans at a glance
 
-Prices and rates below are the values currently shown on the pricing page. They remain **proposals**
-until Nate confirms D2–D7.
+Prices and rates below are settled by decision 0023.
 
 | | Free | Pro | Enterprise |
 | --- | --- | --- | --- |
-| Price | $0/month | $99/month *(D2)* | Custom *(D7)* |
-| Monthly job quota | 100, hard limit *(D5)* | 10,000 | Unlimited *(D6)* |
-| Over quota | Processing stops until next cycle or upgrade | Overage billed at $0.01/job *(D3, D4)* | Custom arrangement |
+| Price | $0/month | $99/month or $990/year | from $499/month, annual and invoiced |
+| Monthly job quota | 100, hard limit | 1,000 | 5,000 |
+| Stem sub-cap | 10 | 250 | 1,500 |
+| Over quota | Processing stops until next cycle or upgrade | $0.01/job and $0.15/stem, invoiced at period close | Volume rate (~$0.08/stem) |
 | Analysis operations | All | All | All |
 | Processing operations | All | All | All |
 | Webhook delivery | Yes, HMAC-signed | Yes, HMAC-signed | Yes, HMAC-signed |
@@ -61,7 +62,7 @@ Non-profit and education pricing is available on request (D14).
 ### Free
 
 - **Price:** $0/month.
-- **Quota:** 100 jobs per billing period, a hard limit.
+- **Quota:** 100 jobs per billing period, a hard limit, of which at most 10 may be stem separations.
 - **Included:** all analysis and processing operations, webhook delivery, HMAC-signed webhooks,
   community support. No credit card required.
 - **Over quota:** job submissions are rejected with `429 Too Many Requests` (error
@@ -70,18 +71,19 @@ Non-profit and education pricing is available on request (D14).
 
 ### Pro
 
-- **Price:** $99/month (D2), billed monthly.
-- **Quota:** 10,000 jobs per billing period.
+- **Price:** $99/month or $990/year, billed by card.
+- **Quota:** 1,000 jobs per billing period, of which at most 250 may be stem separations.
 - **Included:** everything on Free, plus priority processing, email support and a 99.9% uptime SLA
   (D13).
-- **Over quota:** overages are allowed and billed at $0.01/job (D3, D4). Free plan (over quota) has
-  no equivalent.
+- **Over quota:** overages are allowed and billed at $0.01/job and $0.15/stem, as invoice items at
+  period close. Free plan (over quota) has no equivalent.
 - **Purpose:** production use by small teams.
 
 ### Enterprise
 
-- **Price:** custom (D7).
-- **Quota:** unlimited (D6) unless a fair-use cap is agreed.
+- **Price:** from $499/month, annual and invoiced.
+- **Quota:** 5,000 jobs per billing period, of which at most 1,500 may be stem separations; volume
+  overage at roughly $0.08/stem.
 - **Included:** everything on Pro, plus dedicated infrastructure, custom integrations, priority
   support, custom SLAs, volume discounts and a dedicated account manager.
 - **Billing:** contract; invoice or bank transfer.
@@ -89,14 +91,15 @@ Non-profit and education pricing is available on request (D14).
 
 ## What counts as a job
 
-*Decision needed (D17).* A job is one API operation submission — e.g. an analysis, transcode or
-fingerprint request — regardless of file size or processing time. Open questions to settle before
-metering is final:
+Settled by 0023 (D17). A job is **one accepted operation on one input file** — e.g. an analysis,
+transcode or fingerprint request — regardless of file size or processing time.
 
-- Does a job that fails, errors or is canceled still count toward the quota?
-- Does a client retry of the same operation count again, or is it deduplicated?
-- Idempotency: repeated submissions that reuse the same client-supplied job ID should count once.
-  Confirm this is the rule.
+- Counted **per distinct `job_id` per billing period**. An idempotent replay (HTTP 200 on a repeated
+  `client_job_id`) is **not** re-counted.
+- **Stems are a separate sub-cap**, not weighted credits: a stem separation counts as one job *and*
+  one stem, and each plan caps stems independently. This is because a stem job costs ~$0.03–0.06 of
+  GPU time (0022) while a CPU job is near-free.
+- Still open: whether a job that fails or is canceled after acceptance counts toward the quota.
 
 ## Quotas and enforcement
 
@@ -105,27 +108,25 @@ metering is final:
 - Enforcement happens before a job is accepted, so a rejected submission does not consume quota.
 - **Free:** reject when the quota is reached (HTTP 429, `quota_exceeded`).
 - **Pro:** accept over the quota and record the overage for billing.
-- **Enterprise:** no enforced quota (unlimited) unless a cap is agreed under D6.
+- **Enterprise:** 5,000 jobs and 1,500 stems per period, with volume overage per the agreement.
 - The console/API should expose current usage, quota remaining and overage count so customers are
   not surprised. Quota-warning notifications are part of the eventual implementation, not this doc.
 
 ## Overage rules
 
-- Overage only exists on Pro (D4). The rate is $0.01/job (D3).
-- Overage is metered per billing period and billed in arrears with the next invoice (or a separate
-  overage invoice). Confirm the billing cadence.
+- Overage only exists on paid plans (D4). The rate is $0.01/job and $0.15/stem on Pro (D3).
+- Overage is metered per billing period and billed as **invoice items at period close** — not metered
+  billing (0023).
 - Free plan: no overages — hard stop instead.
 - Enterprise: handled in the custom agreement.
 - Overage is only charged for jobs the service accepted, once D17 is settled.
 
 ## Trial
 
-- Draft: the **Free plan is the trial**. Every new account starts on Free with 100 jobs/month and no
-  credit card, as stated on the pricing page.
-- There is currently **no separate Pro or Enterprise trial**. Whether to add one — length, quota,
-  card requirement — is D8.
-- Any trial would need to define what happens on expiry: revert to Free (and hard-stop over 100
-  jobs) or require a card to continue.
+- Every new account starts on **Free** with 100 jobs/month and no credit card.
+- **Pro has a 14-day trial, card required** (D8). On expiry the account either converts to paid Pro or
+  reverts to Free and hard-stops over 100 jobs.
+- Enterprise has no self-serve trial; it is sales-assisted.
 
 ## Upgrade, downgrade and cancellation
 
@@ -163,7 +164,7 @@ first; this is not legal text.
 
 ## Out of scope
 
-- No payment provider is added or approved by this document. Stripe (or any alternative) is D1.
-- No payment, subscription or billing code is written here.
-- The live pricing page remains the customer-facing source of truth until Nate settles D1–D17; copy
-  and this document should be reconciled at that point.
+- No payment, subscription or billing code is written here; that is EPSILON-44 in
+  `epsilon-records/audiokit-billing`.
+- The live pricing page and this document are reconciled with decision 0023. If they drift again,
+  0023 wins.

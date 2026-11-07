@@ -36,6 +36,7 @@ export const plans: Plan[] = [
 		jobLimit: 100,
 		features: [
 			'100 jobs per month',
+			'10 stem separations included',
 			'All analysis operations',
 			'All processing operations',
 			'Webhook delivery',
@@ -47,23 +48,30 @@ export const plans: Plan[] = [
 		name: 'Pro',
 		priceMonthly: 99,
 		priceLabel: '$99',
-		jobLimit: 10_000,
+		jobLimit: 1_000,
 		features: [
-			'10,000 jobs per month',
+			'1,000 jobs per month',
+			'250 stem separations included',
 			'Priority processing',
-			'Overage at $0.01 per job',
+			'Overage at $0.01 per job and $0.15 per stem',
 			'Email support'
 		],
-		delta: 'Adds 9,900 jobs per month',
+		delta: 'Adds 900 jobs and 240 stems per month',
 		featured: true
 	},
 	{
 		id: 'enterprise',
 		name: 'Enterprise',
 		priceMonthly: null,
-		priceLabel: 'Custom',
-		jobLimit: null,
-		features: ['Custom job volume', 'Priority processing', 'Dedicated support', 'Custom terms'],
+		priceLabel: 'From $499',
+		jobLimit: 5_000,
+		features: [
+			'5,000 jobs per month',
+			'1,500 stem separations included',
+			'Priority processing',
+			'Dedicated support',
+			'Custom terms'
+		],
 		delta: 'Talk to us about volume and support'
 	}
 ];

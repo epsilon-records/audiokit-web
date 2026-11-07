@@ -20,6 +20,7 @@
       </div>
       <ul class="pricing-features">
         <li>100 jobs per month</li>
+        <li>10 stem separations included</li>
         <li>All analysis operations</li>
         <li>All processing operations</li>
         <li>Webhook delivery</li>
@@ -39,8 +40,10 @@
         <span class="price-amount">$99</span>
         <span class="price-period">/month</span>
       </div>
+      <p class="pricing-note">or $990/year</p>
       <ul class="pricing-features">
-        <li>10,000 jobs per month</li>
+        <li>1,000 jobs per month</li>
+        <li>250 stem separations included</li>
         <li>All analysis operations</li>
         <li>All processing operations</li>
         <li>Priority processing</li>
@@ -58,10 +61,14 @@
         <p class="pricing-description">Custom solutions for large-scale operations</p>
       </div>
       <div class="pricing-price">
-        <span class="price-amount">Custom</span>
+        <span class="price-period">from</span>
+        <span class="price-amount">$499</span>
+        <span class="price-period">/month</span>
       </div>
+      <p class="pricing-note">annual, invoiced</p>
       <ul class="pricing-features">
-        <li>Unlimited jobs</li>
+        <li>5,000 jobs per month</li>
+        <li>1,500 stem separations included</li>
         <li>All analysis operations</li>
         <li>All processing operations</li>
         <li>Dedicated infrastructure</li>
@@ -82,11 +89,12 @@
     <div class="split">
       <div class="split-copy">
         <h3>What counts as a job?</h3>
-        <p>Every operation you submit counts as one job, regardless of the audio file size or processing time. Whether you're analyzing tempo, transcoding, or generating fingerprints—each request is one job.</p>
+        <p>Every operation you submit counts as one job, regardless of the audio file size or processing time. Whether you're analyzing tempo, transcoding, or generating fingerprints—each request is one job. A retry that reuses the same job ID is not counted twice.</p>
+        <p>Stem separation is the one GPU-heavy operation, so it has its own allowance inside your job quota. A stem separation counts as one job <em>and</em> one stem, and each plan caps stems separately.</p>
       </div>
       <div class="split-copy">
         <h3>Overage pricing</h3>
-        <p>If you exceed your monthly job limit, additional jobs are billed at $0.01 per job for Pro tier. Free tier users will need to upgrade to continue processing.</p>
+        <p>On Pro, jobs beyond your monthly limit are billed at $0.01 each, and stem separations beyond your stem allowance at $0.15 each. Overage is invoiced at the end of the billing period. Free tier users will need to upgrade to continue processing.</p>
       </div>
     </div>
   </div>
@@ -101,7 +109,7 @@
     </div>
     <div class="faq-item">
       <dt>What happens when I reach my job limit?</dt>
-      <dd>On the Free plan, processing stops until the next billing cycle or you upgrade. On Pro, we automatically charge for overages at $0.01 per job. Enterprise plans have custom arrangements.</dd>
+      <dd>On the Free plan, processing stops until the next billing cycle or you upgrade. On Pro, we bill overages at the end of the period: $0.01 per job and $0.15 per stem separation. Enterprise plans have volume rates in their agreement.</dd>
     </div>
     <div class="faq-item">
       <dt>Do you offer discounts for non-profits or education?</dt>
@@ -109,7 +117,7 @@
     </div>
     <div class="faq-item">
       <dt>Is there a free trial for Pro or Enterprise?</dt>
-      <dd>All new users start on the Free plan with 100 jobs per month—no credit card required. This lets you thoroughly test AudioKit before upgrading.</dd>
+      <dd>All new users start on the Free plan with 100 jobs per month—no credit card required. This lets you thoroughly test AudioKit before upgrading. Pro also comes with a 14-day free trial; a card is required and you can cancel before it ends.</dd>
     </div>
     <div class="faq-item">
       <dt>What payment methods do you accept?</dt>

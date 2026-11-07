@@ -465,8 +465,8 @@ email receipt).
 
   ┌───────────────┐  ┌───────────────────────┐  ┌───────────────┐
   │  Free         │  │  Pro   [ Most popular ]│  │  Enterprise   │
-  │  $0 / month   │  │  $99 / month          │  │  Custom       │
-  │  ✓ current    │  │  10,000 jobs / month  │  │  Contact sales│
+  │  $0 / month   │  │  $99 / month          │  │  From $499    │
+  │  ✓ current    │  │  1,000 jobs / month   │  │  Contact sales│
   │               │  │  Priority processing  │  │               │
   │               │  │  ▸ [ Upgrade to Pro ] │  │  [ Contact ]  │
   └───────────────┘  └───────────────────────┘  └───────────────┘
@@ -475,8 +475,8 @@ email receipt).
 ```
 
 Reuses the public `.pricing-*` cards but marks the current plan and swaps the CTA for the
-signed-in action. Delta vs current plan is stated on each card ("adds 9,900 jobs/month"
-rather than repeating the whole feature list).
+signed-in action. Delta vs current plan is stated on each card ("adds 900 jobs and 240 stems
+per month" rather than repeating the whole feature list).
 
 **States:** free · pro (current marked; downgrade offered at period end) · past due · checkout
 in progress (button disabled + note) · enterprise → contact.
@@ -491,7 +491,7 @@ in progress (button disabled + note) · enterprise → contact.
 ```
   ┌──────────────────────────────────────────────────────────────┐
   │  ✓  You're on Pro.                                            │
-  │     10,000 jobs/month, renews … 1 Dec 2026.                   │
+  │     1,000 jobs/month, renews … 1 Dec 2026.                    │
   │     A receipt is on its way to you@example.com.               │
   │  ▸ [ Go to dashboard ]     [ View billing ]                   │
   └──────────────────────────────────────────────────────────────┘
