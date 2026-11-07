@@ -90,11 +90,11 @@
       <div class="split-copy">
         <h3>What counts as a job?</h3>
         <p>Every operation you submit counts as one job, regardless of the audio file size or processing time. Whether you're analyzing tempo, transcoding, or generating fingerprints—each request is one job. A retry that reuses the same job ID is not counted twice.</p>
-        <p>Stem separation is the one GPU-heavy operation, so it has its own allowance inside your job quota. A stem separation counts as one job <em>and</em> one stem, and each plan caps stems separately.</p>
+        <p>Stem separation is the one GPU-heavy operation, so it has its own allowance inside your job quota. A stem separation uses one slot from each allowance &mdash; it counts as one job <em>and</em> one stem &mdash; but it is <em>charged once</em>, at the stem rate.</p>
       </div>
       <div class="split-copy">
         <h3>Overage pricing</h3>
-        <p>On Pro, jobs beyond your monthly limit are billed at $0.01 each, and stem separations beyond your stem allowance at $0.15 each. Overage is invoiced at the end of the billing period. Free tier users will need to upgrade to continue processing.</p>
+        <p>On Pro, overage is invoiced at the end of the billing period: $0.15 for each stem beyond your stem allowance, and $0.01 for each other job beyond your job allowance. A stem that is over the stem allowance is billed at $0.15 only &mdash; the $0.01 job rate does not also apply to it, and no unit is ever charged twice. Free tier users will need to upgrade to continue processing.</p>
       </div>
     </div>
   </div>
@@ -109,7 +109,11 @@
     </div>
     <div class="faq-item">
       <dt>What happens when I reach my job limit?</dt>
-      <dd>On the Free plan, processing stops until the next billing cycle or you upgrade. On Pro, we bill overages at the end of the period: $0.01 per job and $0.15 per stem separation. Enterprise plans have volume rates in their agreement.</dd>
+      <dd>On the Free plan, processing stops until the next billing cycle or you upgrade. On Pro, we bill overage at the end of the period: $0.15 per stem over the stem allowance and $0.01 per other job over the job allowance. A stem is billed once, never as both a stem and a job. Enterprise plans have volume rates in their agreement.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>Do I pay the job rate and the stem rate for one separation?</dt>
+      <dd>No. Stems use a slot from both allowances, so the separation is <em>counted</em> twice, but it is <em>billed</em> once &mdash; at $0.15 for a stem over your stem allowance, with no $0.01 job charge on top.</dd>
     </div>
     <div class="faq-item">
       <dt>Do you offer discounts for non-profits or education?</dt>

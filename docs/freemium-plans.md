@@ -46,7 +46,7 @@ Prices and rates below are settled by decision 0023.
 | Price | $0/month | $99/month or $990/year | from $499/month, annual and invoiced |
 | Monthly job quota | 100, hard limit | 1,000 | 5,000 |
 | Stem sub-cap | 10 | 250 | 1,500 |
-| Over quota | Processing stops until next cycle or upgrade | $0.01/job and $0.15/stem, invoiced at period close | Volume rate (~$0.08/stem) |
+| Over quota | Processing stops until next cycle or upgrade | $0.15/stem and $0.01/other job, invoiced at period close; a stem is billed once | Volume rate (~$0.08/stem) |
 | Analysis operations | All | All | All |
 | Processing operations | All | All | All |
 | Webhook delivery | Yes, HMAC-signed | Yes, HMAC-signed | Yes, HMAC-signed |
@@ -75,8 +75,9 @@ Non-profit and education pricing is available on request (D14).
 - **Quota:** 1,000 jobs per billing period, of which at most 250 may be stem separations.
 - **Included:** everything on Free, plus priority processing, email support and a 99.9% uptime SLA
   (D13).
-- **Over quota:** overages are allowed and billed at $0.01/job and $0.15/stem, as invoice items at
-  period close. Free plan (over quota) has no equivalent.
+- **Over quota:** overages are allowed and billed at $0.15/stem and $0.01/other job, as invoice items
+  at period close. A stem over the sub-cap is billed at the stem rate only (0027), never at both.
+  Free plan (over quota) has no equivalent.
 - **Purpose:** production use by small teams.
 
 ### Enterprise
@@ -114,7 +115,11 @@ transcode or fingerprint request — regardless of file size or processing time.
 
 ## Overage rules
 
-- Overage only exists on paid plans (D4). The rate is $0.01/job and $0.15/stem on Pro (D3).
+- Overage only exists on paid plans (D4). The rate is $0.15/stem and $0.01/other job on Pro (D3).
+- **No unit is charged twice** (0027). A stem uses one slot from each allowance, so excess stems are
+  removed from the job overage before it is billed: on Pro, 300 stems plus 900 other jobs is
+  `50 × $0.15 + 150 × $0.01`, not `200 × $0.01 + 50 × $0.15`. The marketing page must not phrase the
+  two rates in a way that invites the addition.
 - Overage is metered per billing period and billed as **invoice items at period close** — not metered
   billing (0023).
 - Free plan: no overages — hard stop instead.

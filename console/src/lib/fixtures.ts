@@ -53,7 +53,7 @@ export const plans: Plan[] = [
 			'1,000 jobs per month',
 			'250 stem separations included',
 			'Priority processing',
-			'Overage at $0.01 per job and $0.15 per stem',
+			'Overage at $0.15 per stem and $0.01 per other job, never both on one stem',
 			'Email support'
 		],
 		delta: 'Adds 900 jobs and 240 stems per month',

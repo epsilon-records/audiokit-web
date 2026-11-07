@@ -70,8 +70,12 @@ design, and the current best default if we had to ship without an answer.
 - **Is Stripe approved as a vendor?** [EPSILON-44](https://linear.app/epsilon-records/issue/EPSILON-44)
   needs Nate's approval. The design assumes a hosted checkout and a hosted billing portal, and
   nothing more.
-- **Overage rules.** The pricing page says Pro overages bill at $0.01/job and Free hard-stops.
-  The console copy follows that, but it should be a recorded decision.
+- **Overage rules.** Settled: Free hard-stops, Pro bills overage at $0.15/stem and $0.01/other job
+  (AudioKit decisions
+  [0023](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0023-freemium-plans-and-prices.md)
+  and
+  [0027](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0027-stem-overage-billed-once.md):
+  a stem is billed once, never at both rates). Console and pricing copy must phrase it that way.
 - **Dunning and grace period.** What stays working after a failed payment, and for how long?
 - **Who owns cancellation** — the portal, the console, or both — and what the console shows
   for the rest of the paid period.

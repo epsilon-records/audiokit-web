@@ -310,6 +310,66 @@ describe('http adapter: reads', () => {
 	});
 });
 
+describe('http adapter: plans', () => {
+	const proRow = {
+		tier: 'pro',
+		name: 'Pro',
+		price_monthly_cents: 9900,
+		monthly_job_quota: 1000,
+		overage_price_cents: 1,
+		monthly_stem_quota: 250,
+		stem_overage_price_cents: 15,
+		priority_processing: true,
+		email_support: true,
+		sla_uptime_percentage: '99.9'
+	};
+	const freeRow = {
+		tier: 'free',
+		name: 'Free',
+		price_monthly_cents: 0,
+		monthly_job_quota: 100,
+		overage_price_cents: null,
+		monthly_stem_quota: 10,
+		stem_overage_price_cents: null,
+		priority_processing: false,
+		email_support: false,
+		sla_uptime_percentage: null
+	};
+
+	function plansClient(rows: unknown[]) {
+		return createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session-token',
+			fetch: fetchMock(() => jsonResponse({ plans: rows }))
+		});
+	}
+
+	// The service returns these columns from subscription_plans (migration 0004); the card used to
+	// drop them, so Pro read "1,000 jobs per month · Overage at $0.01 per job" — a stem for a penny.
+	it('shows the stem sub-cap and prices stems at the stem rate', async () => {
+		const [, pro] = await plansClient([freeRow, proRow]).getPlans();
+
+		expect(pro.features).toContain('250 stem separations included');
+		expect(pro.features.join(' ')).toMatch(/\$0\.15 per stem and \$0\.01 per other job/);
+		expect(pro.features.join(' ')).toMatch(/never both on one stem/); // decision 0027
+		expect(pro.features.join(' ')).not.toMatch(/\$0\.16/);
+	});
+
+	it('keeps Free free of overage copy', async () => {
+		const [free] = await plansClient([freeRow, proRow]).getPlans();
+
+		expect(free.features).toContain('10 stem separations included');
+		expect(free.features.join(' ')).not.toMatch(/overage/i);
+	});
+
+	it('still shows a per-job rate for a plan with no stem pricing', async () => {
+		const { monthly_stem_quota, stem_overage_price_cents, ...legacy } = proRow;
+		const [pro] = await plansClient([legacy]).getPlans();
+
+		expect(pro.features.join(' ')).toContain('Overage at $0.01 per job');
+	});
+});
+
 describe('http adapter: session token', () => {
 	it('decodes the JWT payload and rejects expired or malformed tokens', () => {
 		const client = createApiClient({
@@ -334,19 +394,48 @@ describe('http adapter: errors', () => {
 	it('starts annual Checkout, opens the portal, and reads the confirmed return', async () => {
 		const fetchImpl = fetchMock((url) => {
 			if (url.endsWith('/v1/subscriptions/checkout')) {
-				return jsonResponse({ status: 'processing', tier: 'pro', url: 'https://checkout.stripe.com/session', session_id: 'cs_test' });
+				return jsonResponse({
+					status: 'processing',
+					tier: 'pro',
+					url: 'https://checkout.stripe.com/session',
+					session_id: 'cs_test'
+				});
 			}
-			if (url.endsWith('/v1/subscriptions/portal')) return jsonResponse({ url: 'https://billing.stripe.com/session' });
-			if (url.endsWith('/v1/subscriptions/current')) return jsonResponse({ subscription: { id: 's1', tier: 'pro', status: 'active', current_period_start: '2026-11-01T00:00:00.000Z', current_period_end: '2026-12-01T00:00:00.000Z' } });
+			if (url.endsWith('/v1/subscriptions/portal'))
+				return jsonResponse({ url: 'https://billing.stripe.com/session' });
+			if (url.endsWith('/v1/subscriptions/current'))
+				return jsonResponse({
+					subscription: {
+						id: 's1',
+						tier: 'pro',
+						status: 'active',
+						current_period_start: '2026-11-01T00:00:00.000Z',
+						current_period_end: '2026-12-01T00:00:00.000Z'
+					}
+				});
 			return jsonResponse({}, 404);
 		});
-		const client = createApiClient({ baseUrl: 'https://billing.test', sessionToken: 'token', fetch: fetchImpl });
+		const client = createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'token',
+			fetch: fetchImpl
+		});
 
-		await expect(client.startCheckout('pro', 'year')).resolves.toMatchObject({ url: 'https://checkout.stripe.com/session' });
-		expect(JSON.parse(String(fetchImpl.calls[0].init.body))).toEqual({ tier: 'pro', interval: 'year' });
+		await expect(client.startCheckout('pro', 'year')).resolves.toMatchObject({
+			url: 'https://checkout.stripe.com/session'
+		});
+		expect(JSON.parse(String(fetchImpl.calls[0].init.body))).toEqual({
+			tier: 'pro',
+			interval: 'year'
+		});
 		await expect(client.createBillingPortal()).resolves.toBe('https://billing.stripe.com/session');
-		await expect(client.getCheckoutResult('success')).resolves.toMatchObject({ status: 'success', plan: 'pro' });
-		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({ status: 'cancelled' });
+		await expect(client.getCheckoutResult('success')).resolves.toMatchObject({
+			status: 'success',
+			plan: 'pro'
+		});
+		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({
+			status: 'cancelled'
+		});
 	});
 
 	it('maps service errors to typed failures', async () => {
