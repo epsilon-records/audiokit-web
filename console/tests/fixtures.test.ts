@@ -40,6 +40,20 @@ describe('usage', () => {
 		expect(operationTotal).toBe(usage.jobsUsed);
 	});
 
+	// Stems are a sub-cap of the job allowance (decision 0023), not extra usage, so the stem
+	// numbers must be a subset of the job numbers and must agree with the operation breakdown.
+	it('states a stem allowance that is consistent with the job total', () => {
+		expect(usage.stemLimit).not.toBeNull();
+		expect(usage.stemsUsed).toBeLessThanOrEqual(usage.jobsUsed);
+		expect(usage.stemsUsed).toBeLessThanOrEqual(usage.stemLimit as number);
+
+		const stemsRow = usage.byOperation.find((row) => row.operation === 'stems');
+		expect(stemsRow?.jobs, 'byOperation must account for the same stem jobs the meter shows').toBe(
+			usage.stemsUsed
+		);
+		expect(usage.stemsOverage).toBe(0);
+	});
+
 	it('covers 12 periods of history, newest first', () => {
 		expect(usage.history).toHaveLength(12);
 		expect(usage.history[0].period).toBe('Nov 2026');

@@ -122,6 +122,10 @@ type WireUsageCurrent = {
 	jobCountByOperation: Record<string, number> | null;
 	quotaLimit: number;
 	overageCount: number;
+	/** Stem sub-cap usage. Optional: an older service omits them, which reads as "no sub-cap". */
+	stemCount?: number | null;
+	stemQuotaLimit?: number | null;
+	stemOverageCount?: number | null;
 	periodStart: string;
 	periodEnd: string;
 	/** Jobs per calendar day in the period, from the service. */
@@ -309,6 +313,11 @@ function toUsage(current: WireUsageCurrent, history: WireUsageHistory[]): UsageS
 		periodEnd: current.periodEnd,
 		jobsUsed: current.jobCount,
 		jobLimit: limit,
+		stemsUsed: current.stemCount ?? 0,
+		// -1 is the service's unlimited marker (UNLIMITED_QUOTA); a bar to infinity is not drawable,
+		// and a plan with no stem sub-cap reads the same way here: nothing to meter.
+		stemLimit: current.stemQuotaLimit == null || current.stemQuotaLimit < 0 ? null : current.stemQuotaLimit,
+		stemsOverage: current.stemOverageCount ?? 0,
 		daily: (current.daily ?? []).map((day) => ({ date: day.date, jobs: Number(day.count) })),
 		byOperation,
 		history: history.map((record) => {

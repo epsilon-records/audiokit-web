@@ -51,6 +51,17 @@ export type UsageSummary = {
 	periodEnd: string;
 	jobsUsed: number;
 	jobLimit: number;
+	/**
+	 * Stem separations this period. Stems are a sub-cap of the job allowance (decision 0023): a
+	 * separation uses a slot in both, so this is a second meter over the same work, not extra
+	 * usage. null means there is nothing to meter — the plan sets no stem sub-cap, or it is
+	 * unlimited. The service has sent these fields all along; the console was dropping them, so
+	 * a Pro customer saw a 1,000-job bar and no 250-stem bar.
+	 */
+	stemsUsed: number;
+	stemLimit: number | null;
+	/** Stems over the sub-cap, billed at the stem rate only (decision 0027). */
+	stemsOverage: number;
 	/** Jobs per day for the current period. */
 	daily: { date: string; jobs: number }[];
 	byOperation: { operation: string; jobs: number }[];
