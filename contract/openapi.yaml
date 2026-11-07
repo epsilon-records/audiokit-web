@@ -51,8 +51,10 @@ paths:
       operationId: getCapabilities
       summary: Operations that work end to end on this instance
       description: |
-        `transcode` and `preview` are left out when the instance has no ffmpeg, and `tags`
-        when it has no tag model (`AUDIOKIT_MODELS_DIR`).
+        `transcode`, `preview` and `normalize` are left out when the instance has no ffmpeg,
+        `tags` when it has no tag model (`AUDIOKIT_MODELS_DIR`), and `stems` when it has no
+        authenticated GPU stem service: both `AUDIOKIT_MODAL_STEMS_URL` and its shared
+        secret `AUDIOKIT_MODAL_STEMS_TOKEN` must be set.
       security: []
       responses:
         "200":
@@ -125,6 +127,40 @@ paths:
                     audio:
                       url: https://storage.example.com/upload/preview.mp3?signature=def
                       headers: { x-upsert: "true" }
+                  webhook: { url: https://example.com/audiokit/webhook }
+              normalize:
+                summary: Normalise a master to -14 LUFS with a -1 dBTP ceiling
+                value:
+                  job_id: job-0196
+                  operation: normalize
+                  input:
+                    url: https://storage.example.com/master.wav?signature=abc
+                    sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                    filename: master.wav
+                  params: { target_lufs: -14, true_peak_dbtp: -1, format: flac }
+                  outputs:
+                    audio:
+                      url: https://storage.example.com/upload/normalised.flac?signature=ghi
+                  webhook: { url: https://example.com/audiokit/webhook }
+              stems:
+                summary: Split a track into four stems
+                value:
+                  job_id: job-0197
+                  operation: stems
+                  input:
+                    url: https://storage.example.com/master.wav?signature=abc
+                    sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+                    filename: master.wav
+                  params: { model: htdemucs_ft }
+                  outputs:
+                    vocals:
+                      url: https://storage.example.com/upload/vocals.wav?signature=v
+                    drums:
+                      url: https://storage.example.com/upload/drums.wav?signature=d
+                    bass:
+                      url: https://storage.example.com/upload/bass.wav?signature=b
+                    other:
+                      url: https://storage.example.com/upload/other.wav?signature=o
                   webhook: { url: https://example.com/audiokit/webhook }
       responses:
         "202":
@@ -432,11 +468,14 @@ components:
         - `input_hash_mismatch`: the downloaded bytes don't match `input.sha256`
         - `unsupported_format` / `unsupported_codec`: not a readable audio file
         - `corrupt_input`: decoding failed partway
-        - `invalid_params`: the params don't fit this file, e.g. a preview starting past the end
+        - `invalid_params`: the params don't fit this file, e.g. a preview starting past the end or
+          normalising a silent input
         - `operation_unavailable`: this instance can't run the operation
         - `encode_failed`: the encoder couldn't write the file, or its output didn't decode
         - `output_url_rejected`: an output URL isn't https or points at a non-public address
         - `output_upload_failed`: the upload failed or returned a non-2xx status
+        - `stems_unavailable`: the GPU stem service couldn't be reached
+        - `stems_failed`: the GPU stem service reported a failure or an unusable result
         - `timeout`: encoding ran over 30 minutes
         - `canceled`: the job was canceled while encoding
         - `internal`: AudioKit's fault; safe to resubmit with a new `job_id`
@@ -454,6 +493,8 @@ components:
             - encode_failed
             - output_url_rejected
             - output_upload_failed
+            - stems_unavailable
+            - stems_failed
             - timeout
             - canceled
             - internal
@@ -471,22 +512,24 @@ components:
 
     Operation:
       type: string
-      enum: [probe, loudness, waveform, transcode, preview, tempo, key, fingerprint, analyze, tags]
+      enum: [probe, loudness, waveform, transcode, preview, normalize, tempo, key, fingerprint, analyze, tags, stems]
       description: |
         - `probe`: decode the whole file and report its container, codec, format and duration
         - `loudness`: EBU R128 integrated loudness, loudness range, true peak and sample peak
         - `waveform`: a peak envelope for drawing a waveform
         - `transcode`: convert to WAV, FLAC, MP3 or AAC; writes the `audio` output
         - `preview`: a short excerpt with fades; writes the `audio` output
+        - `normalize`: a copy scaled to a target integrated loudness, capped at a true-peak ceiling; writes the `audio` output
         - `tempo`: BPM and beat grid
         - `key`: musical key, Camelot code and tuning
         - `fingerprint`: a Chromaprint fingerprint for AcoustID
         - `analyze`: loudness, tempo, key, fingerprint and (with a tag model) tags from one read of the file
         - `tags`: genre, mood and vocal tags from a CLAP audio model
+        - `stems`: split the track into `vocals`, `drums`, `bass` and `other` with HTDemucs on a GPU service; writes those four outputs
 
     OutputName:
       type: string
-      enum: [audio]
+      enum: [audio, vocals, drums, bass, other]
 
     Sha256:
       type: string
@@ -540,6 +583,18 @@ components:
             properties:
               params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/PreviewParams" }] }
               outputs: { required: [audio] }
+        - if: { properties: { operation: { const: normalize } } }
+          then:
+            required: [params, outputs]
+            properties:
+              params: { $ref: "#/components/schemas/NormalizeParams" }
+              outputs: { required: [audio] }
+        - if: { properties: { operation: { const: stems } } }
+          then:
+            required: [outputs]
+            properties:
+              params: { anyOf: [{ type: "null" }, { $ref: "#/components/schemas/StemsParams" }] }
+              outputs: { required: [vocals, drums, bass, other] }
         - if: { properties: { operation: { enum: [probe, loudness, waveform, tempo, key, fingerprint, analyze, tags] } } }
           then: { properties: { outputs: { maxProperties: 0 } } }
 
@@ -614,6 +669,21 @@ components:
           default: false
           description: Also return the audio embedding (512 values for the production model), for similarity search.
 
+    StemsModel:
+      type: string
+      enum: [htdemucs_ft, htdemucs]
+      description: |
+        `htdemucs_ft` is the fine-tuned four-model ensemble: best separation, about four
+        times the compute. `htdemucs` is the base model, faster and cheaper.
+
+    StemsParams:
+      type: object
+      additionalProperties: false
+      properties:
+        model:
+          allOf: [{ $ref: "#/components/schemas/StemsModel" }]
+          default: htdemucs_ft
+
     Format:
       type: string
       enum: [wav, flac, mp3, aac]
@@ -667,6 +737,36 @@ components:
       if: { properties: { format: { enum: [wav, flac] } }, required: [format] }
       then: { not: { required: [bitrate_kbps] } }
 
+    NormalizeParams:
+      type: object
+      additionalProperties: false
+      required: [target_lufs]
+      description: |
+        Write a copy normalised to `target_lufs` with a true-peak ceiling. AudioKit measures
+        the input with the same EBU R128 meter as `loudness` and applies one linear gain of
+        `min(target_lufs - measured_lufs, true_peak_dbtp - measured_true_peak)`, so the ceiling
+        is never exceeded. The target is reached unless the ceiling binds first, in which case
+        the copy lands quieter. `wav` and `flac` keep the ceiling exactly; a lossy encoder may
+        add a little. Cover art and other non-audio streams are dropped; tags are kept.
+      properties:
+        target_lufs: { type: number, minimum: -70, maximum: 0, description: Target EBU R128 integrated loudness in LUFS. }
+        true_peak_dbtp: { type: number, minimum: -20, maximum: 0, default: -1, description: True-peak ceiling in dBTP. }
+        format:
+          allOf: [{ $ref: "#/components/schemas/Format" }]
+          default: flac
+        sample_rate:
+          allOf: [{ $ref: "#/components/schemas/SampleRate" }]
+          description: Default the input's.
+        channels: { type: integer, enum: [1, 2], description: Default the input's. }
+        bit_depth: { type: integer, enum: [16, 24], default: 24, description: WAV and FLAC only. }
+        bitrate_kbps: { type: integer, minimum: 64, maximum: 320, description: MP3 and AAC only. Default 320 for MP3, 256 for AAC. }
+      allOf:
+        - if: { properties: { format: { enum: [mp3, aac] } } }
+          then: { not: { required: [bit_depth] } }
+          else: { not: { required: [bitrate_kbps] } }
+        - if: { properties: { format: { const: mp3 } } }
+          then: { properties: { sample_rate: { maximum: 48000 } } }
+
     # --- Jobs -----------------------------------------------------------------------------
 
     JobStatus:
@@ -708,6 +808,8 @@ components:
           then: { properties: { result: { $ref: "#/components/schemas/TranscodeResult" } } }
         - if: { properties: { operation: { const: preview } } }
           then: { properties: { result: { $ref: "#/components/schemas/PreviewResult" } } }
+        - if: { properties: { operation: { const: normalize } } }
+          then: { properties: { result: { $ref: "#/components/schemas/NormalizeResult" } } }
         - if: { properties: { operation: { const: tempo } } }
           then: { properties: { result: { $ref: "#/components/schemas/TempoResult" } } }
         - if: { properties: { operation: { const: key } } }
@@ -718,6 +820,8 @@ components:
           then: { properties: { result: { $ref: "#/components/schemas/AnalyzeResult" } } }
         - if: { properties: { operation: { const: tags } } }
           then: { properties: { result: { $ref: "#/components/schemas/TagsResult" } } }
+        - if: { properties: { operation: { const: stems } } }
+          then: { properties: { result: { $ref: "#/components/schemas/StemsResult" } } }
 
     Provenance:
       type: object
@@ -1006,3 +1110,84 @@ components:
           required: [audio]
           properties:
             audio: { $ref: "#/components/schemas/PreviewAudioOutput" }
+
+    NormalizeResult:
+      type: object
+      additionalProperties: false
+      required: [target_lufs, true_peak_ceiling_dbtp, target_reached, gain_db, before, after, outputs]
+      description: |
+        `before` and `after` are measured with the same EBU R128 meter as `loudness`: the input
+        and the uploaded copy. `gain_db` is the linear gain applied. `target_reached` is false
+        when the true-peak ceiling bound the gain, so the copy landed quieter than the target.
+      example:
+        target_lufs: -14.0
+        true_peak_ceiling_dbtp: -1.0
+        target_reached: true
+        gain_db: 5.3
+        before: { integrated_lufs: -19.3, loudness_range_lu: 6.2, true_peak_dbtp: -8.0, sample_peak_dbfs: -8.2 }
+        after: { integrated_lufs: -14.0, loudness_range_lu: 6.2, true_peak_dbtp: -2.7, sample_peak_dbfs: -2.9 }
+        outputs:
+          audio:
+            format: flac
+            content_type: audio/flac
+            sample_rate: 48000
+            channels: 2
+            duration_seconds: 213.4
+            bit_depth: 24
+            sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
+            size_bytes: 41234567
+      properties:
+        target_lufs: { type: number }
+        true_peak_ceiling_dbtp: { type: number }
+        target_reached:
+          type: boolean
+          description: True unless the true-peak ceiling bound the gain, in which case the copy landed below the target loudness.
+        gain_db: { type: number, description: The linear gain AudioKit applied, in dB. }
+        before:
+          allOf: [{ $ref: "#/components/schemas/LoudnessFields" }]
+          unevaluatedProperties: false
+        after:
+          allOf: [{ $ref: "#/components/schemas/LoudnessFields" }]
+          unevaluatedProperties: false
+        outputs:
+          type: object
+          additionalProperties: false
+          required: [audio]
+          properties:
+            audio: { $ref: "#/components/schemas/AudioOutput" }
+
+    StemOutput:
+      type: object
+      additionalProperties: false
+      required: [sha256, size_bytes]
+      description: |
+        What the GPU service uploaded for one stem. Re-hash what you stored and compare with
+        `sha256` and `size_bytes`.
+      properties:
+        sha256: { $ref: "#/components/schemas/Sha256" }
+        size_bytes: { type: integer, minimum: 1 }
+        format: { type: string, examples: [wav] }
+        content_type: { type: string, examples: [audio/wav] }
+        sample_rate: { type: integer }
+        channels: { type: integer }
+        duration_seconds: { type: number }
+
+    StemsResult:
+      type: object
+      additionalProperties: false
+      required: [model, outputs]
+      description: |
+        The model that ran and one entry per stem. The GPU service PUTs each stem straight to
+        the signed URL the request supplied, so `outputs` carries the digest and size it
+        stored rather than a local file.
+      properties:
+        model: { $ref: "#/components/schemas/StemsModel" }
+        outputs:
+          type: object
+          additionalProperties: false
+          required: [vocals, drums, bass, other]
+          properties:
+            vocals: { $ref: "#/components/schemas/StemOutput" }
+            drums: { $ref: "#/components/schemas/StemOutput" }
+            bass: { $ref: "#/components/schemas/StemOutput" }
+            other: { $ref: "#/components/schemas/StemOutput" }
