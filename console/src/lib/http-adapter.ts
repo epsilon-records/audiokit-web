@@ -231,8 +231,11 @@ function toPlan(wire: WirePlan): Plan {
 		const jobRate = (jobOverageCents / 100).toFixed(2);
 		const stemRate = (stemOverageCents / 100).toFixed(2);
 		features.push(`Overage at $${stemRate} per stem and $${jobRate} per other job, never both on one stem`);
-	} else if (stemOverageCents != null) {
-		features.push(`Overage at $${(stemOverageCents / 100).toFixed(2)} per stem`);
+	} else if (jobOverageCents == null && stemOverageCents != null) {
+		// A stem rate with no job rate is Enterprise: decision 0023 prices its volume overage per
+		// agreement, and the pricing page says the same. Printing the seeded $0.08 here would
+		// advertise a negotiable rate on a card whose price reads "Custom", so the number stays out.
+		features.push('Volume overage per agreement');
 	} else if (jobOverageCents != null) {
 		features.push(`Overage at $${(jobOverageCents / 100).toFixed(2)} per job`);
 	}
