@@ -124,7 +124,9 @@ transcode or fingerprint request — regardless of file size or processing time.
   billing (0023).
 - Free plan: no overages — hard stop instead.
 - Enterprise: handled in the custom agreement.
-- Overage is only charged for jobs the service accepted, once D17 is settled.
+- Overage is only charged for jobs the service accepted — settled (D17, decision 0023): a job is
+  one accepted operation on one input file, counted per distinct `job_id` per period, and an
+  idempotent replay is not re-counted.
 
 ## Upgrade, downgrade and cancellation
 
