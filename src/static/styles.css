@@ -448,6 +448,12 @@ table.fields td:first-child { width: 1%; }
   color: var(--muted);
 }
 
+.pricing-note {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
 .pricing-features {
   list-style: none;
   display: flex;
