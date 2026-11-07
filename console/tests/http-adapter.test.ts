@@ -362,6 +362,22 @@ describe('http adapter: plans', () => {
 		expect(free.features.join(' ')).not.toMatch(/overage/i);
 	});
 
+	it('keeps Enterprise volume rates out of the card', async () => {
+		// 0023: Enterprise overage is per agreement, so the seeded 8c/stem is not a published price.
+		const [enterprise] = await plansClient([
+			{
+				...proRow,
+				tier: 'enterprise',
+				name: 'Enterprise',
+				overage_price_cents: null,
+				stem_overage_price_cents: 8
+			}
+		]).getPlans();
+
+		expect(enterprise.features).toContain('Volume overage per agreement');
+		expect(enterprise.features.join(' ')).not.toMatch(/\$0\.08/);
+	});
+
 	it('still shows a per-job rate for a plan with no stem pricing', async () => {
 		const { monthly_stem_quota, stem_overage_price_cents, ...legacy } = proRow;
 		const [pro] = await plansClient([legacy]).getPlans();
