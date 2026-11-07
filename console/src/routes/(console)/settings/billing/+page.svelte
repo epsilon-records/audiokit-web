@@ -6,9 +6,10 @@
 	import { formatDate, formatNumber } from '#lib/format';
 	import type { PageProps } from './$types';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	const planLabel = $derived(data.plan?.name ?? data.account.plan);
+	const actionError = $derived(form && 'error' in form ? form.error : null);
 </script>
 
 <svelte:head>
@@ -23,9 +24,18 @@
 
 <SettingsTabs />
 
+{#if data.checkoutResult?.status === 'success'}
+	<p class="notice notice-ok" role="status">Checkout complete. Pro is active.</p>
+{:else if data.checkoutResult?.status === 'processing'}
+	<p class="notice notice-info" role="status">Payment received — activating Pro. Refresh shortly to check your plan.</p>
+{:else if data.checkoutResult?.status === 'cancelled'}
+	<p class="notice" role="status">Checkout canceled. You have not been charged.</p>
+{/if}
+{#if actionError}<p class="notice notice-warn" role="alert">{actionError}</p>{/if}
+
 {#if data.account.pastDue}
 	<p class="notice notice-warn" role="alert">
-		<strong>Payment failed.</strong> Update your card to keep {planLabel} after
+		<strong>Payment failed, update your card.</strong> Update your card to keep {planLabel} after
 		{formatDate(data.account.renewsAt)}.
 	</p>
 {/if}
@@ -47,26 +57,14 @@
 					<dd>{data.plan?.jobLimit ? formatNumber(data.plan.jobLimit) : 'Custom'}</dd>
 				</div>
 				<div>
-					<dt>{data.account.cancelsAt ? 'Reverts' : 'Renews / resets'}</dt>
-					<dd>{formatDate(data.account.renewsAt)}</dd>
+					<dt>{data.account.cancelsAt ? 'Access ends' : 'Renews / resets'}</dt>
+					<dd>{data.account.cancelsAt ? `Pro until ${formatDate(data.account.cancelsAt)}` : formatDate(data.account.renewsAt)}</dd>
 				</div>
 			</dl>
 			<div class="actions">
 				<a class="btn btn-primary" href="/pricing">Change plan</a>
-				{#if data.billing.portalUrl}
-					<a class="btn btn-ghost" href={data.billing.portalUrl} rel="noopener"
-						>Open billing portal ↗</a
-					>
-				{:else}
-					<button type="button" class="btn btn-ghost" disabled>Open billing portal ↗</button>
-				{/if}
+				<form method="POST" action="?/portal"><button type="submit" class="btn btn-ghost">Manage billing ↗</button></form>
 			</div>
-			{#if !data.billing.portalUrl}
-				<p class="field-hint">
-					The hosted billing portal is not wired up yet (Stripe approval is an open decision). In
-					mock mode this button is disabled.
-				</p>
-			{/if}
 		</div>
 	</section>
 

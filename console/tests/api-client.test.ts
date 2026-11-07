@@ -146,5 +146,7 @@ describe('mock client: settings and checkout', () => {
 		await expect(client.startCheckout('enterprise')).rejects.toMatchObject({
 			code: 'enterprise-contact'
 		});
+		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({ status: 'cancelled' });
+		await expect(client.createBillingPortal()).rejects.toMatchObject({ code: 'not-supported' });
 	});
 });
