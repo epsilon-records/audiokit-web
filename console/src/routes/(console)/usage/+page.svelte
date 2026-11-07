@@ -47,6 +47,21 @@
 				{formatPercent(usedShare)} of the {formatNumber(usage.jobLimit)}-job limit used · resets
 				{formatDate(usage.periodEnd)}
 			</p>
+			{#if usage.stemLimit !== null}
+				<Meter
+					used={usage.stemsUsed}
+					limit={usage.stemLimit}
+					label="Stem separations used this billing period"
+				/>
+				<p class="faint">
+					{formatNumber(usage.stemsUsed)} of {formatNumber(usage.stemLimit)} stem separations · a stem
+					uses a slot in both allowances but is billed at the stem rate only
+					{#if usage.stemsOverage > 0}
+						, and {formatNumber(usage.stemsOverage)} are over the allowance this period
+					{/if}
+					.
+				</p>
+			{/if}
 			<UsageChart daily={usage.daily} />
 		</div>
 	</section>

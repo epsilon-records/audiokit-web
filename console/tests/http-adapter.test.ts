@@ -160,6 +160,17 @@ describe('http adapter: magic link', () => {
 });
 
 describe('http adapter: reads', () => {
+	const clientWith = (currentPayload: unknown) =>
+		createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session-token',
+			fetch: fetchMock((url) =>
+				url.includes('/v1/usage/current')
+					? jsonResponse(currentPayload)
+					: jsonResponse({ history: [] })
+			)
+		});
+
 	it('combines /v1/auth/me and /v1/subscriptions/current into an account', async () => {
 		const fetchImpl = fetchMock((url) => {
 			if (url.endsWith('/v1/auth/me')) {
@@ -251,6 +262,9 @@ describe('http adapter: reads', () => {
 
 		expect(usage.jobsUsed).toBe(84);
 		expect(usage.jobLimit).toBe(100);
+		// This payload predates the stem fields: they must read as "no sub-cap", not NaN.
+		expect(usage.stemsUsed).toBe(0);
+		expect(usage.stemLimit).toBeNull();
 		expect(usage.daily).toEqual([
 			{ date: '2026-11-01', jobs: 10 },
 			{ date: '2026-11-02', jobs: 4 }
@@ -271,6 +285,39 @@ describe('http adapter: reads', () => {
 			limit: 100,
 			status: 'overage'
 		});
+	});
+
+	it('maps the stem sub-cap onto a second meter', async () => {
+		// The service has returned stemCount / stemQuotaLimit / stemOverageCount since decision
+		// 0023; the console ignored them, so a Pro account saw one meter and no stem allowance.
+		const current = (extra: Record<string, unknown>) => ({
+			tier: 'pro',
+			jobCount: 1200,
+			jobCountByOperation: { stems: 300, analyze: 900 },
+			quotaLimit: 1000,
+			overageCount: 200,
+			periodStart: '2026-11-01T00:00:00.000Z',
+			periodEnd: '2026-11-30T23:59:59.000Z',
+			...extra
+		});
+
+		const metered = await clientWith(
+			current({ stemCount: 300, stemQuotaLimit: 250, stemOverageCount: 50 })
+		).getUsage();
+		expect(metered.stemsUsed).toBe(300);
+		expect(metered.stemLimit).toBe(250);
+		expect(metered.stemsOverage).toBe(50);
+
+		// Unlimited (-1) has no drawable bar, same as a plan with no stem sub-cap at all.
+		const unlimited = await clientWith(
+			current({ stemCount: 90, stemQuotaLimit: -1, stemOverageCount: 0 })
+		).getUsage();
+		expect(unlimited.stemsUsed).toBe(90);
+		expect(unlimited.stemLimit).toBeNull();
+
+		const uncapped = await clientWith(current({})).getUsage();
+		expect(uncapped.stemLimit).toBeNull();
+		expect(uncapped.stemsOverage).toBe(0);
 	});
 
 	it('maps API keys and a one-time secret', async () => {

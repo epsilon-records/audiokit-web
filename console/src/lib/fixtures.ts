@@ -114,6 +114,9 @@ export const usage: UsageSummary = {
 	periodEnd: '2026-11-30T23:59:59.000Z',
 	jobsUsed: 84,
 	jobLimit: 100,
+	stemsUsed: 6,
+	stemLimit: 10,
+	stemsOverage: 0,
 	daily: [
 		{ date: '2026-11-01', jobs: 4 },
 		{ date: '2026-11-02', jobs: 7 },
@@ -131,7 +134,8 @@ export const usage: UsageSummary = {
 		{ date: '2026-11-14', jobs: 2 }
 	],
 	byOperation: [
-		{ operation: 'analyze', jobs: 34 },
+		{ operation: 'analyze', jobs: 28 },
+		{ operation: 'stems', jobs: 6 },
 		{ operation: 'transcode', jobs: 21 },
 		{ operation: 'tags', jobs: 12 },
 		{ operation: 'loudness', jobs: 9 },
