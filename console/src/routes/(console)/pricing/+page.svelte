@@ -15,6 +15,7 @@
 		form && 'planId' in form ? data.plans.find((plan) => plan.id === form?.planId) : null
 	);
 	const actionError = $derived(form && 'error' in form ? form.error : null);
+	let interval = $state<'month' | 'year'>('month');
 </script>
 
 <svelte:head>
@@ -63,6 +64,14 @@
 			{:else}
 				<form method="POST" action="?/upgrade" use:enhance>
 					<input type="hidden" name="planId" value={plan.id} />
+					{#if plan.id === 'pro'}
+						<label class="field-hint">Billing interval
+							<select name="interval" bind:value={interval}>
+								<option value="month">Monthly · $99/month</option>
+								<option value="year">Annual · $990/year</option>
+							</select>
+						</label>
+					{/if}
 					<button type="submit" class="btn btn-primary">
 						{plan.id === 'free' ? 'Downgrade to Free' : `Upgrade to ${plan.name}`}
 					</button>

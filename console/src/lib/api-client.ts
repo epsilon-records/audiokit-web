@@ -49,13 +49,14 @@ export type ConsoleApi = {
 	getApiKeys(): Promise<ApiKey[]>;
 	getBilling(): Promise<BillingSummary>;
 	getNotificationPreferences(): Promise<NotificationPreferences>;
-	getCheckoutResult(): Promise<CheckoutResult>;
+	getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult>;
+	createBillingPortal(): Promise<string>;
 
 	createApiKey(label: string): Promise<CreatedApiKey>;
 	revokeApiKey(id: string): Promise<ApiKey>;
 	updateProfile(name: string): Promise<Account>;
 	updateNotificationPreferences(next: NotificationPreferences): Promise<NotificationPreferences>;
-	startCheckout(planId: PlanId): Promise<CheckoutResult>;
+	startCheckout(planId: PlanId, interval?: 'month' | 'year'): Promise<CheckoutResult>;
 };
 
 export type ApiAdapter = 'mock' | 'http';

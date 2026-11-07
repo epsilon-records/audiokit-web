@@ -98,6 +98,7 @@ type WireSubscription = {
 	current_period_start: string;
 	current_period_end: string;
 	cancel_at_period_end?: boolean;
+	stripe_status?: string;
 };
 
 type WirePlan = {
@@ -171,6 +172,7 @@ type WireCheckout = {
 	current_period_end?: string;
 	url?: string;
 };
+type WirePortal = { url: string };
 
 type WireError = { error?: string; message?: string };
 
@@ -200,7 +202,7 @@ function toAccount(user: WireUser, subscription: WireSubscription): Account {
 		emailVerified: Boolean(user.email_verified_at),
 		plan: subscription.tier,
 		renewsAt: subscription.current_period_end,
-		pastDue: subscription.status === 'past_due',
+		pastDue: (subscription.stripe_status ?? subscription.status) === 'past_due',
 		cancelsAt: subscription.cancel_at_period_end ? subscription.current_period_end : undefined
 	};
 }
@@ -537,11 +539,24 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			return toNotificationPreferences(payload);
 		},
 
-		async getCheckoutResult(): Promise<CheckoutResult> {
-			throw new HttpApiError(
-				'not-supported',
-				'Checkout status is not available from the billing service yet.'
-			);
+		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
+			if (outcome === 'canceled') return { status: 'cancelled' };
+			if (outcome !== 'success') return { status: 'processing' };
+			// Stripe's webhook updates the plan asynchronously. Poll briefly so the
+			// return page reflects the confirmed subscription when it is ready.
+			for (let attempt = 0; attempt < 5; attempt += 1) {
+				const subscription = await getSubscription();
+				if (subscription.tier === 'pro') {
+					return { status: 'success', plan: subscription.tier, renewsAt: subscription.current_period_end };
+				}
+				if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 1000));
+			}
+			return { status: 'processing' };
+		},
+
+		async createBillingPortal(): Promise<string> {
+			const payload = await request<WirePortal>('/v1/subscriptions/portal', { method: 'POST' });
+			return payload.url;
 		},
 
 		async createApiKey(label: string): Promise<CreatedApiKey> {
@@ -594,7 +609,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			return toNotificationPreferences(payload);
 		},
 
-		async startCheckout(planId: PlanId): Promise<CheckoutResult> {
+		async startCheckout(planId: PlanId, interval: 'month' | 'year' = 'month'): Promise<CheckoutResult> {
 			if (planId === 'enterprise') {
 				throw new HttpApiError(
 					'invalid-request',
@@ -603,7 +618,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			}
 			const payload = await request<WireCheckout>('/v1/subscriptions/checkout', {
 				method: 'POST',
-				...json({ tier: planId })
+				...json({ tier: planId, interval })
 			});
 			return {
 				status: payload.status ?? 'processing',

@@ -30,7 +30,7 @@ import type {
 
 /** A typed failure the screens can branch on, rather than a bare Error. */
 export type MockApiErrorCode =
-	'invalid-email' | 'not-found' | 'enterprise-contact' | 'already-revoked';
+	'invalid-email' | 'not-found' | 'enterprise-contact' | 'already-revoked' | 'not-supported';
 
 export class MockApiError extends ApiError {
 	constructor(code: MockApiErrorCode, message: string) {
@@ -144,10 +144,13 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			return { ...preferences };
 		},
 
-		async getCheckoutResult(): Promise<CheckoutResult> {
-			// TODO(EPSILON-46): read the checkout result from the service once the
-			// Stripe return flow exists. Never claim Pro until the plan state confirms it.
+		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
+			if (outcome === 'canceled') return { status: 'cancelled' };
 			return { status: 'success', plan: account.plan, renewsAt: account.renewsAt };
+		},
+
+		async createBillingPortal(): Promise<string> {
+			throw new MockApiError('not-supported', 'Billing portal is unavailable in mock mode.');
 		},
 
 		async createApiKey(label: string): Promise<CreatedApiKey> {
@@ -182,7 +185,7 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			return { ...preferences };
 		},
 
-		async startCheckout(planId: PlanId): Promise<CheckoutResult> {
+		async startCheckout(planId: PlanId, _interval: 'month' | 'year' = 'month'): Promise<CheckoutResult> {
 			if (planId === 'enterprise') {
 				throw new MockApiError(
 					'enterprise-contact',
