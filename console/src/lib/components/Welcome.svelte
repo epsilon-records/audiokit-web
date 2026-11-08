@@ -17,7 +17,7 @@
 		error?: string | null;
 	} = $props();
 	const example = $derived(
-		'curl https://billing.audiokit.ai/v1/usage/current -H "Authorization: Bearer ' +
+		'curl https://api.audiokit.ai/v1/capabilities -H "Authorization: Bearer ' +
 			(apiKey ?? 'YOUR_API_KEY') +
 			'"'
 	);
@@ -64,8 +64,11 @@
 				</div>
 				<pre class="code">{apiKey}</pre>
 			</div>
-			<h2>3. Try an authenticated request</h2>
-			<p class="muted">Check your usage without submitting a job.</p>
+			<h2>3. Explore the API</h2>
+			<p class="muted">
+				List available operations without submitting a job. This endpoint is public; job requests
+				use your API key.
+			</p>
 			<div class="panel">
 				<div class="panel-bar">
 					<span>Terminal</span><CopyButton value={example} label="Copy example" />
