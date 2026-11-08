@@ -9,9 +9,10 @@ The product has two audiences with different needs, so it has two shells that sh
 - **Console shell** — new: the signed-in app. Optimised for repeated, dense, data-first use.
   Adds a persistent side navigation and a top bar, and drops the marketing hero.
 
-A visitor crosses from one to the other at sign-in and back at sign-out. The public header's button
-is "Sign in" and points at the console's login screen (`https://console.audiokit.ai/login`, built
-from `site.config.mjs`); the console's account menu links back to the docs and the marketing site.
+A visitor crosses from one to the other at sign-in — or at sign-up, which is the same magic link —
+and back at sign-out. The public header's button is "Sign in" and points at the console's login
+screen (`https://console.audiokit.ai/login`, built from `site.config.mjs`); the hero and the Free
+plan point at `/signup`. The console's account menu links back to the docs and the marketing site.
 
 ## 2. Sitemap
 
@@ -167,17 +168,23 @@ Operations that can appear in a per-operation breakdown come from the public con
 | From | To | Trigger |
 | --- | --- | --- |
 | Public header | `/login` | "Sign in" |
-| Landing hero and closing band | `/login` | "Sign in to the console" |
-| Public pricing (Free, Pro) | `/login` | "Sign in" |
-| Public pricing (Enterprise, FAQ contact) | `mailto:sales@audiokit.ai` | "Contact sales" |
-| Docs "an API key" | `/login`, then `/api-keys` | contextual CTA |
+| Landing hero | `/signup` | "Start free" |
+| Landing closing band | `/signup`, then `/login` | "Start free" / "Sign in" |
+| Public pricing (Free) | `/signup` | "Start free" |
+| Public pricing (Pro, Enterprise) | `/login` | "Sign in" |
+| Docs "an API key" | `/signup` or `/login`, then `/onboarding` | contextual CTA |
 | Quota-warning email | `/console/plan` | email CTA |
 | Receipt / payment email | `/console/settings/billing` | email CTA |
 | Direct link | any `/console/*` | redirect via `/login`, preserving target |
 
-The landing page's early-access form is gone: a visitor who has never been provisioned has no
-self-serve way to get an account, because the console has no register screen and a magic link is
-only sent for an address that already exists.
+There is no early-access form any more, and no mailbox to advertise: `sales@audiokit.ai` is not set
+up, so the Enterprise card and the pricing FAQ state the plan without a contact link, and the
+console's plan screen says "Enterprise is arranged with us directly".
+
+A visitor needs neither to get in. `/signup` and `/login` both email a magic link, and a link sent
+to an address with no account creates it on first use — Free plan, no password, first key shown
+once (billing decision 0033) — so `/login` is a way in for a newcomer as well as a returning
+customer. What is still unwritten is how a customer reaches a human for Enterprise terms.
 
 ## 9. Accessibility and layout floor
 
