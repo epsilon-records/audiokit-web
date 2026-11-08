@@ -34,7 +34,9 @@ and the build need no service.
 | Route               | Screen                                                      |
 | ------------------- | ----------------------------------------------------------- |
 | `/login`            | Email magic-link sign-in                                    |
-| `/auth/callback`    | Magic-link landing point (sets the session, then redirects) |
+| `/signup`           | Email magic-link sign-up: Free plan, no password, no card   |
+| `/auth/callback`    | Magic-link landing point; for a new account, shows its first key |
+| `/onboarding`       | First-run setup: profile, save the key, try a request       |
 | `/dashboard`        | Usage overview, recent jobs, quick start                    |
 | `/usage`            | Chart, per-operation breakdown, 12-period history           |
 | `/api-keys`         | List, create (reveal once), revoke                          |
@@ -59,6 +61,14 @@ Auth is **email magic link through the billing service**, per decision 0016:
 4. `hooks.server.ts` resolves the cookie into `locals.session` and keeps the raw token on
    `locals.sessionToken`; the console layout redirects signed-out requests to `/login?next=…`.
    Server loads then call `apiFor(locals.sessionToken)`, which sends the token as a bearer.
+
+**Sign-in and sign-up are the same link.** `/signup` posts to the billing service's `POST
+/v1/auth/signup` and `/login` to `POST /v1/auth/magic-link`; both get a pending token for an
+address with no account, and opening it creates that account — Free plan, email already verified
+by the click, no password (billing decision 0033). The exchange then answers
+`{ user, token, created, api_key }`; on `created` the callback stays put and renders `Welcome.svelte`
+with the one-time key, because the service keeps only its hash. A returning account is redirected
+to its `next` target instead.
 
 In mock mode the token is `mock.<email>`. In HTTP mode it is the service's JWT: `apiFor` passes
 it to every authenticated call and the service verifies it; `parseSessionToken` only decodes it

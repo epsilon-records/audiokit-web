@@ -66,3 +66,11 @@ test("no request-access form, link or copy is left behind", async () => {
   assert.ok(!(await exists("src/pages/thanks.html")), "the form's destination page is gone");
   assert.ok(!(await exists("netlify/functions")), "with no form, the site builds no function");
 });
+
+test("no unpublished mailbox is advertised", () => {
+  // sales@audiokit.ai does not exist yet, so linking it would mail a customer's question into a
+  // void. The Enterprise card and the FAQ state the plan without a contact link until an address
+  // is set up and shown to receive. Ask on the board before adding one back.
+  assert.doesNotMatch(allPages, /mailto:/i, "pages must not advertise an address that cannot receive");
+  assert.doesNotMatch(allPages, /contact (us|sales)/i, "there is no contact channel to point at");
+});

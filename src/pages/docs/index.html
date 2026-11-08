@@ -9,7 +9,7 @@
 <section>
   <h2 id="before">Before you start</h2>
   <ul class="checklist">
-    <li><strong>An API key.</strong> Sign in to <a href="{{CONSOLE_LOGIN}}">the AudioKit console</a> and create a key under <strong>API keys</strong>. Keys look like <code>ak_…</code>.</li>
+    <li><strong>An API key.</strong> <a href="{{CONSOLE_SIGNUP}}">Create an AudioKit account</a> or <a href="{{CONSOLE_LOGIN}}">sign in</a> — the console shows your first key once when you sign in, and lists it under <strong>API keys</strong>. Keys look like <code>ak_…</code>.</li>
     <li><strong>A file AudioKit can download.</strong> An https URL to it, usually a signed GET URL from your storage. It must resolve to a public address, including after redirects.</li>
     <li><strong>The file's sha256.</strong> Hash the exact bytes your URL serves, for example with <code>sha256sum master.wav</code>.</li>
     <li><strong>Optional: a webhook endpoint.</strong> An https URL that accepts POST. Without one, you poll for the result.</li>

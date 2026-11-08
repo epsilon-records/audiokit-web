@@ -60,12 +60,16 @@
 			{#if current}
 				<button type="button" class="btn btn-ghost" disabled>Current plan</button>
 			{:else if plan.id === 'enterprise'}
-				<a class="btn btn-ghost" href="mailto:sales@audiokit.ai">Contact sales</a>
+				<!-- No contact channel to point at yet: sales@audiokit.ai is not set up, so this must not
+				     read as a working mailbox. Enterprise is sales-assisted (AudioKit decision 0023);
+				     add the address here once one exists and receives. -->
+				<p class="field-hint">Enterprise is arranged with us directly.</p>
 			{:else}
 				<form method="POST" action="?/upgrade" use:enhance>
 					<input type="hidden" name="planId" value={plan.id} />
 					{#if plan.id === 'pro'}
-						<label class="field-hint">Billing interval
+						<label class="field-hint"
+							>Billing interval
 							<select name="interval" bind:value={interval}>
 								<option value="month">Monthly · $99/month</option>
 								<option value="year">Annual · $990/year</option>
