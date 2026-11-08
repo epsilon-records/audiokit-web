@@ -143,6 +143,8 @@ describe('http adapter: magic link', () => {
 		expect(result).toEqual({
 			ok: true,
 			token: 'session.jwt.value',
+			created: false,
+			apiKey: null,
 			session: { email: 'you@example.com', issuedAt: '2026-11-14T12:00:00.000Z' }
 		});
 		expect(fetchImpl.calls[0].url).toBe('https://billing.test/v1/auth/magic-link/exchange');

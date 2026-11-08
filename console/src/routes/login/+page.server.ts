@@ -17,7 +17,10 @@ export const actions: Actions = {
 		const next = safeNext(String(form.get('next') ?? '') || url.searchParams.get('next'));
 
 		try {
-			const result = await api.requestMagicLink(email, { next });
+			const result = await api.requestMagicLink(email, {
+				next,
+				signup: url.pathname === '/signup'
+			});
 			return { sent: true, email: result.email, devLink: result.devLink ?? null, next };
 		} catch (error) {
 			if (error instanceof ApiError) {

@@ -68,6 +68,7 @@ const NAV = [
 // The console is a separate app on its own Netlify site (decisions 0016/0021), so every link to
 // it is absolute. Its address is in one place: site.config.mjs.
 const CONSOLE_LOGIN = `${config.consoleUrl}/login`;
+const CONSOLE_SIGNUP = `${config.consoleUrl}/signup`;
 
 const LOGO = `<svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 14v0M9 9v10M14 4v20M19 9v10M24 12v4"/></svg>`;
 
@@ -308,6 +309,7 @@ async function main() {
     API_VERSION: esc(version),
     CONSOLE_URL: config.consoleUrl,
     CONSOLE_LOGIN: CONSOLE_LOGIN,
+    CONSOLE_SIGNUP: CONSOLE_SIGNUP,
     OPERATION_LIST: renderOperationList(doc, ops),
     OPERATION_COUNT: String(ops.length),
     WEBHOOK_TEST_VECTOR: webhookTestVector(doc),

@@ -234,7 +234,9 @@ function toPlan(wire: WirePlan): Plan {
 		// Decision 0027: an excess stem is billed at the stem rate only, never at both rates.
 		const jobRate = (jobOverageCents / 100).toFixed(2);
 		const stemRate = (stemOverageCents / 100).toFixed(2);
-		features.push(`Overage at $${stemRate} per stem and $${jobRate} per other job, never both on one stem`);
+		features.push(
+			`Overage at $${stemRate} per stem and $${jobRate} per other job, never both on one stem`
+		);
 	} else if (jobOverageCents == null && stemOverageCents != null) {
 		// A stem rate with no job rate is Enterprise: decision 0023 prices its volume overage per
 		// agreement, and the pricing page says the same. Printing the seeded $0.08 here would
@@ -316,7 +318,8 @@ function toUsage(current: WireUsageCurrent, history: WireUsageHistory[]): UsageS
 		stemsUsed: current.stemCount ?? 0,
 		// -1 is the service's unlimited marker (UNLIMITED_QUOTA); a bar to infinity is not drawable,
 		// and a plan with no stem sub-cap reads the same way here: nothing to meter.
-		stemLimit: current.stemQuotaLimit == null || current.stemQuotaLimit < 0 ? null : current.stemQuotaLimit,
+		stemLimit:
+			current.stemQuotaLimit == null || current.stemQuotaLimit < 0 ? null : current.stemQuotaLimit,
 		stemsOverage: current.stemOverageCount ?? 0,
 		daily: (current.daily ?? []).map((day) => ({ date: day.date, jobs: Number(day.count) })),
 		byOperation,
@@ -458,22 +461,22 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 		return payload as T;
 	}
 
-/**
- * Decision 0031: a success body names each resource under a key (`{ usage }`, `{ portal }`).
- * The console ships first, so this reads the named shape *and* the pre-0031 shape it can still
- * meet while the service is mid-deploy or rolled back.
- *
- * The discriminator is the value's type, not the key's presence. `POST /v1/api-keys` used to
- * answer a bare object that already has an `api_key` member — the secret string — so unwrapping
- * on `key in payload` would hand back the secret as if it were the resource.
- */
-function unwrap<T>(payload: unknown, key: string): T {
-	if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-		const value = (payload as Record<string, unknown>)[key];
-		if (value !== undefined && value !== null && typeof value === 'object') return value as T;
+	/**
+	 * Decision 0031: a success body names each resource under a key (`{ usage }`, `{ portal }`).
+	 * The console ships first, so this reads the named shape *and* the pre-0031 shape it can still
+	 * meet while the service is mid-deploy or rolled back.
+	 *
+	 * The discriminator is the value's type, not the key's presence. `POST /v1/api-keys` used to
+	 * answer a bare object that already has an `api_key` member — the secret string — so unwrapping
+	 * on `key in payload` would hand back the secret as if it were the resource.
+	 */
+	function unwrap<T>(payload: unknown, key: string): T {
+		if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+			const value = (payload as Record<string, unknown>)[key];
+			if (value !== undefined && value !== null && typeof value === 'object') return value as T;
+		}
+		return payload as T;
 	}
-	return payload as T;
-}
 
 	function json(body: unknown): RequestInit {
 		return { body: JSON.stringify(body) };
@@ -493,17 +496,23 @@ function unwrap<T>(payload: unknown, key: string): T {
 	}
 
 	return {
-		async requestMagicLink(email: string, requestOptions: { next?: string } = {}) {
+		async requestMagicLink(
+			email: string,
+			requestOptions: { next?: string; signup?: boolean } = {}
+		) {
 			const normalised = email.trim().toLowerCase();
 			if (!EMAIL_RE.test(normalised)) {
 				throw new HttpApiError('invalid-email', 'Enter a valid email address.');
 			}
 
-			const payload = await request<WireMagicLinkRequest>('/v1/auth/magic-link', {
-				method: 'POST',
-				auth: false,
-				...json({ email: normalised, next: requestOptions.next })
-			});
+			const payload = await request<WireMagicLinkRequest>(
+				requestOptions.signup ? '/v1/auth/signup' : '/v1/auth/magic-link',
+				{
+					method: 'POST',
+					auth: false,
+					...json({ email: normalised, next: requestOptions.next })
+				}
+			);
 
 			const result: MagicLinkRequest = {
 				sent: true,
@@ -519,14 +528,18 @@ function unwrap<T>(payload: unknown, key: string): T {
 
 		async exchangeMagicLink(token: string): Promise<MagicLinkExchange> {
 			try {
-				const payload = await request<{ user?: WireUser; token?: string }>(
-					'/v1/auth/magic-link/exchange',
-					{ method: 'POST', auth: false, ...json({ token }) }
-				);
+				const payload = await request<{
+					user?: WireUser;
+					token?: string;
+					created?: boolean;
+					api_key?: string | null;
+				}>('/v1/auth/magic-link/exchange', { method: 'POST', auth: false, ...json({ token }) });
 				if (!payload?.token || !payload.user) return { ok: false, error: 'invalid-token' };
 				return {
 					ok: true,
 					token: payload.token,
+					created: payload.created ?? false,
+					apiKey: payload.api_key ?? null,
 					session: { email: payload.user.email, issuedAt: now().toISOString() }
 				};
 			} catch (error) {
@@ -587,7 +600,9 @@ function unwrap<T>(payload: unknown, key: string): T {
 
 		async getNotificationPreferences() {
 			const payload = await request<unknown>('/v1/account/notifications');
-			return toNotificationPreferences(unwrap<WireNotificationPreferences>(payload, 'notifications'));
+			return toNotificationPreferences(
+				unwrap<WireNotificationPreferences>(payload, 'notifications')
+			);
 		},
 
 		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
@@ -598,7 +613,11 @@ function unwrap<T>(payload: unknown, key: string): T {
 			for (let attempt = 0; attempt < 5; attempt += 1) {
 				const subscription = await getSubscription();
 				if (subscription.tier === 'pro') {
-					return { status: 'success', plan: subscription.tier, renewsAt: subscription.current_period_end };
+					return {
+						status: 'success',
+						plan: subscription.tier,
+						renewsAt: subscription.current_period_end
+					};
 				}
 				if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 1000));
 			}
@@ -644,14 +663,14 @@ function unwrap<T>(payload: unknown, key: string): T {
 			return toApiKey(revoked);
 		},
 
-		async updateProfile(name: string): Promise<Account> {
+		async updateProfile(name: string, company?: string): Promise<Account> {
 			const trimmed = name.trim();
 			if (trimmed.length === 0) {
 				throw new HttpApiError('invalid-request', 'Enter a name.');
 			}
 			await request<{ user: WireUser }>('/v1/auth/me', {
 				method: 'PATCH',
-				...json({ name: trimmed })
+				...json({ name: trimmed, ...(company !== undefined ? { company: company.trim() } : {}) })
 			});
 			return getAccountInternal();
 		},
@@ -665,10 +684,15 @@ function unwrap<T>(payload: unknown, key: string): T {
 					product_updates: next.productUpdates
 				})
 			});
-			return toNotificationPreferences(unwrap<WireNotificationPreferences>(payload, 'notifications'));
+			return toNotificationPreferences(
+				unwrap<WireNotificationPreferences>(payload, 'notifications')
+			);
 		},
 
-		async startCheckout(planId: PlanId, interval: 'month' | 'year' = 'month'): Promise<CheckoutResult> {
+		async startCheckout(
+			planId: PlanId,
+			interval: 'month' | 'year' = 'month'
+		): Promise<CheckoutResult> {
 			if (planId === 'enterprise') {
 				throw new HttpApiError(
 					'invalid-request',

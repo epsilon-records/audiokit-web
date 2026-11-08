@@ -12,7 +12,7 @@
 <AuthCard
 	title={form?.sent ? 'Check your inbox' : 'Sign in to your console'}
 	subtitle={form?.sent
-		? `We sent a sign-in link to ${form.email}. It works once and expires in 10 minutes.`
+		? `We sent a sign-in link to ${form.email}. It works once and expires in 15 minutes.`
 		: 'No password — we email you a magic link.'}
 >
 	{#if form?.sent}
@@ -66,8 +66,7 @@
 		</form>
 
 		<p class="auth-sub">
-			New to AudioKit? <a class="link" href="https://audiokit.ai/pricing/">Start on the Free plan</a
-			>
+			New to AudioKit? <a class="link" href="/signup">Start on the Free plan</a>
 			— 100 jobs a month, no card.
 		</p>
 	{/if}

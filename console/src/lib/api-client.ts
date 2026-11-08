@@ -36,7 +36,10 @@ import type {
 
 export type ConsoleApi = {
 	/** Ask the billing service to email a sign-in link. */
-	requestMagicLink(email: string, options?: { next?: string }): Promise<MagicLinkRequest>;
+	requestMagicLink(
+		email: string,
+		options?: { next?: string; signup?: boolean }
+	): Promise<MagicLinkRequest>;
 	/** Consume the token from that link. */
 	exchangeMagicLink(token: string): Promise<MagicLinkExchange>;
 	/** Resolve the session cookie without a round trip, for the server hooks. */
@@ -54,7 +57,7 @@ export type ConsoleApi = {
 
 	createApiKey(label: string): Promise<CreatedApiKey>;
 	revokeApiKey(id: string): Promise<ApiKey>;
-	updateProfile(name: string): Promise<Account>;
+	updateProfile(name: string, company?: string): Promise<Account>;
 	updateNotificationPreferences(next: NotificationPreferences): Promise<NotificationPreferences>;
 	startCheckout(planId: PlanId, interval?: 'month' | 'year'): Promise<CheckoutResult>;
 };

@@ -84,7 +84,10 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 	}
 
 	return {
-		async requestMagicLink(email: string, requestOptions: { next?: string } = {}) {
+		async requestMagicLink(
+			email: string,
+			requestOptions: { next?: string; signup?: boolean } = {}
+		) {
 			const normalised = email.trim().toLowerCase();
 			if (!EMAIL_RE.test(normalised)) {
 				throw new MockApiError('invalid-email', 'Enter a valid email address.');
@@ -105,7 +108,14 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		async exchangeMagicLink(token: string): Promise<MagicLinkExchange> {
 			const email = decodeToken(token);
 			if (!email) return { ok: false, error: 'invalid-token' };
-			return { ok: true, session: sessionFor(email), token };
+			const created = email !== fixtures.account.email;
+			return {
+				ok: true,
+				session: sessionFor(email),
+				token,
+				created,
+				apiKey: created ? `ak_mock_${crypto.randomUUID()}` : null
+			};
 		},
 
 		parseSessionToken(token: string | null | undefined): Session | null {
@@ -185,7 +195,10 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			return { ...preferences };
 		},
 
-		async startCheckout(planId: PlanId, _interval: 'month' | 'year' = 'month'): Promise<CheckoutResult> {
+		async startCheckout(
+			planId: PlanId,
+			_interval: 'month' | 'year' = 'month'
+		): Promise<CheckoutResult> {
 			if (planId === 'enterprise') {
 				throw new MockApiError(
 					'enterprise-contact',

@@ -1,24 +1,27 @@
 <script lang="ts">
 	import AuthCard from '#lib/components/AuthCard.svelte';
+	import Welcome from '#lib/components/Welcome.svelte';
 	import type { PageProps } from './$types';
-
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>Signing in · AudioKit console</title>
-</svelte:head>
-
-<AuthCard
-	title={data.ok === false ? 'That link did not work' : 'Signing you in'}
-	subtitle={data.ok === false
-		? 'Sign-in links are single use and expire quickly.'
-		: 'Hang on while we check your link.'}
+<svelte:head
+	><title>Welcome · AudioKit console</title><meta
+		name="referrer"
+		content="no-referrer"
+	/></svelte:head
 >
-	{#if data.ok === false}
+{#if data.ok === true && typeof data.email === 'string'}
+	<Welcome email={data.email} apiKey={data.apiKey} next={data.next} />
+{:else}
+	<AuthCard
+		title="That link did not work"
+		subtitle="Links are single use and expire after 15 minutes."
+	>
 		<p class="muted" role="alert">{data.error}</p>
 		<a class="btn btn-primary" href="/login">Request a new link</a>
-	{:else}
-		<p class="muted" aria-live="polite">Verifying your link…</p>
-	{/if}
-</AuthCard>
+		<p class="auth-sub">
+			Already verified your email? <a class="link" href="/onboarding">Resume setup</a>.
+		</p>
+	</AuthCard>
+{/if}

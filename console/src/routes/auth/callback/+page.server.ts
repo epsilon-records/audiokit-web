@@ -8,7 +8,8 @@ import type { PageServerLoad } from './$types';
  * Magic-link landing point. The billing service will redirect here with a token;
  * in mock mode the link is shown on the sign-in screen instead of emailed.
  */
-export const load: PageServerLoad = async ({ url, cookies, locals }) => {
+export const load: PageServerLoad = async ({ url, cookies, locals, setHeaders }) => {
+	setHeaders({ 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' });
 	const next = safeNext(url.searchParams.get('next'));
 	const token = url.searchParams.get('token');
 
@@ -30,5 +31,7 @@ export const load: PageServerLoad = async ({ url, cookies, locals }) => {
 		maxAge: SESSION_MAX_AGE_SECONDS
 	});
 
+	if (result.created)
+		return { ok: true as const, apiKey: result.apiKey ?? null, email: result.session.email, next };
 	redirect(303, next);
 };

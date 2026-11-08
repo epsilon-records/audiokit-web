@@ -136,7 +136,8 @@ export type MagicLinkRequest = {
 };
 
 export type MagicLinkExchange =
-	{ ok: true; session: Session; token: string } | { ok: false; error: 'invalid-token' | 'expired' };
+	| { ok: true; session: Session; token: string; created?: boolean; apiKey?: string | null }
+	| { ok: false; error: 'invalid-token' | 'expired' };
 
 export type ProfileUpdate = {
 	name: string;
