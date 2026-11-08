@@ -9,7 +9,7 @@ import type { PageServerLoad } from './$types';
  * in mock mode the link is shown on the sign-in screen instead of emailed.
  */
 export const load: PageServerLoad = async ({ url, cookies, locals, setHeaders }) => {
-	setHeaders({ 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' });
+	setHeaders({ 'cache-control': 'no-store', 'referrer-policy': 'origin' });
 	const next = safeNext(url.searchParams.get('next'));
 	const token = url.searchParams.get('token');
 

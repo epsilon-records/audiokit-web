@@ -19,7 +19,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('x-content-type-options', 'nosniff');
 	response.headers.set(
 		'referrer-policy',
-		event.url.pathname.startsWith('/auth/') ? 'no-referrer' : 'strict-origin-when-cross-origin'
+		event.url.pathname.startsWith('/auth/') ? 'origin' : 'strict-origin-when-cross-origin'
 	);
 	if (
 		event.locals.session ||
