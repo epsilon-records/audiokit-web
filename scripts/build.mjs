@@ -61,6 +61,7 @@ const esc = (s) =>
 const NAV = [
   { id: "start", href: "/docs/", label: "Get started" },
   { id: "reference", href: "/docs/reference/", label: "API reference" },
+  { id: "sdks", href: "/docs/sdks/", label: "Client SDKs" },
   { id: "mcp", href: "/docs/mcp/", label: "MCP" },
   { id: "pricing", href: "/pricing/", label: "Pricing" },
 ];
