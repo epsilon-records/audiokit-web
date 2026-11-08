@@ -9,9 +9,9 @@ The product has two audiences with different needs, so it has two shells that sh
 - **Console shell** — new: the signed-in app. Optimised for repeated, dense, data-first use.
   Adds a persistent side navigation and a top bar, and drops the marketing hero.
 
-A visitor crosses from one to the other at sign-in and back at sign-out. The public header's
-"Request access" button becomes "Sign in" once accounts exist; the console's account menu
-links back to the docs and the marketing site.
+A visitor crosses from one to the other at sign-in and back at sign-out. The public header's button
+is "Sign in" and points at the console's login screen (`https://console.audiokit.ai/login`, built
+from `site.config.mjs`); the console's account menu links back to the docs and the marketing site.
 
 ## 2. Sitemap
 
@@ -167,12 +167,17 @@ Operations that can appear in a per-operation breakdown come from the public con
 | From | To | Trigger |
 | --- | --- | --- |
 | Public header | `/login` | "Sign in" |
-| Public pricing | `/register` | "Get started free" / "Request access" |
-| Landing early-access form | email invite / `/register` | existing list today |
-| Docs "get your API key" | `/register` or `/console/api-keys` | contextual CTA |
+| Landing hero and closing band | `/login` | "Sign in to the console" |
+| Public pricing (Free, Pro) | `/login` | "Sign in" |
+| Public pricing (Enterprise, FAQ contact) | `mailto:sales@audiokit.ai` | "Contact sales" |
+| Docs "an API key" | `/login`, then `/api-keys` | contextual CTA |
 | Quota-warning email | `/console/plan` | email CTA |
 | Receipt / payment email | `/console/settings/billing` | email CTA |
 | Direct link | any `/console/*` | redirect via `/login`, preserving target |
+
+The landing page's early-access form is gone: a visitor who has never been provisioned has no
+self-serve way to get an account, because the console has no register screen and a magic link is
+only sent for an address that already exists.
 
 ## 9. Accessibility and layout floor
 

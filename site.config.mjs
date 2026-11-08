@@ -9,4 +9,7 @@ export default {
   // falling back to contract/openapi.yaml if that fetch fails.
   apiBaseUrl: "https://api.audiokit.ai",
   apiBaseUrlIsPlaceholder: false,
+  // The customer console (decision 0016/0021): its own Netlify site, so every link to it is
+  // absolute. The public site's sign-in CTA points at `${consoleUrl}/login`.
+  consoleUrl: "https://console.audiokit.ai",
 };

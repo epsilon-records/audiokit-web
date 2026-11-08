@@ -193,19 +193,11 @@ code { font-size: 0.9em; }
 .tag { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
 .tag-roadmap { color: var(--faint); border: 1px solid var(--line-strong); font-weight: 500; }
 
-/* Access form */
+/* Closing CTA band */
 .access { text-align: center; align-items: center; max-width: 760px; margin: 0 auto; gap: 24px; }
 .access p { color: var(--muted); font-size: 18px; line-height: 1.6; }
-.access-form { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; width: 100%; }
-.input {
-  flex: 1 1 260px; min-height: 50px; padding: 0 16px; background: var(--bg);
-  border: 1px solid var(--line-strong); border-radius: var(--radius-sm); color: var(--text); font: inherit; font-size: 16px;
-}
-.input-wide { flex-basis: 100%; order: 3; }
-.access-form .btn { order: 2; }
-.input::placeholder { color: #7e8792; }
 
-/* Thanks and 404 */
+/* 404 */
 .status-page { min-height: 62vh; display: flex; flex-direction: column; justify-content: center; gap: 22px; padding-top: 80px; padding-bottom: 80px; }
 .status-page h1 { font-size: clamp(36px, 5vw, 52px); letter-spacing: -0.02em; line-height: 1.1; max-width: 20ch; }
 
