@@ -5,7 +5,7 @@
     <h1>Audio analysis and processing, one job at a time.</h1>
     <p class="lede">Send AudioKit a link to a file and the job you want done. It checks the file, does the work and calls your webhook. Originals are never changed, and every result records exactly what produced it.</p>
     <div class="actions">
-      <a class="btn btn-primary btn-lg" href="#access">Request API access</a>
+      <a class="btn btn-primary btn-lg" href="{{CONSOLE_LOGIN}}">Sign in to the console</a>
       <a class="btn btn-ghost btn-lg" href="/docs/">Read the quickstart</a>
     </div>
   </div>
@@ -93,17 +93,13 @@
   </ul>
 </section>
 
-<section id="access" class="band">
+<section id="console" class="band">
   <div class="wrap section access">
     <h2>Get an API key</h2>
-    <p>AudioKit is in early access for labels, distributors and developers. Tell us what you'd process.</p>
-    <form class="access-form" name="access" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="bot-field">
-      <p class="hidden"><label>Leave this empty: <input name="bot-field"></label></p>
-      <label for="email" class="sr-only">Work email</label>
-      <input class="input" id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required>
-      <label for="use" class="sr-only">What would you process? (optional)</label>
-      <input class="input input-wide" id="use" name="use" type="text" maxlength="500" placeholder="What would you process? (optional)">
-      <button class="btn btn-primary btn-lg" type="submit">Request access</button>
-    </form>
+    <p>Sign in to the AudioKit console with a magic link — no password — and create a key under <strong>API keys</strong>. Usage, your plan and invoices are on the same site.</p>
+    <div class="actions">
+      <a class="btn btn-primary btn-lg" href="{{CONSOLE_LOGIN}}">Sign in to the console</a>
+      <a class="btn btn-ghost btn-lg" href="/pricing/">See pricing</a>
+    </div>
   </div>
 </section>
