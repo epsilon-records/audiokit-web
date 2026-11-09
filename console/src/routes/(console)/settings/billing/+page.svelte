@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import SettingsTabs from '#lib/components/SettingsTabs.svelte';
@@ -10,6 +11,13 @@
 
 	const planLabel = $derived(data.plan?.name ?? data.account.plan);
 	const actionError = $derived(form && 'error' in form ? form.error : null);
+
+	$effect(() => {
+		const target = form && 'portalUrl' in form ? form.portalUrl : null;
+		if (typeof target === 'string' && /^https:\/\//.test(target)) {
+			window.location.assign(target);
+		}
+	});
 </script>
 
 <svelte:head>
@@ -63,7 +71,7 @@
 			</dl>
 			<div class="actions">
 				<a class="btn btn-primary" href="/pricing">Change plan</a>
-				<form method="POST" action="?/portal"><button type="submit" class="btn btn-ghost">Manage billing ↗</button></form>
+				<form method="POST" action="?/portal" use:enhance><button type="submit" class="btn btn-ghost">Manage billing ↗</button></form>
 			</div>
 		</div>
 	</section>
