@@ -36,6 +36,14 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Metrics formatting
+        run: >-
+          npx --no-install prettier --check src/env.ts src/app.d.ts src/hooks.server.ts
+          src/routes/+layout.svelte src/routes/api/app-metrics/+server.ts
+          src/lib/app-metrics-*.ts src/lib/server/app-metrics-*.ts
+          src/lib/components/AppPerformance.svelte tests/app-metrics-*.test.ts
+          tests/fixtures/app-metrics-v1.json vite.config.ts
+
       - name: Check
         run: npm run check
 

@@ -1,11 +1,16 @@
 import adapter from '@sveltejs/adapter-netlify';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig({
 	// Expose PUBLIC_* variables (e.g. PUBLIC_BILLING_API_URL) to the app via
 	// `import.meta.env`, alongside Vite's default VITE_ prefix.
 	envPrefix: ['PUBLIC_', 'VITE_'],
+	define: {
+		__METRICS_PRODUCTION__: JSON.stringify(
+			loadEnv('production', '.', 'CONTEXT').CONTEXT === 'production'
+		)
+	},
 	plugins: [
 		sveltekit({
 			compilerOptions: {

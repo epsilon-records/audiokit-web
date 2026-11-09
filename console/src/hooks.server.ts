@@ -10,6 +10,20 @@ import { SESSION_COOKIE } from '#lib/session';
  * (the service verifies every authenticated call).
  */
 export const handle: Handle = async ({ event, resolve }) => {
+	// Exact credential-free branch before session-cookie decoding. Never widen auth routes.
+	if (event.url.pathname === '/api/app-metrics') {
+		try {
+			if (event.platform?.context?.site?.id === 'bf5e8d56-ab54-47ef-a7ca-89d152c94fe3') {
+				const headers = new Headers(event.request.headers);
+				for (const key of ['traceparent', 'tracestate', 'x-amzn-trace-id', 'x-nf-trace-span-id'])
+					headers.delete(key);
+				event = { ...event, request: new Request(event.request, { headers }) };
+			}
+			return await resolve(event);
+		} catch {
+			return new Response(null, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+		}
+	}
 	const token = event.cookies.get(SESSION_COOKIE) ?? null;
 	event.locals.sessionToken = token;
 	event.locals.session = api.parseSessionToken(token);

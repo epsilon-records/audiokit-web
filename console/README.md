@@ -31,19 +31,19 @@ and the build need no service.
 
 ## Routes
 
-| Route               | Screen                                                      |
-| ------------------- | ----------------------------------------------------------- |
-| `/login`            | Email magic-link sign-in                                    |
-| `/signup`           | Email magic-link sign-up: Free plan, no password, no card   |
+| Route               | Screen                                                           |
+| ------------------- | ---------------------------------------------------------------- |
+| `/login`            | Email magic-link sign-in                                         |
+| `/signup`           | Email magic-link sign-up: Free plan, no password, no card        |
 | `/auth/callback`    | Magic-link landing point; for a new account, shows its first key |
-| `/onboarding`       | First-run setup: profile, save the key, try a request       |
-| `/dashboard`        | Usage overview, recent jobs, quick start                    |
-| `/usage`            | Chart, per-operation breakdown, 12-period history           |
-| `/api-keys`         | List, create (reveal once), revoke                          |
-| `/settings`         | Profile, notifications, session, danger zone                |
-| `/settings/billing` | Plan, payment summary, invoices                             |
-| `/pricing`          | Signed-in plan and upgrade                                  |
-| `/logout`           | `POST`: clears the session and returns to `/login`          |
+| `/onboarding`       | First-run setup: profile, save the key, try a request            |
+| `/dashboard`        | Usage overview, recent jobs, quick start                         |
+| `/usage`            | Chart, per-operation breakdown, 12-period history                |
+| `/api-keys`         | List, create (reveal once), revoke                               |
+| `/settings`         | Profile, notifications, session, danger zone                     |
+| `/settings/billing` | Plan, payment summary, invoices                                  |
+| `/pricing`          | Signed-in plan and upgrade                                       |
+| `/logout`           | `POST`: clears the session and returns to `/login`               |
 
 `/` redirects to `/dashboard` (or `/login` when signed out). Everything under the console
 shell requires a session; the deep link is preserved through sign-in (`/login?next=…`) and
@@ -187,3 +187,58 @@ src/
     logout/              POST sign-out
 tests/                   Vitest unit tests
 ```
+
+## First-party dashboard performance pilot (EPSILON-107)
+
+Default disabled. The browser flag `PUBLIC_APP_METRICS_ENABLED=true` takes effect only
+for a production-context build on `console.audiokit.ai`. `APP_METRICS_ENABLED=true`
+separately enables the relay; billing has its own identically named sink switch.
+`APP_METRICS_SECRET` is a dedicated 32–128 character server-only machine credential
+configured on this site and billing. Never expose it through PUBLIC/VITE variables
+or reuse a session JWT, API key or general billing service token. Deploy and review
+billing first; do not enable the console until its database/machine configuration
+and browser proof have been reviewed.
+
+Only framework route ID `/(console)/dashboard` maps to the wire symbol `dashboard`.
+The collector emits `document_mount_ms` at initial client mount, from numeric
+`performance.now()`. This is not load completion, paint, a Web Vital, visits or an
+authentication timer. All client navigations and all other routes are excluded in
+this one-route slice. The collector reads no URL, referrer, entry name, form,
+cookie or storage, and emits only `{v:1,route:'dashboard',metric,ms}` with integer
+milliseconds 0–60000. The shared contract reserves `client_navigation_ms`, but this
+pilot never produces it.
+
+Native browser fetch uses a fixed same-origin `/api/app-metrics` endpoint, omitted
+credentials, no referrer, redirect errors, no-store, no keepalive and a one-second
+abort. It never retries, flushes on hide/unload or blocks navigation. The exact
+hook bypasses cookie/session decoding. Only matching adapter-owned Netlify site
+context permits discarding W3C/AWS/Netlify transport tracing; credential and baggage
+rejection remains intact. The auth callback's existing origin referrer policy is
+unchanged.
+
+The relay validates strict JSON (including duplicate keys), same-origin metadata,
+256 actual streamed bytes and a one-second body deadline. Its instance-global
+bucket permits burst five/30 attempts per minute and two concurrent calls. It
+reconstructs the four fields and forwards only JSON Content-Type and the dedicated
+machine Authorization to `https://billing.audiokit.ai/v1/internal/app-metrics`.
+The internal hop has a one-second deadline and no retry. It forwards no browser
+headers, session, attribution or raw body. Hosts inevitably receive network
+metadata; this makes no claim that addresses are never received or provider logs
+are erased.
+
+Billing owns migration `0012_console_performance_aggregates.sql`, execute-only
+roles, an atomic global 2000/day budget and finite daily histograms, with startup
+and daily 00:10 UTC pruning even while ingestion is off. Current UTC day plus
+previous seven days is a technical default, not a newly asserted Nate-explicit
+retention choice. There are no event rows, user identifiers or tenant read API.
+Readback is controlled operator SQL; no dashboard, funnel or weekly report is added.
+Deletion does not erase existing backups/WAL. See billing README for SQL and rollout.
+
+`tests/fixtures/app-metrics-v1.json` adapts ERMS contract v1 (main `5f4e802`) only by
+selecting the approved dashboard route. Billing uses the same fixture bytes, with
+no shared runtime package/new dependency. The billing PR's Node CDP harness runs
+an installed Chrome against the actual console app, endpoint, relay, actual private
+sink and PostgreSQL 18; it independently inspects both network hops. It covers TLS
+Secure fake cookies, physical hiding, auth callbacks, history, failures and disabled
+collection. Genuine BFCache is additionally tested with the actual collector bundle
+in a minimal fixture; this is not whole deployed-app BFCache proof.

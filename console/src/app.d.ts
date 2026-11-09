@@ -1,7 +1,11 @@
 import type { Session } from '#lib/types';
 
 declare global {
+	const __METRICS_PRODUCTION__: boolean;
 	namespace App {
+		interface Platform {
+			context?: { site?: { id?: string } };
+		}
 		interface Locals {
 			/** The signed-in session, or null for anonymous requests. */
 			session: Session | null;
@@ -19,6 +23,7 @@ declare global {
 
 	interface ImportMetaEnv {
 		readonly PUBLIC_BILLING_API_URL?: string;
+		readonly PUBLIC_APP_METRICS_ENABLED?: string;
 	}
 
 	interface ImportMeta {
