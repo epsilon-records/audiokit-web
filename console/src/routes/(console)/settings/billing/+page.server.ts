@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { apiFor, ApiError } from '#lib/api-client';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -23,7 +23,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	portal: async ({ locals }) => {
 		try {
-			redirect(303, await apiFor(locals.sessionToken).createBillingPortal());
+			return { portalUrl: await apiFor(locals.sessionToken).createBillingPortal() };
 		} catch (error) {
 			if (error instanceof ApiError) return fail(400, { error: error.message });
 			throw error;
