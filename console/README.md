@@ -70,9 +70,9 @@ by the click, no password (billing decision 0033). The exchange then answers
 with the one-time key, because the service keeps only its hash. A returning account is redirected
 to its `next` target instead.
 
-**First-touch signup source** (AudioKit decision 0040). The public site keeps the first page a
-visitor opened in a tab in `sessionStorage` (`ak_first_touch`, see `src/static/first-touch.js`)
-and adds it to its console sign-up and sign-in links as `ak_ref` (referring host only), `utm_*`
+**First-touch signup source** (AudioKit decisions 0040 and 0041). On the page a visitor lands
+on, the public site reads the source in memory, storing nothing on the device
+(`src/static/first-touch.js`), and adds it to that page's console sign-up and sign-in links as `ak_ref` (referring host only), `utm_*`
 and `ak_landing` (path only). `/signup` and `/login` read those values (or, for a direct landing,
 `utm_*` and the `Referer` host), carry them in hidden fields and send them with the link request,
 because a sign-in link also creates the account for a new address. The console stores none of it.

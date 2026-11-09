@@ -1,16 +1,16 @@
-// First-touch signup source (AudioKit decision 0040).
+// First-touch signup source (AudioKit decisions 0040 and 0041).
 //
-// On the first page a visitor opens in a tab, remember where they came from: the referring
-// site's host name (never the full URL), any utm_* values in the address and the path they
-// landed on. Then add those values to the links that go to console sign-up and sign-in, so the
-// console can pass them to the billing service when it creates the account.
+// On the page a visitor lands on, read where they came from: the referring site's host name
+// (never the full URL), any utm_* values in the address and the path of this page. Add those
+// values to this page's links to console sign-up and sign-in, so the console can pass them to
+// the billing service when it creates the account.
 //
-// What it stores: one sessionStorage entry, `ak_first_touch`, on audiokit.ai only. The browser
-// drops it when the tab closes. No cookie, nothing sent anywhere by this script, and a later page
-// never overwrites the first one. The privacy notice must describe it.
+// Stores nothing (0041): no cookie, no sessionStorage, no localStorage, no request. The values
+// live in this page's memory and its link addresses only. A visitor who moves to another page
+// on the site before signing up loses them; that is accepted. A page reached from another
+// audiokit.ai page is not a landing, so its links carry nothing.
 (() => {
   "use strict";
-  const KEY = "ak_first_touch";
   const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
   // Hosts that are "us": a visit from one of them is not a source.
   const SELF = /(^|\.)audiokit\.ai$/i;
@@ -24,24 +24,27 @@
     return value.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
   };
 
+  // The referrer's host, "self" for one of our own hosts, or "" for none/unusable.
   function referrerHost(referrer) {
     if (typeof referrer !== "string" || !referrer) return "";
     try {
       const url = new URL(referrer);
       if (url.protocol !== "https:" && url.protocol !== "http:") return "";
       const host = url.hostname.toLowerCase();
-      if (SELF.test(host) || IPV4.test(host) || host.startsWith("[")) return "";
+      if (SELF.test(host)) return "self";
+      if (IPV4.test(host) || host.startsWith("[")) return "";
       return clean(host, 253);
     } catch {
       return "";
     }
   }
 
-  // The touch for this page view: what the first-touch record would be if this were the first.
+  // The source for this page view, or {} when this page is not a landing.
   function touchFrom(href, referrer) {
+    const ref = referrerHost(referrer);
+    if (ref === "self") return {};
     const url = new URL(href);
     const touch = {};
-    const ref = referrerHost(referrer);
     if (ref) touch.ak_ref = ref;
     for (const key of UTM) {
       const value = clean(url.searchParams.get(key) ?? "", 100);
@@ -52,27 +55,9 @@
     return touch;
   }
 
-  function firstTouch(storage, href, referrer) {
-    try {
-      const saved = storage?.getItem(KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === "object") return parsed;
-      }
-    } catch {
-      // Unreadable or corrupt: fall through and treat this page as the first touch.
-    }
-    const touch = touchFrom(href, referrer);
-    try {
-      storage?.setItem(KEY, JSON.stringify(touch));
-    } catch {
-      // Storage blocked (private mode, policy): links still carry this page's values.
-    }
-    return touch;
-  }
-
   // Add the touch to console sign-up and sign-in links. Existing query values on a link win.
   function decorate(links, consoleUrl, touch) {
+    if (!Object.keys(touch).length) return 0;
     let origin;
     try {
       origin = new URL(consoleUrl).origin;
@@ -99,20 +84,13 @@
     return count;
   }
 
-  const api = { KEY, touchFrom, firstTouch, decorate, referrerHost };
+  const api = { touchFrom, decorate, referrerHost };
   if (typeof module === "object" && module.exports) module.exports = api;
 
   try {
-    const script = document.currentScript;
-    const consoleUrl = script?.dataset.consoleUrl;
+    const consoleUrl = document.currentScript?.dataset.consoleUrl;
     if (!consoleUrl) return;
-    let storage = null;
-    try {
-      storage = window.sessionStorage;
-    } catch {
-      storage = null;
-    }
-    const touch = firstTouch(storage, location.href, document.referrer);
+    const touch = touchFrom(location.href, document.referrer);
     const run = () => decorate(document.querySelectorAll("a[href]"), consoleUrl, touch);
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
     else run();

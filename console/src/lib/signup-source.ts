@@ -1,7 +1,8 @@
 /**
- * First-touch signup source (AudioKit decision 0040, EPSILON-98).
+ * First-touch signup source (AudioKit decisions 0040 and 0041, EPSILON-98).
  *
- * The public site remembers the first page a visitor opened in a tab and adds it to its console
+ * On the page a visitor lands on, the public site reads where they came from, in memory only
+ * (0041: nothing is stored on the device), and adds it to that page's console
  * sign-up and sign-in links as query values (`src/static/first-touch.js`): `ak_ref` (the
  * referring site's host name), `utm_*` and `ak_landing` (the path they landed on). A visitor who
  * arrives at the console directly brings `utm_*` in the address and, at most, a `Referer` header.

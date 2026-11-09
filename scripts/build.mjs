@@ -146,9 +146,8 @@ function sentryHead() {
 <script>Sentry.init(${JSON.stringify(init)});</script>`;
 }
 
-// First-touch signup source (AudioKit decision 0040): remembers the first landing's referrer
-// host, utm_* values and path for this tab and adds them to console sign-up/sign-in links.
-// See src/static/first-touch.js for what it stores.
+// First-touch signup source (AudioKit decisions 0040 and 0041): adds the landing page's referrer
+// host, utm_* values and path to that page's console sign-up/sign-in links. Stores nothing.
 function firstTouchScript() {
   return `<script src="/first-touch.js" data-console-url="${esc(config.consoleUrl)}" defer></script>\n`;
 }
