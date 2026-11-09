@@ -39,5 +39,6 @@
 <div class="side-out">
 	<a href="https://audiokit.ai/docs/">Docs ↗</a>
 	<a href="https://audiokit.ai/">Marketing site ↗</a>
+	<a href="https://audiokit.ai/privacy/">Privacy ↗</a>
 	<span class="side-caption">API v{apiVersion}</span>
 </div>

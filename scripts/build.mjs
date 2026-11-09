@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import config from "../site.config.mjs";
 import { renderReference, renderOperationList, operationModel, webhookTestVector } from "./reference.mjs";
+import { assertNoGaps, findGaps, isRelease } from "./release-gaps.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "src");
@@ -343,13 +344,20 @@ async function main() {
   urls.push("/privacy/");
 
   const pagesDir = join(src, "pages");
+  const built = new Map();
   for (const file of await walk(pagesDir)) {
     const rel = relative(pagesDir, file);
     const { meta, body } = parsePage(await readFile(file, "utf8"), rel);
     const route = routePath(outPath(rel));
     if (!meta.noindex) urls.push(route);
-    await write(outPath(rel), page(meta, fill(body, tokens, rel), ctx, route));
+    const html = page(meta, fill(body, tokens, rel), ctx, route);
+    built.set(route, html);
+    await write(outPath(rel), html);
   }
+  // Facts only Nate can supply are marked TODO(privacy); a production build refuses them.
+  const gaps = [...built.values()].reduce((n, html) => n + findGaps(html).length, 0);
+  if (gaps) console.warn(`gaps: ${gaps} TODO(privacy) marker(s); a production build will refuse to publish`);
+  assertNoGaps(built, isRelease());
 
   const refRoute = "/docs/reference/";
   urls.push(refRoute);

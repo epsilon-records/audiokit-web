@@ -27,6 +27,9 @@
 	</section>
 
 	<footer class="auth-foot">
-		<p>Read the <a href="https://audiokit.ai/docs/">docs</a> ↗</p>
+		<p>
+			Read the <a href="https://audiokit.ai/docs/">docs</a> ↗ ·
+			<a href="https://audiokit.ai/privacy/">Privacy notice</a> ↗
+		</p>
 	</footer>
 </main>

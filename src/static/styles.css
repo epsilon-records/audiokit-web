@@ -516,3 +516,6 @@ table.fields td:first-child { width: 1%; }
     grid-template-columns: 1fr;
   }
 }
+
+/* Facts a draft page is still missing (scripts/release-gaps.mjs). A production build refuses them. */
+mark.gap { background: rgba(255, 196, 0, 0.14); color: #ffd24d; border: 1px dashed rgba(255, 196, 0, 0.6); border-radius: 3px; padding: 0 4px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.85em; }
