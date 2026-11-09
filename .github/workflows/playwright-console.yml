@@ -1,0 +1,45 @@
+name: Console browser smoke tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'console/**'
+      - '.github/workflows/playwright-console.yml'
+  pull_request:
+    paths:
+      - 'console/**'
+      - '.github/workflows/playwright-console.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: console
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+      - run: npm ci
+      # Kept isolated from the production console dependency tree until the
+      # Playwright dependency is added with a reviewed lockfile update.
+      - run: npm install --no-save --package-lock=false @playwright/test@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-playwright-report
+          path: |
+            console/playwright-report/
+            console/test-results/
+          retention-days: 7
