@@ -1,4 +1,4 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import { apiFor, ApiError, HttpApiError } from '#lib/api-client';
 import type { PlanId } from '#lib/types';
 import type { Actions, PageServerLoad } from './$types';
@@ -21,7 +21,7 @@ export const actions: Actions = {
 	// supports Pro and must never be used to switch a customer to Free.
 	downgrade: async ({ locals }) => {
 		try {
-			redirect(303, await apiFor(locals.sessionToken).createBillingPortal());
+			return { portalUrl: await apiFor(locals.sessionToken).createBillingPortal() };
 		} catch (error) {
 			if (error instanceof ApiError) return fail(400, { error: error.message });
 			throw error;
@@ -36,7 +36,8 @@ export const actions: Actions = {
 		try {
 			const checkout = await apiFor(locals.sessionToken).startCheckout(planId, interval);
 			// A real service hands off to a hosted checkout page; the mock does not.
-			if (checkout.url) redirect(303, checkout.url);
+			// Return the URL to the browser. Cross-origin redirects from SvelteKit actions
+			// can surface as a 500 on the deployed console; navigate client-side instead.
 			return { checkout, planId };
 		} catch (error) {
 			if (error instanceof HttpApiError && error.status === 409) {
