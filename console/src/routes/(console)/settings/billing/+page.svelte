@@ -76,7 +76,11 @@
 			{#if data.billing.paymentMethod}
 				<p class="muted">Card on file: <span class="mono">{data.billing.paymentMethod}</span></p>
 			{:else}
-				<p class="muted">No payment method on file. The Free plan does not need one.</p>
+				{#if data.account.plan === 'free'}
+					<p class="muted">No payment method on file. The Free plan does not need one.</p>
+				{:else}
+					<p class="muted">Payment details are managed in Stripe. Select <strong>Manage billing</strong> above to view or update your payment method.</p>
+				{/if}
 			{/if}
 		</div>
 	</section>
@@ -85,7 +89,9 @@
 		<h2 id="invoices-heading">Invoices</h2>
 		{#if data.billing.invoices.length === 0}
 			<EmptyState title="No invoices yet">
-				Invoices appear here after the first paid period. Free-plan usage is not invoiced.
+				{data.account.plan === 'free'
+					? 'Free-plan usage is not invoiced.'
+					: 'Invoice history is available in Stripe. Select Manage billing above to view your invoices.'}
 			</EmptyState>
 		{:else}
 			<div class="table-box">
