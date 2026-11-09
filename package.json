@@ -8,7 +8,9 @@
     "contract:pull": "node scripts/pull-contract.mjs",
     "contract:check": "node scripts/check-contract.mjs",
     "contract:check:strict": "node scripts/check-contract.mjs --strict",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:build": "npm run build && node test/analytics-output.mjs",
+    "test:analytics:browser": "node test/analytics.browser.mjs"
   },
   "engines": {
     "node": ">=20"
