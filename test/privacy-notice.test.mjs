@@ -46,8 +46,9 @@ test("device storage it describes matches the code", () => {
   assert.ok(text.includes(cookie), `notice names the ${cookie} cookie`);
   assert.match(session, /SESSION_MAX_AGE_SECONDS = 60 \* 60 \* 8;/);
   assert.match(text, /expires after 8 hours/);
-  // The site's first-touch entry (decision 0040, EPSILON-98).
-  assert.match(text, /sessionStorage under the name ak_first_touch/);
+  // The signup source stores nothing on the device (decisions 0040 and 0041, EPSILON-98).
+  assert.match(text, /Nothing is stored on your device for this: no cookie and no browser storage/);
+  assert.doesNotMatch(text, /sessionStorage|localStorage|ak_first_touch/);
   assert.match(text, /The public site sets no cookies/);
 });
 

@@ -32,8 +32,8 @@
   <h3 id="site-analytics" data-toc="Analytics">Analytics</h3>
   <p>When it is switched on, selected public content pages of audiokit.ai use Cloudflare Web Analytics to measure aggregate page traffic and page performance. It uses no cookies and no browser storage, and is not used to follow you across other websites. It receives the page address, the referring address and browser performance measurements. It is not used in the console, the API or the billing service, and it skips pages whose address contains a query string or fragment.</p>
   <h3 id="site-source" data-toc="Where you came from">Where you came from</h3>
-  <p>To learn which channels bring people to AudioKit, the site remembers, for the browser tab you are using, the first page you opened on audiokit.ai: the name of the website that linked you to us (the host name only, such as <code>news.example.com</code>, never the full address), any <code>utm_</code> campaign tags in the link, and the path of the page you landed on. This is kept in your browser's <code>sessionStorage</code> under the name <code>ak_first_touch</code>. Your browser deletes it when you close the tab. It is not a cookie, and the site sends it nowhere by itself.</p>
-  <p>When you follow a link from the site to sign up or sign in, those values are added to the link. If you then create an account, they are stored with your account (see <a href="#account">your account</a>). If you do not create an account, nothing is stored on our side.</p>
+  <p>To learn which channels bring people to AudioKit, the page you land on reads three things: the name of the website that linked you to us (the host name only, such as <code>news.example.com</code>, never the full address), any <code>utm_</code> campaign tags in the link, and the path of that page. It adds them to that page's links to sign up and sign in. Nothing is stored on your device for this: no cookie and no browser storage. If you move to another page on the site first, the values are not carried over.</p>
+  <p>If you follow one of those links and create an account, the values are stored with your account (see <a href="#account">your account</a>). If you do not create an account, nothing is stored on our side.</p>
 </section>
 
 <section>
@@ -100,7 +100,6 @@
 <section>
   <h2 id="retention">How long we keep it</h2>
   <ul>
-    <li><strong>Site visit data in your browser</strong> (<code>ak_first_touch</code>): until you close the tab.</li>
     <li><strong>Console sign-in cookie:</strong> 8 hours, or until you sign out.</li>
     <li><strong>Sign-in links:</strong> usable for 15 minutes. The hash record stays with your account.</li>
     <li><strong>Account, API key records, preferences and signup source:</strong> for as long as your account exists.</li>
