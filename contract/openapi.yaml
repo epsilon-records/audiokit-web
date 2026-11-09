@@ -339,7 +339,10 @@ paths:
       tags: [Jobs]
       operationId: getJob
       summary: Job status and result
-      description: Always has the final state, even if webhook delivery gave up.
+      description: >-
+        Always has the final state, even if webhook delivery gave up. A finished job is kept
+        for 90 days after it finishes; then it and its webhook deliveries are deleted, this
+        answers 404 and its `job_id` can be used again.
       responses:
         "200":
           description: The job.
