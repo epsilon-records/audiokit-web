@@ -150,3 +150,14 @@ describe('mock client: settings and checkout', () => {
 		await expect(client.createBillingPortal()).rejects.toMatchObject({ code: 'not-supported' });
 	});
 });
+
+describe('mock client: account deletion', () => {
+	it('only accepts the account address', async () => {
+		const client = newClient();
+		const { email } = await client.getAccount();
+		await expect(client.deleteAccount('someone@else.test')).rejects.toMatchObject({
+			code: 'invalid-request'
+		});
+		await expect(client.deleteAccount(email.toUpperCase())).resolves.toBeUndefined();
+	});
+});

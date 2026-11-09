@@ -31,7 +31,12 @@ import type { SignupSource } from './signup-source';
 
 /** A typed failure the screens can branch on, rather than a bare Error. */
 export type MockApiErrorCode =
-	'invalid-email' | 'not-found' | 'enterprise-contact' | 'already-revoked' | 'not-supported';
+	| 'invalid-email'
+	| 'invalid-request'
+	| 'not-found'
+	| 'enterprise-contact'
+	| 'already-revoked'
+	| 'not-supported';
 
 export class MockApiError extends ApiError {
 	constructor(code: MockApiErrorCode, message: string) {
@@ -190,6 +195,12 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		async updateProfile(name: string) {
 			account = { ...account, name: name.trim() || account.name };
 			return { ...account };
+		},
+
+		async deleteAccount(confirmEmail: string) {
+			if (confirmEmail.trim().toLowerCase() !== account.email.toLowerCase()) {
+				throw new MockApiError('invalid-request', 'Type the email address of this account.');
+			}
 		},
 
 		async updateNotificationPreferences(next: NotificationPreferences) {

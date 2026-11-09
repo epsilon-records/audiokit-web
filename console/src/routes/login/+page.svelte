@@ -48,6 +48,9 @@
 		</div>
 	{:else}
 		<form method="POST" action="?/send" class="form-stack">
+			{#if data.deleted}
+				<p class="notice notice-ok" role="status">Your account was deleted.</p>
+			{/if}
 			<input type="hidden" name="next" value={data.next} />
 			<SignupSourceFields {source} />
 
