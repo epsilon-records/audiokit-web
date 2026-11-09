@@ -64,6 +64,10 @@
 				     read as a working mailbox. Enterprise is sales-assisted (AudioKit decision 0023);
 				     add the address here once one exists and receives. -->
 				<p class="field-hint">Enterprise is arranged with us directly.</p>
+			{:else if plan.id === 'free'}
+				<form method="POST" action="?/downgrade" use:enhance>
+					<button type="submit" class="btn btn-primary">Manage downgrade in billing portal</button>
+				</form>
 			{:else}
 				<form method="POST" action="?/upgrade" use:enhance>
 					<input type="hidden" name="planId" value={plan.id} />
@@ -77,7 +81,7 @@
 						</label>
 					{/if}
 					<button type="submit" class="btn btn-primary">
-						{plan.id === 'free' ? 'Downgrade to Free' : `Upgrade to ${plan.name}`}
+						`Upgrade to ${plan.name}`
 					</button>
 				</form>
 			{/if}
