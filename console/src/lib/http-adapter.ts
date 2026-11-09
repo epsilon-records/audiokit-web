@@ -38,6 +38,7 @@
  */
 
 import { ApiError } from './errors';
+import { toWireSignupSource, type SignupSource } from './signup-source';
 import type { ConsoleApi } from './api-client';
 import type {
 	Account,
@@ -498,7 +499,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 	return {
 		async requestMagicLink(
 			email: string,
-			requestOptions: { next?: string; signup?: boolean } = {}
+			requestOptions: { next?: string; signup?: boolean; source?: SignupSource } = {}
 		) {
 			const normalised = email.trim().toLowerCase();
 			if (!EMAIL_RE.test(normalised)) {
@@ -510,7 +511,12 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 				{
 					method: 'POST',
 					auth: false,
-					...json({ email: normalised, next: requestOptions.next })
+					// First-touch source (0040): billing keeps it only on the account this link creates.
+					...json({
+						email: normalised,
+						next: requestOptions.next,
+						signup_source: toWireSignupSource(requestOptions.source)
+					})
 				}
 			);
 

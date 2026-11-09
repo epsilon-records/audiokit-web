@@ -33,12 +33,13 @@ import type {
 	Session,
 	UsageSummary
 } from './types';
+import type { SignupSource } from './signup-source';
 
 export type ConsoleApi = {
 	/** Ask the billing service to email a sign-in link. */
 	requestMagicLink(
 		email: string,
-		options?: { next?: string; signup?: boolean }
+		options?: { next?: string; signup?: boolean; source?: SignupSource }
 	): Promise<MagicLinkRequest>;
 	/** Consume the token from that link. */
 	exchangeMagicLink(token: string): Promise<MagicLinkExchange>;

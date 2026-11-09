@@ -70,6 +70,15 @@ by the click, no password (billing decision 0033). The exchange then answers
 with the one-time key, because the service keeps only its hash. A returning account is redirected
 to its `next` target instead.
 
+**First-touch signup source** (AudioKit decision 0040). The public site keeps the first page a
+visitor opened in a tab in `sessionStorage` (`ak_first_touch`, see `src/static/first-touch.js`)
+and adds it to its console sign-up and sign-in links as `ak_ref` (referring host only), `utm_*`
+and `ak_landing` (path only). `/signup` and `/login` read those values (or, for a direct landing,
+`utm_*` and the `Referer` host), carry them in hidden fields and send them with the link request,
+because a sign-in link also creates the account for a new address. The console stores none of it.
+`src/lib/signup-source.ts` cleans and caps the values; `toWireSignupSource` is the only place that
+knows the billing field names.
+
 In mock mode the token is `mock.<email>`. In HTTP mode it is the service's JWT: `apiFor` passes
 it to every authenticated call and the service verifies it; `parseSessionToken` only decodes it
 so the shell can resolve the session.
