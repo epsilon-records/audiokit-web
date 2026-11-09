@@ -12,7 +12,7 @@ test('passwordless signup creates a Free account and opens pricing', async ({ pa
   await page.getByRole('link', { name: 'Open the magic link' }).click();
   await page.goto('/pricing');
   await expect(page.getByText('100 jobs a month', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Upgrade to Pro' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
 });
 
 test('signed-out users cannot access billing settings', async ({ page }) => {
