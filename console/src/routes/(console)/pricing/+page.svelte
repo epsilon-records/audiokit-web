@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import PlanCard from '#lib/components/PlanCard.svelte';
 	import { formatDate } from '#lib/format';
@@ -65,11 +64,11 @@
 				     add the address here once one exists and receives. -->
 				<p class="field-hint">Enterprise is arranged with us directly.</p>
 			{:else if plan.id === 'free'}
-				<form method="POST" action="?/downgrade" use:enhance>
+				<form method="POST" action="?/downgrade">
 					<button type="submit" class="btn btn-primary">Manage downgrade in billing portal</button>
 				</form>
 			{:else}
-				<form method="POST" action="?/upgrade" use:enhance>
+				<form method="POST" action="?/upgrade">
 					<input type="hidden" name="planId" value={plan.id} />
 					{#if plan.id === 'pro'}
 						<label class="field-hint"
