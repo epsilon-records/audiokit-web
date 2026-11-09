@@ -60,6 +60,8 @@ test("keeps only the referrer's host name, and drops our own hosts", () => {
   assert.equal(ft.referrerHost("https://console.audiokit.ai/login"), "");
   assert.equal(ft.referrerHost("android-app://com.example"), "");
   assert.equal(ft.referrerHost("not a url"), "");
+  assert.equal(ft.referrerHost("http://192.168.1.10/admin"), "", "no IP addresses");
+  assert.equal(ft.referrerHost("http://[::1]/"), "", "no IP addresses");
   assert.equal(ft.referrerHost(""), "");
 });
 
@@ -70,6 +72,9 @@ test("cleans and caps visitor-controlled values", () => {
   assert.equal(touch.utm_term, "two words");
   assert.ok(!("utm_content" in touch), "an empty value is not stored");
   assert.ok(!("ak_ref" in touch), "no referrer, no ak_ref");
+  const email = ft.touchFrom(`${SITE}/?utm_source=jane%40example.com&utm_medium=email`, "");
+  assert.ok(!("utm_source" in email), "an email-like value is dropped");
+  assert.equal(email.utm_medium, "email");
 });
 
 test("the first touch is stored once and never overwritten", () => {

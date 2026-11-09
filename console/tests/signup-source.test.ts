@@ -53,6 +53,10 @@ describe('readSignupSource', () => {
 		expect(readSignupSource(params('ak_landing=%2F%2Fevil.test'))).toBeUndefined();
 		expect(readSignupSource(params('ak_landing=%2Fdocs%2F%3Ftoken%3Dx'))).toBeUndefined();
 		expect(readSignupSource(params('ak_ref=console.audiokit.ai'))).toBeUndefined();
+		expect(readSignupSource(params('ak_ref=10.0.0.1'))).toBeUndefined();
+		expect(readSignupSource(params('utm_source=jane%40example.com&utm_medium=email'))).toEqual({
+			utmMedium: 'email'
+		});
 	});
 
 	it('caps every value', () => {

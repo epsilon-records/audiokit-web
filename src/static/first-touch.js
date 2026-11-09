@@ -14,6 +14,9 @@
   const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
   // Hosts that are "us": a visit from one of them is not a source.
   const SELF = /(^|\.)audiokit\.ai$/i;
+  const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
+  // An email address in a utm value is personal data nobody asked for: drop the value.
+  const EMAIL_LIKE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 
   const clean = (value, max) => {
     if (typeof value !== "string") return "";
@@ -27,7 +30,8 @@
       const url = new URL(referrer);
       if (url.protocol !== "https:" && url.protocol !== "http:") return "";
       const host = url.hostname.toLowerCase();
-      return SELF.test(host) ? "" : clean(host, 253);
+      if (SELF.test(host) || IPV4.test(host) || host.startsWith("[")) return "";
+      return clean(host, 253);
     } catch {
       return "";
     }
@@ -41,7 +45,7 @@
     if (ref) touch.ak_ref = ref;
     for (const key of UTM) {
       const value = clean(url.searchParams.get(key) ?? "", 100);
-      if (value) touch[key] = value;
+      if (value && !EMAIL_LIKE.test(value)) touch[key] = value;
     }
     const path = clean(url.pathname, 200);
     if (path) touch.ak_landing = path;

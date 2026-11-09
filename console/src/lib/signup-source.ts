@@ -46,6 +46,9 @@ const LIMITS: Record<keyof SignupSource, number> = {
 
 /** Our own hosts: a visit from one of them is not a source. */
 const SELF_HOST = /(^|\.)audiokit\.ai$/i;
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
+/** An email address in a utm value is personal data nobody asked for: drop the value. */
+const EMAIL_LIKE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 const HOSTNAME =
 	/^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*$/;
 
@@ -60,7 +63,7 @@ function clean(value: unknown, max: number): string {
 
 function cleanHost(value: unknown): string {
 	const host = clean(value, LIMITS.referrerHost).toLowerCase();
-	if (!host || !HOSTNAME.test(host) || SELF_HOST.test(host)) return '';
+	if (!host || !HOSTNAME.test(host) || IPV4.test(host) || SELF_HOST.test(host)) return '';
 	return host;
 }
 
@@ -97,7 +100,7 @@ export function readSignupSource(
 	if (ref) source.referrerHost = ref;
 	for (const key of ['utmSource', 'utmMedium', 'utmCampaign', 'utmTerm', 'utmContent'] as const) {
 		const value = clean(values.get(SOURCE_PARAMS[key]), LIMITS[key]);
-		if (value) source[key] = value;
+		if (value && !EMAIL_LIKE.test(value)) source[key] = value;
 	}
 	const landing = cleanPath(values.get(SOURCE_PARAMS.landingPath));
 	if (landing) source.landingPath = landing;
@@ -119,9 +122,10 @@ export function signupSourceQuery(source: SignupSource | undefined): string {
 }
 
 /**
- * The billing service's field shape. ASSUMED until billing posts the contract on the board
- * ("First-touch signup source fields (EPSILON-98)", epsilon-records/knowledge#54 asks for it):
- * one optional `signup_source` object, snake_case keys, empty keys left out. This is the only
+ * The billing service's field shape, as billing published it in
+ * epsilon-records/knowledge#55 (the contract for EPSILON-98): one optional `signup_source`
+ * object, snake_case keys, empty keys left out. Billing re-validates every field, never refuses
+ * a signup over it, and stores it only when the link creates the account. This is the only
  * place that knows the wire names.
  */
 export function toWireSignupSource(
