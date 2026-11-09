@@ -1,8 +1,13 @@
 <script lang="ts">
 	import AuthCard from '#lib/components/AuthCard.svelte';
+	import SignupSourceFields from '#lib/components/SignupSourceFields.svelte';
+	import { signupSourceQuery } from '#lib/signup-source';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+	// First-touch signup source (decision 0040), kept across a resend and between the screens.
+	let source = $derived(form?.source ?? data.source);
+	let carry = $derived(signupSourceQuery(source ?? undefined));
 </script>
 
 <svelte:head>
@@ -36,13 +41,15 @@
 			<form method="POST" action="?/send" class="actions">
 				<input type="hidden" name="email" value={form.email} />
 				<input type="hidden" name="next" value={form.next} />
+				<SignupSourceFields {source} />
 				<button type="submit" class="btn btn-ghost">Send a new link</button>
-				<a class="link" href="/signup">Use a different email</a>
+				<a class="link" href={`/signup${carry}`}>Use a different email</a>
 			</form>
 		</div>
 	{:else}
 		<form method="POST" action="?/send" class="form-stack">
 			<input type="hidden" name="next" value={data.next} />
+			<SignupSourceFields {source} />
 
 			<div class="field">
 				<label for="email">Email</label>
@@ -66,7 +73,7 @@
 		</form>
 
 		<p class="auth-sub">
-			Already have an account? <a class="link" href="/login">Sign in</a>.
+			Already have an account? <a class="link" href={`/login${carry}`}>Sign in</a>.
 		</p>
 	{/if}
 </AuthCard>

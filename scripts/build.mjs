@@ -148,6 +148,12 @@ function sentryHead() {
 <script>Sentry.init(${JSON.stringify(init)});</script>`;
 }
 
+// First-touch signup source (AudioKit decisions 0040 and 0041): adds the landing page's referrer
+// host, utm_* values and path to that page's console sign-up/sign-in links. Stores nothing.
+function firstTouchScript() {
+  return `<script src="/first-touch.js" data-console-url="${esc(config.consoleUrl)}" defer></script>\n`;
+}
+
 function page(meta, body, ctx, route = "/") {
   const title = meta.title ? `${meta.title} · AudioKit` : "AudioKit";
   const desc = meta.description || "";
@@ -197,7 +203,7 @@ ${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-to
 ${header(meta)}
 ${main}
 ${footer(meta, ctx)}
-${needsJs ? `<script src="/site.js" defer></script>\n` : ""}</body>
+${needsJs ? `<script src="/site.js" defer></script>\n` : ""}${firstTouchScript()}</body>
 </html>
 `;
 }

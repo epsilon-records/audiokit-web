@@ -27,6 +27,7 @@ import type {
 	PlanId,
 	Session
 } from './types';
+import type { SignupSource } from './signup-source';
 
 /** A typed failure the screens can branch on, rather than a bare Error. */
 export type MockApiErrorCode =
@@ -86,7 +87,8 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 	return {
 		async requestMagicLink(
 			email: string,
-			requestOptions: { next?: string; signup?: boolean } = {}
+			// `source` is accepted and dropped: the mock has no account store to keep it on.
+			requestOptions: { next?: string; signup?: boolean; source?: SignupSource } = {}
 		) {
 			const normalised = email.trim().toLowerCase();
 			if (!EMAIL_RE.test(normalised)) {
