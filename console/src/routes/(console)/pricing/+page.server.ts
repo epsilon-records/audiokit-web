@@ -16,6 +16,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	// Downgrades are managed in Stripe's portal so the subscription remains
+	// active until the configured period end. The Checkout endpoint only
+	// supports Pro and must never be used to switch a customer to Free.
+	downgrade: async ({ locals }) => {
+		try {
+			redirect(303, await apiFor(locals.sessionToken).createBillingPortal());
+		} catch (error) {
+			if (error instanceof ApiError) return fail(400, { error: error.message });
+			throw error;
+		}
+	},
 	upgrade: async ({ request, locals }) => {
 		const form = await request.formData();
 		const planId = String(form.get('planId') ?? '') as PlanId;
