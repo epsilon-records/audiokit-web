@@ -58,6 +58,18 @@ test("it describes the first-touch signup source billing stores (decision 0040)"
   }
 });
 
+test("it names the controller, address and contact Nate supplied (shared 0013, 0015)", () => {
+  assert.match(text, /The controller for the personal data described here is Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam\./);
+  assert.match(notice, /href="mailto:hello@epsilonrecords\.com">hello@epsilonrecords\.com</);
+  // No legal form was supplied, so none is stated (shared 0014/0015).
+  assert.doesNotMatch(text, /Epsilon Records (B\.V\.|BV|V\.O\.F|VOF|LLC|Ltd|Inc)/i);
+});
+
+test("the analytics statement follows the configured beacon", () => {
+  assert.match(notice, /\{\{ANALYTICS_STATUS\}\}/);
+  assert.match(build, /ANALYTICS_STATUS: ANALYTICS_ENABLED/);
+});
+
 test("no client is named on the public page", () => {
   assert.doesNotMatch(notice, /\bERMS\b|Epsilon Records Management/i);
 });

@@ -323,6 +323,10 @@ async function main() {
     CONSOLE_SIGNUP: CONSOLE_SIGNUP,
     OPERATION_LIST: renderOperationList(doc, ops),
     OPERATION_COUNT: String(ops.length),
+    // The privacy notice (src/pages/privacy.html) states whether the Cloudflare beacon is on.
+    ANALYTICS_STATUS: ANALYTICS_ENABLED
+      ? "We use Cloudflare Web Analytics on selected public pages of audiokit.ai to measure aggregate page traffic and page performance."
+      : "Cloudflare Web Analytics is currently disabled on this public site. When it is switched on, selected public pages of audiokit.ai use it to measure aggregate page traffic and page performance.",
     WEBHOOK_TEST_VECTOR: webhookTestVector(doc),
     BASE_URL_NOTE: config.apiBaseUrlIsPlaceholder
       ? `<p class="note">Examples use <code>${esc(config.apiBaseUrl)}</code>. Replace it with the base URL that comes with your API key.</p>`
@@ -331,17 +335,6 @@ async function main() {
 
   await rm(out, { recursive: true, force: true });
   await cp(join(src, "static"), out, { recursive: true });
-  // Disclosure content stays in the static source tree; render it with the shared layout.
-  await rm(join(out, "privacy.html"), { force: true });
-  await write("privacy/index.html", page(
-    { title: "Privacy and analytics", layout: "docs" },
-    (await readFile(join(src, "static", "privacy.html"), "utf8")).replace(
-      "{{ANALYTICS_STATUS}}", ANALYTICS_ENABLED
-        ? "We use Cloudflare Web Analytics on selected public pages to understand aggregate page traffic and performance."
-        : "Cloudflare Web Analytics is currently disabled on this public site.",
-    ), ctx, "/privacy/",
-  ));
-  urls.push("/privacy/");
 
   const pagesDir = join(src, "pages");
   const built = new Map();
