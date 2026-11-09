@@ -94,6 +94,7 @@ function footer(meta, ctx) {
       <a href="/docs/reference/">API reference</a>
       <a href="/docs/mcp/">MCP</a>
       <a href="/pricing/">Pricing</a>
+      <a href="/privacy/">Privacy</a>
       <a href="/docs/openapi.yaml">openapi.yaml</a>
     </nav>
   </div>
@@ -133,6 +134,7 @@ function sidebar(meta, body) {
 // The DSN is public, but it still comes from the environment rather than the source.
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN || "";
 const SENTRY_BUNDLE_VERSION = "11.11.0";
+const ANALYTICS_ENABLED = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || "");
 
 function sentryHead() {
   if (!SENTRY_DSN) return "";
@@ -188,6 +190,7 @@ ${head}
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 ${sentryHead()}
+${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-token="${esc(config.cloudflareWebAnalyticsToken)}" defer></script>` : ""}
 </head>
 <body class="layout-${meta.layout || "site"}">
 <a class="skip" href="#main">Skip to content</a>
@@ -321,6 +324,17 @@ async function main() {
 
   await rm(out, { recursive: true, force: true });
   await cp(join(src, "static"), out, { recursive: true });
+  // Disclosure content stays in the static source tree; render it with the shared layout.
+  await rm(join(out, "privacy.html"), { force: true });
+  await write("privacy/index.html", page(
+    { title: "Privacy and analytics", layout: "docs" },
+    (await readFile(join(src, "static", "privacy.html"), "utf8")).replace(
+      "{{ANALYTICS_STATUS}}", ANALYTICS_ENABLED
+        ? "We use Cloudflare Web Analytics on selected public pages to understand aggregate page traffic and performance."
+        : "Cloudflare Web Analytics is currently disabled on this public site.",
+    ), ctx, "/privacy/",
+  ));
+  urls.push("/privacy/");
 
   const pagesDir = join(src, "pages");
   for (const file of await walk(pagesDir)) {
