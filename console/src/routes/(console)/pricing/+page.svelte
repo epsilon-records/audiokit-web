@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import PlanCard from '#lib/components/PlanCard.svelte';
 	import { formatDate } from '#lib/format';
@@ -15,6 +16,15 @@
 	);
 	const actionError = $derived(form && 'error' in form ? form.error : null);
 	let interval = $state<'month' | 'year'>('month');
+
+	// SvelteKit action redirects to an external Stripe domain can fail on Netlify.
+	// The action returns the URL; a browser navigation performs the handoff.
+	$effect(() => {
+		const target = form && 'portalUrl' in form ? form.portalUrl : checkout?.url;
+		if (typeof target === 'string' && /^https:\/\//.test(target)) {
+			window.location.assign(target);
+		}
+	});
 </script>
 
 <svelte:head>
@@ -64,11 +74,11 @@
 				     add the address here once one exists and receives. -->
 				<p class="field-hint">Enterprise is arranged with us directly.</p>
 			{:else if plan.id === 'free'}
-				<form method="POST" action="?/downgrade">
+				<form method="POST" action="?/downgrade" use:enhance>
 					<button type="submit" class="btn btn-primary">Manage downgrade in billing portal</button>
 				</form>
 			{:else}
-				<form method="POST" action="?/upgrade">
+				<form method="POST" action="?/upgrade" use:enhance>
 					<input type="hidden" name="planId" value={plan.id} />
 					{#if plan.id === 'pro'}
 						<label class="field-hint"
