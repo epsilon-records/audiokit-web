@@ -3,7 +3,7 @@
   <p class="kicker">Legal</p>
   <h1>Privacy notice</h1>
   <p class="lede">This notice explains what personal data AudioKit processes when you visit audiokit.ai, use the console at {{CONSOLE_URL}} or call the API, why we process it, who else handles it, and the rights you have.</p>
-  <p class="note">Effective from <mark class="gap">TODO(privacy): the date this notice takes effect</mark>.</p>
+  <p class="note">Effective from <mark class="gap">TODO(privacy): the publication date, set in the final commit at merge (AudioKit 0043)</mark>.</p>
 </section>
 
 <section>
@@ -105,6 +105,7 @@
     <li><strong>Modal:</strong> its data processing addendum incorporates the standard contractual clauses.</li>
     <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google's privacy policy</a> for how Google handles international transfers.</li>
   </ul>
+  <p><mark class="gap">TODO(privacy): each safeguard above checked against the Data Privacy Framework list and the provider's DPA (AudioKit 0043)</mark> <mark class="gap">TODO(privacy): confirmation that the data processing terms for Stripe, Sentry, Resend and Netlify are accepted</mark></p>
   <p>You can ask us for details of the safeguard that applies (see <a href="#controller">who is responsible</a>).</p>
 </section>
 
@@ -114,10 +115,13 @@
     <li><strong>Console sign-in cookie:</strong> 8 hours, or until you sign out.</li>
     <li><strong>Sign-in links:</strong> usable for 15 minutes. The hash record stays with your account.</li>
     <li><strong>Account, API key records, preferences and signup source:</strong> for as long as your account exists.</li>
-    <li><strong>Job, usage and webhook records:</strong> for as long as your account exists. We do not delete them on a fixed schedule while the account is open. They are deleted when the account is deleted.</li>
+    <li><strong>Job records, webhook deliveries and payment events from Stripe:</strong> deleted after 90 days, or sooner if you delete your account. <mark class="gap">TODO(privacy): the 90-day cleanup in the API and the billing service has shipped</mark></li>
+    <li><strong>Usage counts:</strong> for as long as your account exists.</li>
     <li><strong>Invoices and payment records:</strong> 7 years, as Dutch tax law requires businesses to keep their records (Article 52 of the General State Taxes Act, AWR). Stripe also keeps its own records under its own terms.</li>
     <li><strong>Audio and other files:</strong> not kept. They exist only while a job is being processed.</li>
-    <li><strong>Request logs, error reports and analytics:</strong> we set no retention period of our own for these. Railway, Netlify, Sentry and Cloudflare keep them under their own settings and terms, and we see analytics only as aggregate figures.</li>
+    <li><strong>Request logs of our API and billing service at Railway:</strong> <mark class="gap">TODO(privacy): Railway's log retention period for the current plan</mark>.</li>
+    <li><strong>Error reports at Sentry:</strong> no longer than 90 days.</li>
+    <li><strong>Hosting logs at Netlify and analytics at Cloudflare:</strong> we keep none ourselves; the providers keep them under their own retention practices. Cloudflare gives us aggregate reports only.</li>
   </ul>
   <p>You can delete your account yourself in the console, or email <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and we will do it. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices.</p>
 </section>
