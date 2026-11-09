@@ -20,7 +20,7 @@ function run({ current = safe, original = safe, referrer = '', id = token, entri
   return scripts;
 }
 test('missing real configuration stays disabled', () => {
-  assert.equal(config.cloudflareWebAnalyticsToken, '');
+  assert.ok(config.cloudflareWebAnalyticsToken === '' || /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken));
   for (const id of ['', null, 'UNKNOWN', 'example']) assert.equal(run({ id }).length, 0);
 });
 test('clean public documents load exactly once with document-only metrics', () => {

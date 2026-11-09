@@ -1,0 +1,33 @@
+// Run after the static build. This checks generated output without changing it.
+import assert from 'node:assert/strict';
+import { readFile, readdir, stat } from 'node:fs/promises';
+import config from '../site.config.mjs';
+const root = new URL('../dist/', import.meta.url);
+async function htmlFiles(dir = root) {
+  const result = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const file = new URL(entry.name + (entry.isDirectory() ? '/' : ''), dir);
+    if (entry.isDirectory()) result.push(...await htmlFiles(file));
+    else if (entry.name.endsWith('.html')) result.push(file);
+  }
+  return result;
+}
+const files = await htmlFiles();
+assert.equal(files.length, 8, 'review public route inventory when adding pages');
+let loaders = 0;
+for (const file of files) {
+  const html = await readFile(file, 'utf8');
+  assert.match(html, /href="\/privacy\/"/);
+  assert.doesNotMatch(html, /\{\{ANALYTICS_STATUS\}\}|data-cf-beacon|static\.cloudflareinsights\.com/);
+  const tags = [...html.matchAll(/<script src="\/analytics.js" data-site-token="([^"]+)" defer><\/script>/g)];
+  const enabled = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || '');
+  const expected = enabled && !file.pathname.endsWith('/404.html') ? 1 : 0;
+  assert.equal(tags.length, expected, file.pathname);
+  for (const tag of tags) assert.equal(tag[1], config.cloudflareWebAnalyticsToken);
+  loaders += tags.length;
+  if (process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN) assert.match(html, /Sentry.init\(/);
+}
+assert.equal(await stat(new URL('privacy.html', root)).then(() => true, () => false), false);
+assert.match(await readFile(new URL('privacy/index.html', root), 'utf8'), config.cloudflareWebAnalyticsToken
+  ? /We use Cloudflare Web Analytics/ : /Cloudflare Web Analytics is currently disabled/);
+console.log(`PASS ${files.length} public HTML documents: ${loaders} guarded loaders, no direct vendor injection, privacy links and conditional Sentry preserved`);

@@ -18,3 +18,5 @@ jobs:
       - run: npm test
       # Fail the build when contract/openapi.yaml drifts from the live API contract.
       - run: npm run contract:check:strict
+      # Validate guarded loader/privacy coverage in generated public HTML.
+      - run: npm run test:build
