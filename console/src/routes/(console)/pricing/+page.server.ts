@@ -42,7 +42,7 @@ export const actions: Actions = {
 		} catch (error) {
 			if (error instanceof HttpApiError && error.status === 409) {
 				try {
-					redirect(303, await apiFor(locals.sessionToken).createBillingPortal());
+					return { portalUrl: await apiFor(locals.sessionToken).createBillingPortal(), planId };
 				} catch (portalError) {
 					if (portalError instanceof ApiError) return fail(400, { error: portalError.message, planId });
 					throw portalError;
