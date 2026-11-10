@@ -29,9 +29,15 @@ test("the console links the notice on the auth screens and in the shell", async 
 });
 
 test("it names every provider that handles personal data", () => {
-  for (const name of ["Railway", "Modal", "Netlify", "Stripe", "Sentry", "Resend", "Google Fonts", "Cloudflare Web Analytics"]) {
+  for (const name of ["Railway", "Modal", "Netlify", "Stripe", "Sentry", "Resend", "Google Fonts", "Cloudflare Web Analytics", "GitHub"]) {
     assert.ok(text.includes(name), name);
   }
+});
+
+test("it states GitHub's role, safeguard and 90-day retention for encrypted backups (decision 0048)", () => {
+  assert.match(text, /GitHub[^]*?encrypted backups of our databases/);
+  assert.match(text, /GitHub:[^]*?Data Privacy Framework[^]*?standard contractual clauses/);
+  assert.match(text, /Encrypted database backups at GitHub: 90 days/);
 });
 
 test("it has the sections a notice needs", () => {
