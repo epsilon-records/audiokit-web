@@ -15,6 +15,7 @@ const plain = (html) => html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
 test("the Kit form ID is one config constant, and it ships empty until the form exists", async () => {
   assert.ok("kitFormId" in config);
+  assert.equal(config.kitDisclosure, true, "the Kit disclosure stays on while Kit holds subscribers");
   assert.equal(normalizeKitFormId(config.kitFormId), config.kitFormId);
   for (const file of ["scripts/build.mjs", "src/pages/index.html", "scripts/kit-form.mjs"]) {
     assert.doesNotMatch(await read(file), /app\.kit\.com\/forms\/\d{4,}/, `${file} hard-codes a form ID`);
@@ -49,11 +50,15 @@ test("the landing page places the form through the token", async () => {
   assert.match(await read("src/pages/index.html"), /\{\{PRODUCT_UPDATES_FORM\}\}/);
 });
 
-test("the Kit-only privacy wording disappears with an empty ID and stays with one", async () => {
+test("the Kit privacy disclosure follows kitDisclosure, not the form ID", async () => {
   const notice = await read("src/pages/privacy.html");
   const off = plain(applyKitBlocks(notice, false));
   assert.doesNotMatch(off, /\bKit\b|ConvertKit|kit\.com/);
   assert.doesNotMatch(applyKitBlocks(notice, false), /updates-list/);
+  const build = await read("scripts/build.mjs");
+  assert.match(build, /KIT_DISCLOSURE = KIT_ENABLED \|\| config\.kitDisclosure === true/);
+  assert.match(build, /applyKitBlocks\(text, KIT_DISCLOSURE\)/);
+  assert.doesNotMatch(build, /applyKitBlocks\(text, KIT_ENABLED\)/);
   assert.doesNotMatch(applyKitBlocks(notice, false), /<!--\/?kit-->/);
   const onHtml = applyKitBlocks(notice, true);
   assert.doesNotMatch(onHtml, /<!--\/?kit-->/);
@@ -64,6 +69,7 @@ test("the Kit-only privacy wording disappears with an empty ID and stays with on
     "you are subscribed only after you click the link",
     "Every product update email includes an unsubscribe link",
     "Your consent (a)",
+    "marked as unsubscribed so that you are not emailed again, until you ask us to erase it; we then delete it",
     "EU-U.S. Data Privacy Framework",
     "Standard Contractual Clauses",
   ]) assert.ok(on.includes(s), s);

@@ -138,6 +138,7 @@ const SENTRY_DSN = process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN || ""
 const SENTRY_BUNDLE_VERSION = "11.11.0";
 const KIT_FORM_ID = normalizeKitFormId(config.kitFormId);
 const KIT_ENABLED = KIT_FORM_ID !== "";
+const KIT_DISCLOSURE = KIT_ENABLED || config.kitDisclosure === true;
 const ANALYTICS_ENABLED = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || "");
 
 function sentryHead() {
@@ -222,7 +223,7 @@ function parsePage(text, file) {
 }
 
 function fill(text, tokens, file) {
-  return applyKitBlocks(text, KIT_ENABLED).replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
+  return applyKitBlocks(text, KIT_DISCLOSURE).replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
     if (!(name in tokens)) throw new Error(`${file}: unknown token {{${name}}}`);
     return tokens[name];
   });

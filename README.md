@@ -68,11 +68,11 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 
 ## Product updates signup
 
-The landing page can carry a "Product updates" email signup, a plain HTML POST to a Kit form (shared decision [0027](https://github.com/epsilon-records/knowledge/blob/main/shared/decisions/0027-subscribe-forms-epsilon-and-audiokit-lists.md)). It has no Kit script and sets nothing on your device. The Kit form ID is `kitFormId` in `site.config.mjs`, and it ships empty: while it is empty the build renders no form and drops every Kit sentence from the privacy notice (the `<!--kit-->...<!--/kit-->` blocks in `src/pages/privacy.html`). To turn it on, create the Kit form, set double opt-in and the two redirects below, then put its numeric ID in `kitFormId`.
+The landing page can carry a "Product updates" email signup, a plain HTML POST to a Kit form (shared decision [0027](https://github.com/epsilon-records/knowledge/blob/main/shared/decisions/0027-subscribe-forms-epsilon-and-audiokit-lists.md)). It has no Kit script and sets nothing on your device. The Kit form ID is `kitFormId` in `site.config.mjs`, and it ships empty: while it is empty the build renders no form. The privacy notice's Kit disclosure (the `<!--kit-->...<!--/kit-->` blocks in `src/pages/privacy.html`) follows a separate flag, `kitDisclosure`, which stays `true` for as long as Kit holds subscribers, so clearing the form ID never hides it. To turn the form on, create the Kit form, set double opt-in and the two redirects below, then put its numeric ID in `kitFormId`.
 
 | Kit form setting | Value |
 | --- | --- |
-| Double opt-in | On: leave "Auto-confirm new subscribers" unchecked |
+| Double opt-in | On: "Send confirmation email" (the incentive email) enabled and "Auto-confirm new subscribers" unchecked |
 | After subscribing, redirect to | `https://audiokit.ai/check-your-inbox/` |
 | After confirming, redirect to | `https://audiokit.ai/subscribed/` |
 

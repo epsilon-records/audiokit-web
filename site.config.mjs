@@ -19,6 +19,10 @@ export default {
   consoleUrl: "https://console.audiokit.ai",
   // Kit form ID for the "Product updates" signup on the landing page (shared decision 0027).
   // Digits only, from the Kit form's URL. Leave it empty until the form exists: while empty, the
-  // build renders no form and the privacy notice carries no Kit wording. Never an API key.
+  // build renders no form. Never an API key.
   kitFormId: "",
+  // Keeps the privacy notice's Kit disclosure (processor, transfers, retention). Leave it true
+  // for as long as Kit holds subscribers, even if the form is switched off: clearing kitFormId
+  // must not hide the disclosure. A configured kitFormId always shows it.
+  kitDisclosure: true,
 };

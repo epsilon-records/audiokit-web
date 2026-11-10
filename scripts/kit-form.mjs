@@ -1,6 +1,7 @@
 // The "Product updates" signup (shared decision 0027). A plain HTML POST to a Kit form: no Kit
 // script, no tracking. The Kit form ID lives in one place, `kitFormId` in site.config.mjs. While
-// it is empty nothing renders: no form on the landing page, no Kit wording in the privacy notice.
+// it is empty no form renders. The privacy notice's Kit disclosure follows a separate flag,
+// `kitDisclosure`, so it stays while Kit holds subscribers even if the form is switched off.
 
 /** The numeric Kit form ID, or "" when not configured. Anything else is a config mistake. */
 export function normalizeKitFormId(id) {
@@ -30,8 +31,8 @@ export function productUpdatesForm(id) {
 }
 
 /**
- * Keeps or drops `<!--kit-->...<!--/kit-->` blocks. With a form ID the markers are removed and the
- * content stays; without one the whole block goes, so the notice never describes a form that is not live.
+ * Keeps or drops `<!--kit-->...<!--/kit-->` blocks. When `enabled` the markers are removed and the
+ * content stays; otherwise the whole block goes. The build passes the disclosure flag, not the form ID.
  */
 export function applyKitBlocks(html, enabled) {
   return html.replace(/[ \t]*<!--kit-->\n?([\s\S]*?)[ \t]*<!--\/kit-->\n?/g, (_, inner) => (enabled ? inner : ""));
