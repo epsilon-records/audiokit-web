@@ -10,7 +10,8 @@
     "contract:check:strict": "node scripts/check-contract.mjs --strict",
     "test": "node --test test/*.test.mjs",
     "test:build": "npm run build && node test/analytics-output.mjs",
-    "test:analytics:browser": "node test/analytics.browser.mjs"
+    "test:analytics:browser": "node test/analytics.browser.mjs",
+    "test:acceptance": "node --test test/acceptance/smoke.acceptance.mjs"
   },
   "engines": {
     "node": ">=20"
