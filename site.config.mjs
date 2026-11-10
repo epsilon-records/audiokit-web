@@ -17,4 +17,8 @@ export default {
   // The customer console (decision 0016/0021): its own Netlify site, so every link to it is
   // absolute. The public site's sign-in CTA points at `${consoleUrl}/login`.
   consoleUrl: "https://console.audiokit.ai",
+  // Kit form ID for the "Product updates" signup on the landing page (shared decision 0027).
+  // Digits only, from the Kit form's URL. Leave it empty until the form exists: while empty, the
+  // build renders no form and the privacy notice carries no Kit wording. Never an API key.
+  kitFormId: "",
 };

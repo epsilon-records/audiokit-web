@@ -13,7 +13,7 @@ async function htmlFiles(dir = root) {
   return result;
 }
 const files = await htmlFiles();
-assert.equal(files.length, 8, 'review public route inventory when adding pages');
+assert.equal(files.length, 10, 'review public route inventory when adding pages');
 let loaders = 0;
 for (const file of files) {
   const html = await readFile(file, 'utf8');
@@ -21,7 +21,9 @@ for (const file of files) {
   assert.doesNotMatch(html, /\{\{ANALYTICS_STATUS\}\}|data-cf-beacon|static\.cloudflareinsights\.com/);
   const tags = [...html.matchAll(/<script src="\/analytics.js" data-site-token="([^"]+)" defer><\/script>/g)];
   const enabled = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || '');
-  const expected = enabled && !file.pathname.endsWith('/404.html') ? 1 : 0;
+  // noindex pages (404 and the two newsletter confirmation pages) never load the beacon.
+  const noindex = /\/(404\.html|check-your-inbox\/index\.html|subscribed\/index\.html)$/.test(file.pathname);
+  const expected = enabled && !noindex ? 1 : 0;
   assert.equal(tags.length, expected, file.pathname);
   for (const tag of tags) assert.equal(tag[1], config.cloudflareWebAnalyticsToken);
   loaders += tags.length;
