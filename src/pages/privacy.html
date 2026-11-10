@@ -64,6 +64,19 @@
   <p><strong>Errors.</strong> When something fails in the API or the billing service, an error report goes to Sentry. It can include details of the request being handled.</p>
 </section>
 
+<!--kit-->
+<section>
+  <h2 id="updates-list">Product updates signup</h2>
+  <p>You can subscribe to an occasional email about new AudioKit features and changes, using the form on the landing page whenever it is shown. Subscribing is separate from creating an account: it does not create one, and it is a different list from the email preferences in the console. Nothing is sent anywhere until you submit the form.</p>
+  <h3 id="updates-collected" data-toc="What is collected">What is collected, and how</h3>
+  <p>Only the email address you enter. The form sends it from your browser to Kit (formerly ConvertKit), the service we use to run this list. Kit also receives your IP address and browser details, as any website does when it receives a request. Kit then emails you a confirmation message, and you are subscribed only after you click the link in it. Once you confirm, Kit sends you to a confirmation page on audiokit.ai. We use your address only to send you product updates.</p>
+  <h3 id="updates-processor" data-toc="Kit as processor">Kit as processor</h3>
+  <p>Kit processes your email address for us as our email provider, and also under <a href="https://kit.com/privacy">its own privacy policy</a>. Kit states that it may transfer personal data to the United States and elsewhere using the EU-U.S. Data Privacy Framework and the European Commission's Standard Contractual Clauses (<a href="https://kit.com/gdpr">Kit's GDPR page</a>).</p>
+  <h3 id="updates-unsubscribe" data-toc="Unsubscribing">Unsubscribing</h3>
+  <p>Every product update email includes an unsubscribe link. You can also write to <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and ask us to remove you.</p>
+</section>
+
+<!--/kit-->
 <section>
   <h2 id="bases">Why we process it (legal bases)</h2>
   <div class="table-box"><table class="fields"><thead><tr><th scope="col">Purpose</th><th scope="col">Legal basis (GDPR art. 6(1))</th></tr></thead><tbody>
@@ -72,6 +85,9 @@
     <tr><td>Keeping the service secure and available: rate limits, request logs, error monitoring</td><td>Our legitimate interest in a reliable, secure service (f)</td></tr>
     <tr><td>Serving the website and its fonts</td><td>Our legitimate interest in delivering the site (f)</td></tr>
     <tr><td>Aggregate web analytics, first-touch signup source and internal funnel reports</td><td>Our legitimate interest in understanding which channels and pages work, using aggregate numbers (f)</td></tr>
+<!--kit-->
+    <tr><td>Product update emails to people who subscribe on audiokit.ai</td><td>Your consent (a), which you give by entering your address and confirming it, and can withdraw at any time by unsubscribing</td></tr>
+<!--/kit-->
     <tr><td>Product update emails, if you turn them on</td><td>Your consent (a), which you can withdraw in the console at any time</td></tr>
   </tbody></table></div>
   <p>Where we rely on legitimate interests, you can object, as described <a href="#rights">below</a>.</p>
@@ -89,6 +105,9 @@
     <tr><td>Sentry</td><td>Error monitoring for the site, API and billing service</td><td>United States</td></tr>
     <tr><td>Resend</td><td>Sending our email</td><td>United States</td></tr>
     <tr><td>Google Fonts</td><td>Typefaces for the site and console</td><td>United States</td></tr>
+<!--kit-->
+    <tr><td>Kit</td><td>Runs the product updates list: stores subscribers' email addresses and sends the confirmation and update emails</td><td>United States</td></tr>
+<!--/kit-->
     <tr><td>Cloudflare Web Analytics</td><td>Aggregate, cookieless web analytics on selected public pages</td><td>United States and its global network</td></tr>
   </tbody></table></div>
 </section>
@@ -102,6 +121,9 @@
     <li><strong>Sentry:</strong> self-certified under the EU–US Data Privacy Framework, with the standard contractual clauses in its data processing addendum (Schedule 3) as the fallback.</li>
     <li><strong>Resend:</strong> its data processing addendum incorporates the standard contractual clauses, and Resend states that it complies with the EU–US Data Privacy Framework.</li>
     <li><strong>Cloudflare:</strong> complies with the EU–US Data Privacy Framework, with the standard contractual clauses in its data processing addendum if that certification lapses.</li>
+<!--kit-->
+    <li><strong>Kit:</strong> states that it may transfer personal data to the United States and elsewhere using the EU–US Data Privacy Framework and the standard contractual clauses (<a href="https://kit.com/gdpr">Kit's GDPR page</a>).</li>
+<!--/kit-->
     <li><strong>Railway:</strong> its data processing addendum relies on the EU–US Data Privacy Framework where the recipient is certified, or otherwise on the standard contractual clauses.</li>
     <li><strong>GitHub:</strong> states in its privacy statement that it complies with the EU–US Data Privacy Framework, and that it otherwise relies on the European Commission's standard contractual clauses for transfers from the EU.</li>
     <li><strong>Modal:</strong> its data processing addendum incorporates the standard contractual clauses.</li>
@@ -120,6 +142,9 @@
     <li><strong>Usage counts:</strong> for as long as your account exists.</li>
     <li><strong>Invoices and payment records:</strong> 7 years, as Dutch tax law requires businesses to keep their records (Article 52 of the General State Taxes Act, AWR). Stripe also keeps its own records under its own terms.</li>
     <li><strong>Audio and other files:</strong> not kept. They exist only while a job is being processed.</li>
+<!--kit-->
+    <li><strong>Product updates list:</strong> while you are subscribed, your address stays on the list. After you unsubscribe it stays in Kit, marked as unsubscribed so that you are not emailed again, until you ask us to erase it; we then delete it. Write to us to ask.</li>
+<!--/kit-->
     <li><strong>Request logs of our API and billing service at Railway:</strong> 7 days.</li>
     <li><strong>Error reports at Sentry:</strong> no longer than 90 days.</li>
     <li><strong>Encrypted database backups at GitHub:</strong> 90 days, then GitHub deletes them. They are daily copies of the databases made for recovery, so a deletion you ask for reaches them within 90 days.</li>

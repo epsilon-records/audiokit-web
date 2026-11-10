@@ -17,6 +17,7 @@ import YAML from "yaml";
 import config from "../site.config.mjs";
 import { renderReference, renderOperationList, operationModel, webhookTestVector } from "./reference.mjs";
 import { assertNoGaps, findGaps, isRelease } from "./release-gaps.mjs";
+import { applyKitBlocks, normalizeKitFormId, productUpdatesForm } from "./kit-form.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "src");
@@ -135,6 +136,9 @@ function sidebar(meta, body) {
 // The DSN is public, but it still comes from the environment rather than the source.
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN || "";
 const SENTRY_BUNDLE_VERSION = "11.11.0";
+const KIT_FORM_ID = normalizeKitFormId(config.kitFormId);
+const KIT_ENABLED = KIT_FORM_ID !== "";
+const KIT_DISCLOSURE = KIT_ENABLED || config.kitDisclosure === true;
 const ANALYTICS_ENABLED = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || "");
 
 function sentryHead() {
@@ -219,7 +223,7 @@ function parsePage(text, file) {
 }
 
 function fill(text, tokens, file) {
-  return text.replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
+  return applyKitBlocks(text, KIT_DISCLOSURE).replace(/\{\{([A-Z_]+)\}\}/g, (_, name) => {
     if (!(name in tokens)) throw new Error(`${file}: unknown token {{${name}}}`);
     return tokens[name];
   });
@@ -327,6 +331,7 @@ async function main() {
     ANALYTICS_STATUS: ANALYTICS_ENABLED
       ? "We use Cloudflare Web Analytics on selected public pages of audiokit.ai to measure aggregate page traffic and page performance."
       : "Cloudflare Web Analytics is currently disabled on this public site. When it is switched on, selected public pages of audiokit.ai use it to measure aggregate page traffic and page performance.",
+    PRODUCT_UPDATES_FORM: productUpdatesForm(KIT_FORM_ID),
     WEBHOOK_TEST_VECTOR: webhookTestVector(doc),
     BASE_URL_NOTE: config.apiBaseUrlIsPlaceholder
       ? `<p class="note">Examples use <code>${esc(config.apiBaseUrl)}</code>. Replace it with the base URL that comes with your API key.</p>`

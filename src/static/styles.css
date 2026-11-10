@@ -519,3 +519,18 @@ table.fields td:first-child { width: 1%; }
 
 /* Facts a draft page is still missing (scripts/release-gaps.mjs). A production build refuses them. */
 mark.gap { background: rgba(255, 196, 0, 0.14); color: #ffd24d; border: 1px dashed rgba(255, 196, 0, 0.6); border-radius: 3px; padding: 0 4px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.85em; }
+
+/* Product updates signup (landing page; renders only when kitFormId is set) */
+.signup { align-items: center; }
+.signup-box { display: grid; gap: 14px; width: 100%; max-width: 36rem; }
+.signup-box h2 { font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -0.02em; line-height: 1.15; }
+.signup-box p:not(.kicker) { color: var(--muted); line-height: 1.6; }
+.signup-box form { display: flex; flex-wrap: wrap; gap: 10px; }
+.signup-box input[type="email"] {
+  flex: 1 1 220px; min-width: 0; min-height: 44px; padding: 10px 14px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--panel); color: var(--text); font: inherit; font-size: 15px;
+}
+.signup-box input[type="email"]::placeholder { color: var(--faint); }
+.signup-box small { color: var(--faint); line-height: 1.5; }
+.signup-box small a { color: var(--accent); border-bottom: 1px solid rgba(255, 181, 71, 0.4); }

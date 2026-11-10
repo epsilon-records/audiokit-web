@@ -239,10 +239,24 @@ paths:
         <AUDIOKIT_ADMIN_TOKEN>`, not a client API key; the endpoint is off when the token is
         unset.
 
-        Adding a client with an existing `id` replaces it, so this is safe to retry. A key hash
-        belongs to one client: writing one that another client has takes it away from that one.
-        Clients listed in `AUDIOKIT_CLIENTS` still bootstrap the store; a client written here
-        overrides that entry.
+        Adding a client with an existing `id` replaces it, so this is safe to retry: the same body
+        sent twice leaves the same client. Every field is replaced, `plan_less` included, so a
+        body that leaves it out stores `false`. A key hash belongs to one client: writing one
+        that another client has takes it away from that one. Clients listed in
+        `AUDIOKIT_CLIENTS` still bootstrap the store; a client written here overrides that entry.
+
+        `plan_less` marks a client with no plan behind it (an internal or first-party key):
+        its job submissions are never rate limited and its `stems` jobs skip the billing
+        check. It does the same for a client created at runtime as listing the id in
+        `AUDIOKIT_RATE_LIMIT_EXEMPT_CLIENTS` does for one known ahead of time, and the two
+        work together. It takes effect on the client's next request, with no redeploy.
+
+        Only the fields listed in the schema are part of the contract. Others are ignored
+        today, not rejected, so a misspelled `plan_less` leaves the client rate limited
+        without an error: send only what is listed.
+
+        The admin token is one value, or two (`current,next`) while it rotates: either
+        authenticates.
       security:
         - adminToken: []
       requestBody:
@@ -257,15 +271,23 @@ paths:
                   id: client_0193
                   api_key_sha256: 837d2e9c0f1a4b5c6d7e8f9012a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5
                   webhook_secret: example_webhook_secret_replace_me
+              no_plan:
+                summary: A client with no plan behind it
+                value:
+                  id: client_0194
+                  api_key_sha256: 4c5d6e7f8091a2b3c4d5e6f708192a3b4c5837d2e9c0f1a4b5c6d7e8f9012a3b
+                  webhook_secret: example_webhook_secret_replace_me
+                  plan_less: true
       responses:
         "204":
           description: The client was added or replaced.
         "401": { $ref: "#/components/responses/Unauthorized" }
         "422":
           description: |
-            `invalid_request`: `id`, `api_key_sha256` or `webhook_secret` is invalid. The id is
-            1-200 printable ASCII characters with no spaces, the hash is 64 hex characters and
-            the secret is 16+ characters.
+            `invalid_request`: `id`, `api_key_sha256`, `webhook_secret` or `plan_less` is
+            invalid. The id is 1-200 printable ASCII characters with no spaces, the hash is 64
+            hex characters, the secret is 16+ characters and `plan_less` is a boolean. The
+            stored client is left as it was.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -279,9 +301,25 @@ paths:
       operationId: deleteClient
       summary: Revoke a client
       description: |
-        Removes the client, so its API key stops working at once. A client that is listed in
-        `AUDIOKIT_CLIENTS` can't be removed here: the variable would keep it on, so remove it
-        there instead.
+        Removes the client, so its API key stops working at once: every call made with it,
+        including `GET /v1/jobs/{id}` for a job it submitted, answers `401 unauthorized`.
+
+        What happens to work already accepted:
+
+        - **Queued and running jobs are not canceled.** They run to the end and their records
+          stay (until the usual retention), but nothing can read them with the revoked key.
+          To stop a job, cancel it before revoking, or erase the client's data.
+        - **Webhooks for the client are not delivered.** Each is signed with the client's
+          secret, which is gone, so a delivery that is due after the revoke is given up on
+          without being sent, and no retry follows. A delivery already in flight when the
+          client is removed may still arrive.
+        - **Resubmit under another client.** Because a revoked client's jobs can neither be
+          polled nor report back, jobs still unfinished when it is revoked should be
+          submitted again under another client.
+
+        Repeating the call answers `404`, which a caller that only wants the client gone can
+        treat as success. A client that is listed in `AUDIOKIT_CLIENTS` can't be removed here:
+        the variable would keep it on, so remove it there instead.
       security:
         - adminToken: []
       responses:
@@ -420,7 +458,7 @@ components:
       scheme: bearer
       description: |
         The billing service's `AUDIOKIT_ADMIN_TOKEN`. Not a client API key, and never sent by
-        clients.
+        clients. The API accepts one value, or two (`current,next`) while the token rotates.
 
   parameters:
     ClientId:
@@ -563,6 +601,13 @@ components:
           type: string
           minLength: 16
           description: Secret AudioKit signs this client's webhooks with.
+        plan_less:
+          type: boolean
+          default: false
+          description: |
+            The client has no plan behind it: its job submissions are never rate limited and its
+            `stems` jobs skip the billing check. Replaced on every write, so leaving it out
+            stores `false`.
 
     JobErrorCode:
       description: |

@@ -12,13 +12,15 @@ src/pages/
   docs/index.html     get started (hand-written guide)
   docs/mcp.html       MCP page (→ /docs/mcp/)
   404.html
+  check-your-inbox.html, subscribed.html   product-updates confirmation pages (noindex)
 src/static/           copied as is: styles.css (design tokens at the top), site.js, favicon.svg
 scripts/build.mjs     layout, {{TOKENS}}, link check; writes dist/, sitemap.xml and robots.txt
 scripts/reference.mjs renders /docs/reference/ and the landing page's operation list from the contract
 scripts/pull-contract.mjs  refreshes contract/openapi.yaml
 scripts/check-contract.mjs checks contract/openapi.yaml against the live contract (npm test)
 contract/openapi.yaml the API contract the build falls back to; contract/SOURCE says where it came from
-site.config.mjs       the API base URL and the console URL (one place)
+site.config.mjs       the API base URL, the console URL and the Kit form ID (one place)
+scripts/kit-form.mjs  the product-updates form and the Kit-only privacy blocks
 console/              the signed-in customer console, its own SvelteKit app and Netlify site
 test/                 plan-consistency, sign-in CTA and contract-drift checks (npm test)
 netlify.toml          build command, publish directory and headers
@@ -63,6 +65,18 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 
 - `apiBaseUrl` (`https://api.audiokit.ai`) — every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
 - `consoleUrl` (`https://console.audiokit.ai`) — the customer console. Every sign-in CTA points at `<consoleUrl>/login`.
+
+## Product updates signup
+
+The landing page can carry a "Product updates" email signup, a plain HTML POST to a Kit form (shared decision [0027](https://github.com/epsilon-records/knowledge/blob/main/shared/decisions/0027-subscribe-forms-epsilon-and-audiokit-lists.md)). It has no Kit script and sets nothing on your device. The Kit form ID is `kitFormId` in `site.config.mjs`, and it ships empty: while it is empty the build renders no form. The privacy notice's Kit disclosure (the `<!--kit-->...<!--/kit-->` blocks in `src/pages/privacy.html`) follows a separate flag, `kitDisclosure`, which stays `true` for as long as Kit holds subscribers, so clearing the form ID never hides it. To turn the form on, create the Kit form, set double opt-in and the two redirects below, then put its numeric ID in `kitFormId`.
+
+| Kit form setting | Value |
+| --- | --- |
+| Double opt-in | On: "Send confirmation email" (the incentive email) enabled and "Auto-confirm new subscribers" unchecked |
+| After subscribing, redirect to | `https://audiokit.ai/check-your-inbox/` |
+| After confirming, redirect to | `https://audiokit.ai/subscribed/` |
+
+`test/kit-form.test.mjs` covers the empty and configured cases.
 
 ## Sign in and sign up
 
