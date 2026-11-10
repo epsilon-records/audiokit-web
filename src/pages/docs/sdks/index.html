@@ -2,11 +2,11 @@
 <section>
   <h1>TypeScript and Python SDKs</h1>
   <p>Submit jobs and verify webhooks without writing your own HTTP client. Both SDKs are generated from the <a href="/docs/openapi.yaml">OpenAPI contract</a>; the signature helpers use the same published test vector as the API.</p>
-  <p><strong>Release status:</strong> the Python SDK 0.1.0 is on <a href="https://pypi.org/project/audiokit-ai/">PyPI</a> as <code>audiokit-ai</code>. The TypeScript SDK is not on npm yet; until it is, use the <a href="/docs/">HTTP quickstart</a> from Node.js.</p>
+  <p><strong>Release status:</strong> the Python SDK 0.1.0 is on <a href="https://pypi.org/project/audiokit-ai/">PyPI</a> as <code>audiokit-ai</code>. The TypeScript SDK 0.1.0 is on <a href="https://www.npmjs.com/package/audiokit-ai">npm</a> as <code>audiokit-ai</code>.</p>
 </section>
 <section>
   <h2 id="typescript">TypeScript · Node.js 20+</h2>
-  <p>Not on npm yet. Once published: <code>npm install audiokit-ai</code>. The package is ESM and server-side only; never ship your API key to a browser.</p>
+  <p>Install with <code>npm install audiokit-ai</code>. The package is ESM and server-side only; never ship your API key to a browser.</p>
   <div class="panel"><div class="panel-bar"><span>submit a job</span></div>
 <pre class="code">import { AudioKit, ApiError, verifyWebhook } from 'audiokit-ai';
 
