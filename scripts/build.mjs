@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import config from "../site.config.mjs";
 import { renderReference, renderOperationList, operationModel, webhookTestVector } from "./reference.mjs";
+import { assertNoGaps, findGaps, isRelease } from "./release-gaps.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "src");
@@ -322,6 +323,10 @@ async function main() {
     CONSOLE_SIGNUP: CONSOLE_SIGNUP,
     OPERATION_LIST: renderOperationList(doc, ops),
     OPERATION_COUNT: String(ops.length),
+    // The privacy notice (src/pages/privacy.html) states whether the Cloudflare beacon is on.
+    ANALYTICS_STATUS: ANALYTICS_ENABLED
+      ? "We use Cloudflare Web Analytics on selected public pages of audiokit.ai to measure aggregate page traffic and page performance."
+      : "Cloudflare Web Analytics is currently disabled on this public site. When it is switched on, selected public pages of audiokit.ai use it to measure aggregate page traffic and page performance.",
     WEBHOOK_TEST_VECTOR: webhookTestVector(doc),
     BASE_URL_NOTE: config.apiBaseUrlIsPlaceholder
       ? `<p class="note">Examples use <code>${esc(config.apiBaseUrl)}</code>. Replace it with the base URL that comes with your API key.</p>`
@@ -330,26 +335,22 @@ async function main() {
 
   await rm(out, { recursive: true, force: true });
   await cp(join(src, "static"), out, { recursive: true });
-  // Disclosure content stays in the static source tree; render it with the shared layout.
-  await rm(join(out, "privacy.html"), { force: true });
-  await write("privacy/index.html", page(
-    { title: "Privacy and analytics", layout: "docs" },
-    (await readFile(join(src, "static", "privacy.html"), "utf8")).replace(
-      "{{ANALYTICS_STATUS}}", ANALYTICS_ENABLED
-        ? "We use Cloudflare Web Analytics on selected public pages to understand aggregate page traffic and performance."
-        : "Cloudflare Web Analytics is currently disabled on this public site.",
-    ), ctx, "/privacy/",
-  ));
-  urls.push("/privacy/");
 
   const pagesDir = join(src, "pages");
+  const built = new Map();
   for (const file of await walk(pagesDir)) {
     const rel = relative(pagesDir, file);
     const { meta, body } = parsePage(await readFile(file, "utf8"), rel);
     const route = routePath(outPath(rel));
     if (!meta.noindex) urls.push(route);
-    await write(outPath(rel), page(meta, fill(body, tokens, rel), ctx, route));
+    const html = page(meta, fill(body, tokens, rel), ctx, route);
+    built.set(route, html);
+    await write(outPath(rel), html);
   }
+  // Facts only Nate can supply are marked TODO(privacy); a production build refuses them.
+  const gaps = [...built.values()].reduce((n, html) => n + findGaps(html).length, 0);
+  if (gaps) console.warn(`gaps: ${gaps} TODO(privacy) marker(s); a production build will refuse to publish`);
+  assertNoGaps(built, isRelease());
 
   const refRoute = "/docs/reference/";
   urls.push(refRoute);

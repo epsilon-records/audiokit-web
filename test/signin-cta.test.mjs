@@ -71,6 +71,13 @@ test("no unpublished mailbox is advertised", () => {
   // sales@audiokit.ai does not exist yet, so linking it would mail a customer's question into a
   // void. The Enterprise card and the FAQ state the plan without a contact link until an address
   // is set up and shown to receive. Ask on the board before adding one back.
-  assert.doesNotMatch(allPages, /mailto:/i, "pages must not advertise an address that cannot receive");
+  // The one exception is the privacy contact Nate chose in shared decision 0013
+  // (hello@epsilonrecords.com, the inbox epsilonrecords.com already publishes), and only on the
+  // privacy notice.
+  const PRIVACY_CONTACT = "mailto:hello@epsilonrecords.com";
+  pageFiles.forEach((file, i) => {
+    const html = file.endsWith("privacy.html") ? pages[i].replaceAll(`"${PRIVACY_CONTACT}"`, '""') : pages[i];
+    assert.doesNotMatch(html, /mailto:/i, `${file}: pages must not advertise an address that cannot receive`);
+  });
   assert.doesNotMatch(allPages, /contact (us|sales)/i, "there is no contact channel to point at");
 });

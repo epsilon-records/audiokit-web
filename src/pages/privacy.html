@@ -1,0 +1,147 @@
+<!-- {"title": "Privacy notice", "description": "What AudioKit collects on audiokit.ai, in the console and through the API, why, where it is processed, how long it is kept and your rights.", "layout": "docs"} -->
+<section class="doc-intro">
+  <p class="kicker">Legal</p>
+  <h1>Privacy notice</h1>
+  <p class="lede">This notice explains what personal data AudioKit processes when you visit audiokit.ai, use the console at {{CONSOLE_URL}} or call the API, why we process it, who else handles it, and the rights you have.</p>
+  <p class="note">Effective from 10 November 2026.</p>
+</section>
+
+<section>
+  <h2 id="controller">Who is responsible</h2>
+  <p>The controller for the personal data described here is Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam. In this notice, "AudioKit", "we" and "us" mean that controller.</p>
+  <p>To ask a question about this notice or to use any of your rights, write to <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a>.</p>
+</section>
+
+<section>
+  <h2 id="summary">In short</h2>
+  <ul>
+    <li>The public site sets no cookies. The console sets one sign-in cookie.</li>
+    <li>We do not store your audio. AudioKit fetches each input from the URL you send and uploads results to the URLs you provide. Files exist on our side only while a job is being processed.</li>
+    <li>Accounts, API keys, usage and billing are kept in a database in the EU (Amsterdam). Payments, error reports and some delivery services involve providers in the United States, listed <a href="#providers">below</a>.</li>
+    <li>We do not sell personal data, and we do not use it for advertising.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="site">Visiting audiokit.ai</h2>
+  <h3 id="site-hosting" data-toc="Hosting and fonts">Hosting and fonts</h3>
+  <p>The site is served by Netlify. As with any website, your browser sends its IP address and request details (such as the page requested, browser type and referring page) to the host, which keeps them in its server logs.</p>
+  <p>Pages on audiokit.ai and in the console load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page.</p>
+  <h3 id="site-errors" data-toc="Error monitoring">Error monitoring</h3>
+  <p>Public pages load Sentry's browser script, which reports errors that happen in your browser on our pages and timing data for a sample of page loads. A report can include the page address, browser and operating system, and the IP address it was sent from.</p>
+  <h3 id="site-analytics" data-toc="Analytics">Analytics</h3>
+  <p>{{ANALYTICS_STATUS}} It uses no cookies and no browser storage, and is not used to follow you across other websites. It receives the page address, the referring address and browser performance measurements. It is not used in the console, the API or the billing service, and it skips pages whose address contains a query string or fragment.</p>
+  <h3 id="site-source" data-toc="Where you came from">Where you came from</h3>
+  <p>To learn which channels bring people to AudioKit, the page you land on reads three things: the name of the website that linked you to us (the host name only, such as <code>news.example.com</code>, never the full address), any <code>utm_</code> campaign tags in the link, and the path of that page. It adds them to that page's links to sign up and sign in. Nothing is stored on your device for this: no cookie and no browser storage. If you move to another page on the site first, the values are not carried over.</p>
+  <p>If you follow one of those links and create an account, the values are stored with your account (see <a href="#account">your account</a>). If you do not create an account, nothing is stored on our side.</p>
+</section>
+
+<section>
+  <h2 id="account">Your account and the console</h2>
+  <h3 id="account-signin" data-toc="Signing in">Signing in</h3>
+  <p>You sign up and sign in with your email address. We email you a single-use sign-in link that expires after 15 minutes. We keep only a cryptographic hash of each link, with when it was created, used and expires. There is no password.</p>
+  <p>Once you are signed in, the console sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. The console needs it to work. The console runs no analytics script.</p>
+  <h3 id="account-data" data-toc="What we keep">What we keep about you</h3>
+  <ul>
+    <li><strong>Account:</strong> email address, name, and company if you give one; when the address was verified; account status; when the account was created and last signed in.</li>
+    <li><strong>Where you came from:</strong> if you arrived through the site, the referring host name, <code>utm_</code> tags and landing path described <a href="#site-source">above</a>, with the time of signup. These are set once, when the account is created, and never updated. If you arrive at the console directly, the host name of the page that linked to it (from your browser's <code>Referer</code> header) may be used instead. Internet addresses, email addresses and full URLs are discarded.</li>
+    <li><strong>API keys:</strong> a hash of each key (never the key itself after it is shown to you once), its name, its first characters for display, and when it was created, last used and revoked.</li>
+    <li><strong>Plan and usage:</strong> your plan, billing periods, and counts of jobs by operation per period.</li>
+    <li><strong>Email preferences:</strong> whether you want quota warnings, payment receipts and product updates. Product updates are off unless you turn them on.</li>
+    <li><strong>Payments:</strong> if you subscribe to a paid plan, your Stripe customer and subscription identifiers, invoice records (amounts, tax, status, period, and a link to the invoice at Stripe), and the subscription events Stripe sends us. Card details are entered on Stripe's own page; we never see or store your card number.</li>
+  </ul>
+  <h3 id="account-email" data-toc="Email we send">Email we send</h3>
+  <p>We send sign-in links, quota warnings, a notice when a free quota is used up, and payment receipts. They are sent through Resend from <code>mail.audiokit.ai</code>. Resend processes your address and the message content to deliver them.</p>
+  <h3 id="account-reports" data-toc="Internal reports">Internal reports</h3>
+  <p>We count, from our own account database, how many accounts go from signup to a first API key, a first job, a first stem job and a paid plan, together with weekly usage. The results are aggregate numbers emailed to the team once a week. No tracking script is involved.</p>
+</section>
+
+<section>
+  <h2 id="api">Using the API</h2>
+  <p>When you or your software submits a job, we keep a record of it: the operation and its settings, the input URL, file name and checksum you send, the output and webhook URLs you give us, the <code>authorization</code> field if you set one, the job's status and timings, its result (for example measured loudness, tempo or tags, and checksums of the files we uploaded), and any error. We also keep a record of each webhook we deliver. Treat input and output URLs as shared with us: if they are signed links, they work until they expire.</p>
+  <p><strong>Audio and other files.</strong> AudioKit downloads each input from the URL you send. It processes the file in a temporary working directory that is deleted when processing ends, and uploads results directly to the upload URLs you provide. Stem separation runs on GPUs provided by Modal in the EU: Modal's service downloads the input from your URL, separates it and uploads each stem to your URLs, and keeps no copy. We do not keep copies of your audio, and we do not use it to train models.</p>
+  <p><strong>Rate limits and security.</strong> To protect the service, we count requests per API key and per IP address. The counts are held in memory for a short window and are not stored. Our services also write operational logs of requests, which can include the IP address and the path requested.</p>
+  <p><strong>Errors.</strong> When something fails in the API or the billing service, an error report goes to Sentry. It can include details of the request being handled.</p>
+</section>
+
+<section>
+  <h2 id="bases">Why we process it (legal bases)</h2>
+  <div class="table-box"><table class="fields"><thead><tr><th scope="col">Purpose</th><th scope="col">Legal basis (GDPR art. 6(1))</th></tr></thead><tbody>
+    <tr><td>Creating and running your account, signing you in, running your jobs, keeping usage within your plan, sending service email (sign-in links, quota and payment notices)</td><td>Performance of our contract with you (b)</td></tr>
+    <tr><td>Taking payments and keeping invoices and tax records</td><td>Contract (b) and our legal obligations (c)</td></tr>
+    <tr><td>Keeping the service secure and available: rate limits, request logs, error monitoring</td><td>Our legitimate interest in a reliable, secure service (f)</td></tr>
+    <tr><td>Serving the website and its fonts</td><td>Our legitimate interest in delivering the site (f)</td></tr>
+    <tr><td>Aggregate web analytics, first-touch signup source and internal funnel reports</td><td>Our legitimate interest in understanding which channels and pages work, using aggregate numbers (f)</td></tr>
+    <tr><td>Product update emails, if you turn them on</td><td>Your consent (a), which you can withdraw in the console at any time</td></tr>
+  </tbody></table></div>
+  <p>Where we rely on legitimate interests, you can object, as described <a href="#rights">below</a>.</p>
+</section>
+
+<section>
+  <h2 id="providers">Who else handles it</h2>
+  <p>We use these service providers. Each processes personal data on our behalf, for the purpose given.</p>
+  <div class="table-box"><table class="fields"><thead><tr><th scope="col">Provider</th><th scope="col">What for</th><th scope="col">Where</th></tr></thead><tbody>
+    <tr><td>Railway</td><td>Runs the API, the billing service and their databases</td><td>EU (Amsterdam)</td></tr>
+    <tr><td>Modal</td><td>GPU processing for stem separation</td><td>EU</td></tr>
+    <tr><td>Netlify</td><td>Hosts audiokit.ai and the console</td><td>United States and its global network</td></tr>
+    <tr><td>Stripe</td><td>Payments, subscriptions, invoices and tax</td><td>United States</td></tr>
+    <tr><td>Sentry</td><td>Error monitoring for the site, API and billing service</td><td>United States</td></tr>
+    <tr><td>Resend</td><td>Sending our email</td><td>United States</td></tr>
+    <tr><td>Google Fonts</td><td>Typefaces for the site and console</td><td>United States</td></tr>
+    <tr><td>Cloudflare Web Analytics</td><td>Aggregate, cookieless web analytics on selected public pages</td><td>United States and its global network</td></tr>
+  </tbody></table></div>
+</section>
+
+<section>
+  <h2 id="transfers">International transfers</h2>
+  <p>Several of the providers above are in the United States, or are US companies that can reach data held in the EU, so personal data can be transferred outside the European Economic Area. These are the safeguards each provider states in its own published terms:</p>
+  <ul>
+    <li><strong>Netlify:</strong> its data processing addendum states that Netlify is certified under the EU–US Data Privacy Framework and that transfers rely on it, with the European Commission's standard contractual clauses as the fallback.</li>
+    <li><strong>Stripe:</strong> Stripe, LLC is self-certified under the EU–US Data Privacy Framework, with the standard contractual clauses as the fallback.</li>
+    <li><strong>Sentry:</strong> self-certified under the EU–US Data Privacy Framework, with the standard contractual clauses in its data processing addendum (Schedule 3) as the fallback.</li>
+    <li><strong>Resend:</strong> its data processing addendum incorporates the standard contractual clauses, and Resend states that it complies with the EU–US Data Privacy Framework.</li>
+    <li><strong>Cloudflare:</strong> complies with the EU–US Data Privacy Framework, with the standard contractual clauses in its data processing addendum if that certification lapses.</li>
+    <li><strong>Railway:</strong> its data processing addendum relies on the EU–US Data Privacy Framework where the recipient is certified, or otherwise on the standard contractual clauses.</li>
+    <li><strong>Modal:</strong> its data processing addendum incorporates the standard contractual clauses.</li>
+    <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google's privacy policy</a> for how Google handles international transfers.</li>
+  </ul>
+  <p>You can ask us for details of the safeguard that applies (see <a href="#controller">who is responsible</a>).</p>
+</section>
+
+<section>
+  <h2 id="retention">How long we keep it</h2>
+  <ul>
+    <li><strong>Console sign-in cookie:</strong> 8 hours, or until you sign out.</li>
+    <li><strong>Sign-in links:</strong> usable for 15 minutes. The hash record stays with your account.</li>
+    <li><strong>Account, API key records, preferences and signup source:</strong> for as long as your account exists.</li>
+    <li><strong>Job records, webhook deliveries and payment events from Stripe:</strong> deleted after 90 days, or sooner if you delete your account.</li>
+    <li><strong>Usage counts:</strong> for as long as your account exists.</li>
+    <li><strong>Invoices and payment records:</strong> 7 years, as Dutch tax law requires businesses to keep their records (Article 52 of the General State Taxes Act, AWR). Stripe also keeps its own records under its own terms.</li>
+    <li><strong>Audio and other files:</strong> not kept. They exist only while a job is being processed.</li>
+    <li><strong>Request logs of our API and billing service at Railway:</strong> 7 days.</li>
+    <li><strong>Error reports at Sentry:</strong> no longer than 90 days.</li>
+    <li><strong>Hosting logs at Netlify and analytics at Cloudflare:</strong> we keep none ourselves; the providers keep them under their own retention practices. Cloudflare gives us aggregate reports only.</li>
+  </ul>
+  <p>You can delete your account yourself in the console, or email <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and we will do it. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices.</p>
+</section>
+
+<section>
+  <h2 id="rights">Your rights</h2>
+  <p>Under the GDPR you have the right to:</p>
+  <ul>
+    <li>access the personal data we hold about you and get a copy;</li>
+    <li>have inaccurate data corrected (you can change your name in the console's settings);</li>
+    <li>have your data erased;</li>
+    <li>restrict how we process it;</li>
+    <li>receive the data you gave us in a portable format;</li>
+    <li>object to processing based on our legitimate interests;</li>
+    <li>withdraw consent at any time, without affecting processing that happened before.</li>
+  </ul>
+  <p>To use any of them, write to the address under <a href="#controller">who is responsible</a>. We will reply within one month. You also have the right to complain to a data protection supervisory authority. In the Netherlands that is the <a href="https://autoriteitpersoonsgegevens.nl/">Autoriteit Persoonsgegevens</a>; you may also go to the authority in the EU country where you live or work, or where you think the problem occurred.</p>
+  <p>AudioKit is a service for businesses and developers, and is not meant for children under 16.</p>
+</section>
+
+<section>
+  <h2 id="changes">Changes</h2>
+  <p>When what we collect or why changes, we update this page and the date at the top. If a change materially affects how we use data from your account, we will tell you by email first.</p>
+</section>
