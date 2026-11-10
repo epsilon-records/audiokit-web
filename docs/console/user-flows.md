@@ -184,9 +184,16 @@ until confirmed).
 3. On confirm, sign out and show a closing confirmation; email a receipt of the deletion.
 4. If jobs are in flight, explain what happens to them first.
 
-**States:** blocked while a subscription is active (cancel first) · blocked while past due ·
-confirmation mismatch · success.
-**Open:** retention/erasure semantics and whether deletion is immediate or a grace period
+**As built (decision 0042):** typing the account email enables **Delete account**; the console
+calls `POST /v1/account/deletion` on the billing service, which revokes the keys, erases the API's
+jobs, cancels any subscription and deletes the Stripe customer, then the account. Nothing blocks on
+an active subscription: it is cancelled immediately, with no refund and no final invoice. On
+success the session is cleared and `/login` says the account was deleted. If the service could only
+finish part of it, the form shows the error and the same button resumes it. Invoice and payment
+records are kept 7 years (Dutch tax law); everything else is deleted. No receipt email is sent.
+
+**States:** confirmation mismatch · service could not finish (retry) · success.
+**Open:** whether to email a receipt of the deletion
 ([open questions](open-questions.md#data-retention)).
 
 ---

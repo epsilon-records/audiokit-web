@@ -681,6 +681,19 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			return getAccountInternal();
 		},
 
+		async deleteAccount(confirmEmail: string): Promise<void> {
+			const typed = confirmEmail.trim();
+			if (typed.length === 0) {
+				throw new HttpApiError('invalid-request', 'Type your email address to confirm.');
+			}
+			// 204 once the account is gone, including on a repeat; 400 when the address is not
+			// the account's; 502 `deletion_incomplete` when AudioKit or Stripe failed part way.
+			await request<unknown>('/v1/account/deletion', {
+				method: 'POST',
+				...json({ confirm_email: typed })
+			});
+		},
+
 		async updateNotificationPreferences(next: NotificationPreferences) {
 			const payload = await request<unknown>('/v1/account/notifications', {
 				method: 'PATCH',

@@ -298,6 +298,38 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/admin/clients/{client_id}/data:
+    parameters:
+      - $ref: "#/components/parameters/ClientId"
+    delete:
+      tags: [Admin]
+      operationId: eraseClient
+      summary: Erase a client and its data
+      description: |
+        How the billing service deletes an account (self-serve account deletion). In one
+        transaction it removes the client, so its API key stops working at once, and every job
+        and webhook delivery stored for it, including each job's request, result, error and
+        provenance. AudioKit holds no audio: inputs are fetched and outputs are uploaded to the
+        client's own URLs, so job records are all there is to erase.
+
+        Safe to retry: a client that is already gone answers `200` with zero counts. A job that
+        was running when the client was erased is not recorded when it ends. A client that is
+        listed in `AUDIOKIT_CLIENTS` can't be erased here: remove it there instead.
+      security:
+        - adminToken: []
+      responses:
+        "200":
+          description: The client and its data are gone. Counts are what this call removed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientErased" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: "`client_bootstrap`: this client comes from `AUDIOKIT_CLIENTS`; remove it there."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/jobs/{provider_job_id}:
@@ -307,7 +339,10 @@ paths:
       tags: [Jobs]
       operationId: getJob
       summary: Job status and result
-      description: Always has the final state, even if webhook delivery gave up.
+      description: >-
+        Always has the final state, even if webhook delivery gave up. A finished job is kept
+        for 90 days after it finishes; then it is deleted, this answers 404 and its `job_id`
+        can be used again.
       responses:
         "200":
           description: The job.
@@ -498,6 +533,17 @@ components:
             - entitlement_unavailable
         - type: string
 
+    ClientErased:
+      type: object
+      required: [erased]
+      properties:
+        erased:
+          type: object
+          required: [client, jobs, webhook_deliveries]
+          properties:
+            client: { type: boolean, description: Whether a stored client was removed. }
+            jobs: { type: integer, minimum: 0 }
+            webhook_deliveries: { type: integer, minimum: 0 }
     ClientUpsert:
       type: object
       additionalProperties: false

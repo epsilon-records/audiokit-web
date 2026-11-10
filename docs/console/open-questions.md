@@ -84,9 +84,10 @@ design, and the current best default if we had to ship without an answer.
 
 ## Data retention
 
-- **Delete-account semantics.** What is deleted, what is retained (invoices for tax), whether
-  deletion is immediate or has a grace period, and whether a receipt is emailed. The danger-zone
-  copy depends on this.
+- **Delete-account semantics.** Settled by AudioKit decision 0042 (self-serve, immediate, no grace
+  period): see [F13](user-flows.md#f13-delete-account-danger-zone). Invoice and payment records are
+  kept 7 years under Dutch tax law (as the privacy notice says); everything else is deleted. Still
+  open: whether a receipt of the deletion is emailed (none is sent today).
 - **Export.** Does a user get a data export before deletion? Not designed.
 
 ## Charts

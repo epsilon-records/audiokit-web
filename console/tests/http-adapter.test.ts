@@ -544,3 +544,63 @@ describe('http adapter: errors', () => {
 		});
 	});
 });
+
+describe('http adapter: account deletion (decision 0042)', () => {
+	const token = jwt({ email: 'you@example.com', exp: 4102444800 });
+	const client = (fetchImpl: typeof fetch) =>
+		createApiClient({ baseUrl: 'https://billing.test', sessionToken: token, fetch: fetchImpl });
+
+	it('posts the typed address to /v1/account/deletion with the session token', async () => {
+		const fetchImpl = fetchMock(() => new Response(null, { status: 204 }));
+		await expect(client(fetchImpl).deleteAccount('  you@example.com ')).resolves.toBeUndefined();
+		expect(fetchImpl.calls).toHaveLength(1);
+		const [{ url, init }] = fetchImpl.calls;
+		expect(url).toBe('https://billing.test/v1/account/deletion');
+		expect(init.method).toBe('POST');
+		expect(header(init, 'authorization')).toBe(`Bearer ${token}`);
+		expect(JSON.parse(String(init.body))).toEqual({ confirm_email: 'you@example.com' });
+	});
+
+	it('does not call the service without an address', async () => {
+		const fetchImpl = fetchMock(() => new Response(null, { status: 204 }));
+		await expect(client(fetchImpl).deleteAccount('   ')).rejects.toMatchObject({
+			code: 'invalid-request'
+		});
+		expect(fetchImpl.calls).toHaveLength(0);
+	});
+
+	it('surfaces a wrong address as invalid-request with the service message', async () => {
+		const fetchImpl = fetchMock(() =>
+			jsonResponse({ error: 'confirmation_mismatch', message: 'Type the email address.' }, 400)
+		);
+		await expect(client(fetchImpl).deleteAccount('other@example.com')).rejects.toMatchObject({
+			code: 'invalid-request',
+			message: 'Type the email address.',
+			status: 400
+		});
+	});
+
+	it('surfaces a half-finished deletion as a retryable server error, and a repeat succeeds', async () => {
+		let answers = [
+			jsonResponse({ error: 'deletion_incomplete', message: 'Try again in a moment.' }, 502),
+			new Response(null, { status: 204 })
+		];
+		const fetchImpl = fetchMock(() => answers.shift() as Response);
+		const api = client(fetchImpl);
+		await expect(api.deleteAccount('you@example.com')).rejects.toMatchObject({
+			code: 'server-error',
+			status: 502
+		});
+		await expect(api.deleteAccount('you@example.com')).resolves.toBeUndefined();
+		expect(fetchImpl.calls).toHaveLength(2);
+	});
+
+	it('needs a session', async () => {
+		const fetchImpl = fetchMock(() => new Response(null, { status: 204 }));
+		const anonymous = createApiClient({ baseUrl: 'https://billing.test', fetch: fetchImpl });
+		await expect(anonymous.deleteAccount('you@example.com')).rejects.toMatchObject({
+			code: 'unauthorized'
+		});
+		expect(fetchImpl.calls).toHaveLength(0);
+	});
+});

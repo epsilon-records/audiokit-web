@@ -12,6 +12,14 @@
 		form && 'preferencesSaved' in form ? form.preferencesSaved : false
 	);
 	const profileError = $derived(form && 'profileError' in form ? form.profileError : null);
+	const deleteError = $derived(form && 'deleteError' in form ? form.deleteError : null);
+
+	// Delete stays disabled until the typed address matches. The server checks it again.
+	let confirmEmail = $state('');
+	let deleting = $state(false);
+	const confirmed = $derived(
+		confirmEmail.trim().toLowerCase() === data.account.email.toLowerCase() && confirmEmail !== ''
+	);
 </script>
 
 <svelte:head>
@@ -134,16 +142,43 @@
 		</div>
 		<div class="panel-body">
 			<p class="muted">
-				<strong>Delete account</strong> — revokes all API keys and removes your jobs and usage data. Invoices
-				are kept for tax. This can't be undone.
+				<strong>Delete account</strong> — deletes your account, revokes and removes all API keys, cancels
+				any subscription and deletes your jobs, usage data and billing profile. Invoices and payment records
+				are kept for 7 years because Dutch tax law requires it. This can't be undone.
 			</p>
-			<p class="notice notice-warn">
-				Not implemented: deletion needs a recorded retention policy (design open question). This
-				button is disabled in the scaffold.
-			</p>
-			<div class="actions">
-				<button type="button" class="btn btn-danger" disabled>Delete account…</button>
-			</div>
+			<form
+				method="POST"
+				action="?/deleteAccount"
+				class="form-stack"
+				use:enhance={() => {
+					deleting = true;
+					return async ({ update }) => {
+						await update();
+						deleting = false;
+					};
+				}}
+			>
+				<div class="field">
+					<label for="confirmEmail">Type <strong>{data.account.email}</strong> to confirm</label>
+					<input
+						class="input"
+						id="confirmEmail"
+						name="confirmEmail"
+						type="email"
+						autocomplete="off"
+						bind:value={confirmEmail}
+						aria-describedby={deleteError ? 'delete-error' : undefined}
+					/>
+				</div>
+				{#if deleteError}
+					<p class="field-error" id="delete-error" role="alert">{deleteError}</p>
+				{/if}
+				<div class="actions">
+					<button type="submit" class="btn btn-danger" disabled={!confirmed || deleting}>
+						{deleting ? 'Deleting…' : 'Delete account'}
+					</button>
+				</div>
+			</form>
 		</div>
 	</section>
 </div>

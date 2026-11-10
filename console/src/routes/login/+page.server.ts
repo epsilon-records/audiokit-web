@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ locals, url, request }) => {
 	// First-touch source (decision 0040): from the site's link, or from a direct landing here.
 	// Carried in hidden fields to the link request; the console keeps none of it.
 	const source = readSignupSource(url.searchParams, request.headers.get('referer')) ?? null;
-	return { next, source };
+	return { next, source, deleted: url.searchParams.get('deleted') === '1' };
 };
 
 export const actions: Actions = {

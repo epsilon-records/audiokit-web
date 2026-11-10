@@ -59,6 +59,13 @@ export type ConsoleApi = {
 	createApiKey(label: string): Promise<CreatedApiKey>;
 	revokeApiKey(id: string): Promise<ApiKey>;
 	updateProfile(name: string, company?: string): Promise<Account>;
+	/**
+	 * Delete the signed-in account (decision 0042): billing records, API keys, the Stripe
+	 * customer and the API's jobs. `confirmEmail` must be the account's address. Safe to repeat:
+	 * resolves once the account is gone, also when it already was. Rejects with a retryable
+	 * `server-error` when the service could only finish part of it; the same call resumes.
+	 */
+	deleteAccount(confirmEmail: string): Promise<void>;
 	updateNotificationPreferences(next: NotificationPreferences): Promise<NotificationPreferences>;
 	startCheckout(planId: PlanId, interval?: 'month' | 'year'): Promise<CheckoutResult>;
 };
