@@ -82,6 +82,7 @@
   <p>We use these service providers. Each processes personal data on our behalf, for the purpose given.</p>
   <div class="table-box"><table class="fields"><thead><tr><th scope="col">Provider</th><th scope="col">What for</th><th scope="col">Where</th></tr></thead><tbody>
     <tr><td>Railway</td><td>Runs the API, the billing service and their databases</td><td>EU (Amsterdam)</td></tr>
+    <tr><td>GitHub</td><td>Stores encrypted backups of our databases. We hold the only decryption key, so GitHub holds the backups as ciphertext it cannot read</td><td>United States and its global network</td></tr>
     <tr><td>Modal</td><td>GPU processing for stem separation</td><td>EU</td></tr>
     <tr><td>Netlify</td><td>Hosts audiokit.ai and the console</td><td>United States and its global network</td></tr>
     <tr><td>Stripe</td><td>Payments, subscriptions, invoices and tax</td><td>United States</td></tr>
@@ -102,6 +103,7 @@
     <li><strong>Resend:</strong> its data processing addendum incorporates the standard contractual clauses, and Resend states that it complies with the EU–US Data Privacy Framework.</li>
     <li><strong>Cloudflare:</strong> complies with the EU–US Data Privacy Framework, with the standard contractual clauses in its data processing addendum if that certification lapses.</li>
     <li><strong>Railway:</strong> its data processing addendum relies on the EU–US Data Privacy Framework where the recipient is certified, or otherwise on the standard contractual clauses.</li>
+    <li><strong>GitHub:</strong> states in its privacy statement that it complies with the EU–US Data Privacy Framework, and that it otherwise relies on the European Commission's standard contractual clauses for transfers from the EU.</li>
     <li><strong>Modal:</strong> its data processing addendum incorporates the standard contractual clauses.</li>
     <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google's privacy policy</a> for how Google handles international transfers.</li>
   </ul>
@@ -120,6 +122,7 @@
     <li><strong>Audio and other files:</strong> not kept. They exist only while a job is being processed.</li>
     <li><strong>Request logs of our API and billing service at Railway:</strong> 7 days.</li>
     <li><strong>Error reports at Sentry:</strong> no longer than 90 days.</li>
+    <li><strong>Encrypted database backups at GitHub:</strong> 90 days, then GitHub deletes them. They are daily copies of the databases made for recovery, so a deletion you ask for reaches them within 90 days.</li>
     <li><strong>Hosting logs at Netlify and analytics at Cloudflare:</strong> we keep none ourselves; the providers keep them under their own retention practices. Cloudflare gives us aggregate reports only.</li>
   </ul>
   <p>You can delete your account yourself in the console, or email <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and we will do it. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices.</p>
