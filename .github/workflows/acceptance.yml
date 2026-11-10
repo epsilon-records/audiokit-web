@@ -1,0 +1,47 @@
+name: Acceptance (manual)
+
+# On demand only. This runs the launch smoke suite against PRODUCTION with Stripe in test mode
+# (see test/acceptance/README.md). It never runs on push or pull_request.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type production-test-mode to confirm Stripe is in test mode"
+        required: true
+      email:
+        description: "Throwaway address you can read (a new account is created and deleted)"
+        required: true
+      magic_token:
+        description: "Token from the sign-in link. Leave empty on the first run to request the link."
+        required: false
+      audio_url:
+        description: "https URL of an audio clip of 30 seconds or less (needed with a token)"
+        required: false
+      stems:
+        description: "Run the single stems job (uses paid compute)"
+        type: boolean
+        default: false
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run the acceptance suite
+        env:
+          AUDIOKIT_ACCEPT_CONFIRM: ${{ inputs.confirm }}
+          AUDIOKIT_ACCEPT_EMAIL: ${{ inputs.email }}
+          AUDIOKIT_ACCEPT_MAGIC_TOKEN: ${{ inputs.magic_token }}
+          AUDIOKIT_ACCEPT_AUDIO_URL: ${{ inputs.audio_url }}
+          AUDIOKIT_ACCEPT_STEMS: ${{ inputs.stems && '1' || '0' }}
+        run: npm run test:acceptance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-evidence
+          path: acceptance-evidence.jsonl
+          if-no-files-found: ignore
