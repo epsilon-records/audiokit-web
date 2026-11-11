@@ -30,6 +30,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	const response = await resolve(event);
 
+	// The Content-Security-Policy comes from SvelteKit (vite.config.ts).
+	response.headers.set('strict-transport-security', 'max-age=31536000; includeSubDomains');
 	response.headers.set('x-content-type-options', 'nosniff');
 	response.headers.set(
 		'referrer-policy',

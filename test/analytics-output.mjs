@@ -27,7 +27,10 @@ for (const file of files) {
   assert.equal(tags.length, expected, file.pathname);
   for (const tag of tags) assert.equal(tag[1], config.cloudflareWebAnalyticsToken);
   loaders += tags.length;
-  if (process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN) assert.match(html, /Sentry.init\(/);
+  if (process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN) assert.match(html, /<script src="\/sentry-init.js"><\/script>/);
+}
+if (process.env.SENTRY_DSN || process.env.PUBLIC_SENTRY_DSN) {
+  assert.match(await readFile(new URL('sentry-init.js', root), 'utf8'), /^Sentry\.init\(/);
 }
 assert.equal(await stat(new URL('privacy.html', root)).then(() => true, () => false), false);
 assert.match(await readFile(new URL('privacy/index.html', root), 'utf8'), config.cloudflareWebAnalyticsToken
