@@ -102,4 +102,4 @@ shown to receive mail.
 
 Netlify site `audiokit` (https://audiokit.ai; https://audiokit.netlify.app redirects there), linked to this repo: every push to `main` deploys production, and pull requests get deploy previews.
 
-The site no longer builds any function, so `RESEND_API_KEY` and `AUDIOKIT_FROM_EMAIL` on the `audiokit` Netlify site are unused. Console email goes through the billing service (see [`epsilon-records/audiokit-billing`](https://github.com/epsilon-records/audiokit-billing)), which has its own keys.
+The site no longer builds any function, so `RESEND_API_KEY` and `AUDIOKIT_FROM_EMAIL` on the `audiokit` Netlify site are unused. Console email goes through the billing service (see [`epsilon-records/epsilon-billing`](https://github.com/epsilon-records/epsilon-billing)), which has its own keys.

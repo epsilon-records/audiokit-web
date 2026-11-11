@@ -109,7 +109,7 @@ cold start. That is deliberate for a scaffold: there is no database behind it.
 (Netlify UI or `netlify.toml`); never commit it. See `console/.env.example`.
 
 `src/lib/http-adapter.ts` maps `ConsoleApi` onto the service's real routes (`src/routes/` in
-`epsilon-records/audiokit-billing`): `/v1/auth/me`, `/v1/subscriptions/current`,
+`epsilon-records/epsilon-billing`): `/v1/auth/me`, `/v1/subscriptions/current`,
 `/v1/usage/current`, `/v1/usage/history`, `/v1/api-keys` and `/v1/jobs`. Routes the service does
 not have yet (the magic-link endpoints, plans, notification preferences, profile update and
 checkout) are documented as `ASSUMED` at the top of the file and tracked on the knowledge board;
