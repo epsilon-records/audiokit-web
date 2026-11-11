@@ -49,6 +49,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TOKEN_PREFIX = 'mock.';
 const MAGIC_LINK_TTL_MS = 10 * 60 * 1000;
 
+/** Shaped like billing's (`whsec_` + 48 hex) but marked as a mock, and made fresh each time. */
+function mockWebhookSecret(): string {
+	return `whsec_mock_${crypto.randomUUID().replace(/-/g, '')}`;
+}
+
 /** Mock magic-link tokens carry the email so a stateless callback can resolve them. */
 function encodeToken(email: string): string {
 	return `${TOKEN_PREFIX}${encodeURIComponent(email)}`;
@@ -121,7 +126,8 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 				session: sessionFor(email),
 				token,
 				created,
-				apiKey: created ? `ak_mock_${crypto.randomUUID()}` : null
+				apiKey: created ? `ak_mock_${crypto.randomUUID()}` : null,
+				webhookSecret: created ? mockWebhookSecret() : null
 			};
 		},
 
@@ -181,7 +187,7 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 				revoked: false
 			};
 			keys = [key, ...keys];
-			return { ...key, secret };
+			return { ...key, secret, webhookSecret: mockWebhookSecret() };
 		},
 
 		async revokeApiKey(id: string): Promise<ApiKey> {

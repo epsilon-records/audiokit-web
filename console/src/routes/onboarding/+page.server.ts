@@ -35,7 +35,7 @@ export const actions: Actions = {
 		if (!locals.session) redirect(303, '/login?next=/onboarding');
 		try {
 			const key = await apiFor(locals.sessionToken).createApiKey('Onboarding');
-			return { apiKey: key.secret };
+			return { apiKey: key.secret, webhookSecret: key.webhookSecret };
 		} catch (error) {
 			if (error instanceof ApiError) return fail(400, { error: error.message });
 			throw error;

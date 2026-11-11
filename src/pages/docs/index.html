@@ -100,6 +100,7 @@ curl {{API_BASE}}/v1/capabilities</pre>
 <section>
   <h2 id="webhooks">Verify webhooks</h2>
   <p>Every event carries <code>X-Signature: t=&lt;unix seconds&gt;,v1=&lt;hex&gt;</code>, an HMAC-SHA256 of <code>"{t}.{raw_body}"</code> keyed with your webhook secret. Verify it against the raw body before parsing, and reject timestamps more than 300 seconds old.</p>
+  <p>Each API key has its own webhook secret (<code>whsec_…</code>). The console shows it once, beside the key, when the key is created: store both then. If you lose it, create a new key and revoke the old one.</p>
   <div class="panel">
     <div class="panel-bar"><span>Node</span><button class="copy" type="button">Copy</button></div>
 <pre class="code">import crypto from "node:crypto";

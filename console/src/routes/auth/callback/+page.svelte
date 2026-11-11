@@ -9,7 +9,12 @@
 	><title>Welcome · AudioKit console</title><meta name="referrer" content="origin" /></svelte:head
 >
 {#if data.ok === true && typeof data.email === 'string'}
-	<Welcome email={data.email} apiKey={data.apiKey} next={data.next} />
+	<Welcome
+		email={data.email}
+		apiKey={data.apiKey}
+		webhookSecret={data.webhookSecret}
+		next={data.next}
+	/>
 {:else}
 	<AuthCard
 		title="That link did not work"

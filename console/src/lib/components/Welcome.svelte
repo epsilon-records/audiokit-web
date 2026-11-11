@@ -4,6 +4,7 @@
 	let {
 		email,
 		apiKey = null,
+		webhookSecret = null,
 		next = '/dashboard',
 		name = '',
 		company = '',
@@ -11,6 +12,8 @@
 	}: {
 		email: string;
 		apiKey?: string | null;
+		/** The key's webhook secret, shown once beside it (EPSILON-124). */
+		webhookSecret?: string | null;
 		next?: string;
 		name?: string;
 		company?: string;
@@ -64,6 +67,21 @@
 				</div>
 				<pre class="code">{apiKey}</pre>
 			</div>
+			{#if webhookSecret}
+				<p class="muted">
+					AudioKit signs this key's result webhooks with its webhook secret. Verify the
+					<code>X-Signature</code> header with it. It is also shown only once.
+				</p>
+				<div class="panel">
+					<div class="panel-bar">
+						<span>Webhook secret</span><CopyButton
+							value={webhookSecret}
+							label="Copy webhook secret"
+						/>
+					</div>
+					<pre class="code">{webhookSecret}</pre>
+				</div>
+			{/if}
 			<h2>3. Explore the API</h2>
 			<p class="muted">
 				List available operations without submitting a job. This endpoint is public; job requests
@@ -77,7 +95,9 @@
 			</div>
 			<label class="checkbox"
 				><input type="checkbox" name="savedKey" required /><span
-					>I have saved my API key securely.</span
+					>{webhookSecret
+						? 'I have saved my API key and webhook secret securely.'
+						: 'I have saved my API key securely.'}</span
 				></label
 			>
 		{:else}

@@ -22,13 +22,30 @@
 	const revokeError = $derived(form && 'revokeError' in form ? form.revokeError : null);
 	const revokedLabel = $derived(form && 'revoked' in form ? form.revoked : null);
 
-	// Close the create dialog and open the one-time reveal when a key is created;
-	// close the revoke dialog after a successful revoke.
+	// `form` keeps the created key until the next action, so the reveal renders from `reveal`
+	// instead: once the dialog closes (Done, ✕ or Esc) that key is dismissed and neither it nor its
+	// webhook secret stays in the DOM (EPSILON-124).
+	let dismissedId: string | null = $state(null);
+	const reveal = $derived(created && created.id !== dismissedId ? created : null);
+	let revealShown = false;
+
+	// Close the create dialog and open the one-time reveal when a key is created; drop the reveal
+	// once it has been shown and closed.
 	$effect(() => {
-		if (created) {
+		// Read both up front: an effect only re-runs for what it read on its last run.
+		const open = revealOpen;
+		if (reveal && !revealShown) {
+			revealShown = true;
 			createOpen = false;
 			revealOpen = true;
+		} else if (reveal && !open) {
+			revealShown = false;
+			dismissedId = reveal.id;
 		}
+	});
+
+	// Close the revoke dialog after a successful revoke.
+	$effect(() => {
 		if (revokedLabel) {
 			revokeOpen = false;
 			revokeTarget = null;
@@ -117,8 +134,8 @@
 {/if}
 
 <p class="faint">
-	Only the key prefix is shown after creation. The full secret is displayed once, immediately after
-	it is made.
+	Only the key prefix is shown after creation. The full key and its webhook secret are displayed
+	once, immediately after the key is made.
 </p>
 
 <!-- Create -->
@@ -150,15 +167,31 @@
 
 <!-- Reveal once -->
 <Dialog bind:open={revealOpen} title="Key created — copy it now">
-	{#if created}
+	{#if reveal}
 		<p class="muted">This is the only time we'll show it. Store it somewhere safe.</p>
 		<div class="panel">
 			<div class="panel-bar">
-				<span>{created.label}</span>
-				<CopyButton value={created.secret} label="Copy key" />
+				<span>{reveal.label}</span>
+				<CopyButton value={reveal.secret} label="Copy key" />
 			</div>
-			<pre class="code">{created.secret}</pre>
+			<pre class="code">{reveal.secret}</pre>
 		</div>
+		{#if reveal.webhookSecret}
+			<p class="muted">
+				AudioKit signs this key's result webhooks with its webhook secret. Verify the
+				<code>X-Signature</code> header with it (<a
+					class="link"
+					href="https://audiokit.ai/docs/#webhooks">how</a
+				>). It is also shown only now.
+			</p>
+			<div class="panel">
+				<div class="panel-bar">
+					<span>Webhook secret</span>
+					<CopyButton value={reveal.webhookSecret} label="Copy webhook secret" />
+				</div>
+				<pre class="code">{reveal.webhookSecret}</pre>
+			</div>
+		{/if}
 		<div class="actions">
 			<button type="button" class="btn btn-primary" onclick={() => (revealOpen = false)}
 				>Done</button
