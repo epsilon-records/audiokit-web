@@ -141,7 +141,9 @@ const KIT_ENABLED = KIT_FORM_ID !== "";
 const KIT_DISCLOSURE = KIT_ENABLED || config.kitDisclosure === true;
 const ANALYTICS_ENABLED = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || "");
 
-function sentryHead() {
+// Sentry.init runs from /sentry-init.js, written by the build, not from an inline script: the
+// Content-Security-Policy in netlify.toml allows no inline scripts (EPSILON-118).
+function sentryInit() {
   if (!SENTRY_DSN) return "";
   const init = {
     dsn: SENTRY_DSN,
@@ -149,8 +151,13 @@ function sentryHead() {
     tracesSampleRate: 0.1,
   };
   if (process.env.COMMIT_REF) init.release = process.env.COMMIT_REF;
+  return `Sentry.init(${JSON.stringify(init)});\n`;
+}
+
+function sentryHead() {
+  if (!SENTRY_DSN) return "";
   return `<script src="https://browser.sentry-cdn.com/${SENTRY_BUNDLE_VERSION}/bundle.tracing.min.js" crossorigin="anonymous"></script>
-<script>Sentry.init(${JSON.stringify(init)});</script>`;
+<script src="/sentry-init.js"></script>`;
 }
 
 // First-touch signup source (AudioKit decisions 0040 and 0041): adds the landing page's referrer
@@ -340,6 +347,7 @@ async function main() {
 
   await rm(out, { recursive: true, force: true });
   await cp(join(src, "static"), out, { recursive: true });
+  if (SENTRY_DSN) await write("sentry-init.js", sentryInit());
 
   const pagesDir = join(src, "pages");
   const built = new Map();

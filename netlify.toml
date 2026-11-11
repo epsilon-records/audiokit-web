@@ -7,9 +7,15 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# The Content-Security-Policy allows what the pages load (EPSILON-118): Google Fonts, the Sentry
+# browser bundle and its ingest host (shared decisions 0003, 0004), the Cloudflare Web Analytics
+# beacon (0011) and the Kit signup form's POST (0027), whose redirect returns to audiokit.ai.
+# The pages carry no inline scripts or styles; keep it that way (test/csp-output.mjs checks).
 [[headers]]
   for = "/*"
   [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://browser.sentry-cdn.com https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src 'self' https://cloudflareinsights.com https://o337159.ingest.us.sentry.io; form-action 'self' https://app.kit.com https://audiokit.ai; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"

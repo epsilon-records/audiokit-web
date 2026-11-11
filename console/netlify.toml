@@ -11,9 +11,11 @@
   NODE_VERSION = "22"
 
 # Static assets are served by Netlify, so the app's handle() headers don't apply to them.
+# The Content-Security-Policy is set per page by SvelteKit (vite.config.ts), not here.
 [[headers]]
   for = "/*"
   [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
