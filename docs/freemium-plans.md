@@ -164,6 +164,6 @@ first; this is not legal text.
 ## Out of scope
 
 - No payment, subscription or billing code is written here; that is EPSILON-44 in
-  `epsilon-records/audiokit-billing`.
+  `epsilon-records/epsilon-billing`.
 - The live pricing page and this document are reconciled with decisions 0023 and 0024. If they drift,
   those decisions win.
