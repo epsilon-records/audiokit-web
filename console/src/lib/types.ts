@@ -83,8 +83,12 @@ export type ApiKey = {
 	revoked: boolean;
 };
 
-/** The one-time response after creating a key: the full secret is never listed again. */
-export type CreatedApiKey = ApiKey & { secret: string };
+/**
+ * The one-time response after creating a key: the full secret is never listed again, and nor is
+ * the webhook secret that signs this key's result webhooks (`X-Signature`). `webhookSecret` is
+ * null only when the billing service predates EPSILON-124 and did not return one.
+ */
+export type CreatedApiKey = ApiKey & { secret: string; webhookSecret: string | null };
 
 export type Invoice = {
 	id: string;
@@ -136,7 +140,15 @@ export type MagicLinkRequest = {
 };
 
 export type MagicLinkExchange =
-	| { ok: true; session: Session; token: string; created?: boolean; apiKey?: string | null }
+	| {
+			ok: true;
+			session: Session;
+			token: string;
+			created?: boolean;
+			apiKey?: string | null;
+			/** The default key's webhook secret, revealed with it, only when the account was created. */
+			webhookSecret?: string | null;
+	  }
 	| { ok: false; error: 'invalid-token' | 'expired' };
 
 export type ProfileUpdate = {

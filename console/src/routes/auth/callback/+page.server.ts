@@ -32,6 +32,12 @@ export const load: PageServerLoad = async ({ url, cookies, locals, setHeaders })
 	});
 
 	if (result.created)
-		return { ok: true as const, apiKey: result.apiKey ?? null, email: result.session.email, next };
+		return {
+			ok: true as const,
+			apiKey: result.apiKey ?? null,
+			webhookSecret: result.webhookSecret ?? null,
+			email: result.session.email,
+			next
+		};
 	redirect(303, next);
 };

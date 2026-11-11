@@ -117,8 +117,8 @@
 {/if}
 
 <p class="faint">
-	Only the key prefix is shown after creation. The full secret is displayed once, immediately after
-	it is made.
+	Only the key prefix is shown after creation. The full key and its webhook secret are displayed
+	once, immediately after the key is made.
 </p>
 
 <!-- Create -->
@@ -159,6 +159,22 @@
 			</div>
 			<pre class="code">{created.secret}</pre>
 		</div>
+		{#if created.webhookSecret}
+			<p class="muted">
+				AudioKit signs this key's result webhooks with its webhook secret. Verify the
+				<code>X-Signature</code> header with it (<a
+					class="link"
+					href="https://audiokit.ai/docs/#webhooks">how</a
+				>). It is also shown only now.
+			</p>
+			<div class="panel">
+				<div class="panel-bar">
+					<span>Webhook secret</span>
+					<CopyButton value={created.webhookSecret} label="Copy webhook secret" />
+				</div>
+				<pre class="code">{created.webhookSecret}</pre>
+			</div>
+		{/if}
 		<div class="actions">
 			<button type="button" class="btn btn-primary" onclick={() => (revealOpen = false)}
 				>Done</button

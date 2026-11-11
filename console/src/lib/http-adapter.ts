@@ -154,6 +154,8 @@ type WireCreatedApiKey = {
 	api_key: string;
 	key_prefix: string;
 	created_at: string;
+	/** EPSILON-124: returned once, with the key. Absent from a billing service that predates it. */
+	webhook_secret?: string | null;
 };
 
 type WireJob = {
@@ -539,6 +541,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 					token?: string;
 					created?: boolean;
 					api_key?: string | null;
+					webhook_secret?: string | null;
 				}>('/v1/auth/magic-link/exchange', { method: 'POST', auth: false, ...json({ token }) });
 				if (!payload?.token || !payload.user) return { ok: false, error: 'invalid-token' };
 				return {
@@ -546,6 +549,7 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 					token: payload.token,
 					created: payload.created ?? false,
 					apiKey: payload.api_key ?? null,
+					webhookSecret: payload.webhook_secret ?? null,
 					session: { email: payload.user.email, issuedAt: now().toISOString() }
 				};
 			} catch (error) {
@@ -653,7 +657,8 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 				createdAt: created.created_at,
 				lastUsedAt: null,
 				revoked: false,
-				secret: created.api_key
+				secret: created.api_key,
+				webhookSecret: created.webhook_secret ?? null
 			};
 		},
 
