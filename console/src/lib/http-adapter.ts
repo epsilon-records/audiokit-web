@@ -412,6 +412,9 @@ export type HttpAdapterOptions = {
 	now?: () => Date;
 };
 
+/** How long sign-out waits for the billing service before it clears the cookie anyway. */
+export const SIGN_OUT_TIMEOUT_MS = 3000;
+
 export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 	const baseUrl = options.baseUrl.replace(/\/+$/, '');
 	const sessionToken = options.sessionToken ?? null;
@@ -691,12 +694,29 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			if (typed.length === 0) {
 				throw new HttpApiError('invalid-request', 'Type your email address to confirm.');
 			}
-			// 204 once the account is gone, including on a repeat; 400 when the address is not
-			// the account's; 502 `deletion_incomplete` when AudioKit or Stripe failed part way.
+			// 204 once the account is gone (which also ends its sessions); 400 when the address is
+			// not the account's; 502 `deletion_incomplete` when AudioKit or Stripe failed part way.
 			await request<unknown>('/v1/account/deletion', {
 				method: 'POST',
 				...json({ confirm_email: typed })
 			});
+		},
+
+		async signOut(): Promise<void> {
+			// 204: every session of the account has ended. 401: this one already had (signed out
+			// elsewhere, expired, or the account is gone), which is what signing out wants.
+			if (!sessionToken) return;
+			try {
+				// A deadline, so a hung billing service cannot hold the cookie deletion past the
+				// function's own timeout. The abort surfaces as a `network` error.
+				await request<unknown>('/v1/auth/logout', {
+					method: 'POST',
+					signal: AbortSignal.timeout(SIGN_OUT_TIMEOUT_MS)
+				});
+			} catch (error) {
+				if (error instanceof HttpApiError && error.code === 'unauthorized') return;
+				throw error;
+			}
 		},
 
 		async updateNotificationPreferences(next: NotificationPreferences) {

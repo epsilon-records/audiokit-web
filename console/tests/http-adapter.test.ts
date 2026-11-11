@@ -7,6 +7,7 @@ import {
 	createApiClient,
 	HttpApiError
 } from '../src/lib/api-client';
+import { SIGN_OUT_TIMEOUT_MS } from '../src/lib/http-adapter';
 
 const fixedNow = () => new Date('2026-11-14T12:00:00.000Z');
 
@@ -602,6 +603,50 @@ describe('http adapter: account deletion (decision 0042)', () => {
 		await expect(anonymous.deleteAccount('you@example.com')).rejects.toMatchObject({
 			code: 'unauthorized'
 		});
+		expect(fetchImpl.calls).toHaveLength(0);
+	});
+});
+
+describe('http adapter: sign out (EPSILON-114)', () => {
+	const token = jwt({ email: 'you@example.com', exp: 4102444800 });
+	const client = (fetchImpl: typeof fetch) =>
+		createApiClient({ baseUrl: 'https://billing.test', sessionToken: token, fetch: fetchImpl });
+
+	it('ends the session at the service with the session token', async () => {
+		const fetchImpl = fetchMock(() => new Response(null, { status: 204 }));
+		await expect(client(fetchImpl).signOut()).resolves.toBeUndefined();
+		expect(fetchImpl.calls).toHaveLength(1);
+		const [{ url, init }] = fetchImpl.calls;
+		expect(url).toBe('https://billing.test/v1/auth/logout');
+		expect(init.method).toBe('POST');
+		expect(header(init, 'authorization')).toBe(`Bearer ${token}`);
+	});
+
+	it('treats a session the service already ended as signed out', async () => {
+		const fetchImpl = fetchMock(() => jsonResponse({ error: 'unauthorized' }, 401));
+		await expect(client(fetchImpl).signOut()).resolves.toBeUndefined();
+	});
+
+	it('reports a service failure so the caller can log it', async () => {
+		const fetchImpl = fetchMock(() => jsonResponse({ error: 'internal_error' }, 500));
+		await expect(client(fetchImpl).signOut()).rejects.toMatchObject({ code: 'server-error' });
+	});
+
+	it('gives up on a billing service that never answers, so the cookie can still go', async () => {
+		// Like a real fetch on a hung connection: it settles only when the request is aborted.
+		const hung = (async (_input: RequestInfo | URL, init: RequestInit = {}) =>
+			new Promise<Response>((_resolve, reject) => {
+				init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+			})) as typeof fetch;
+		const started = Date.now();
+		await expect(client(hung).signOut()).rejects.toMatchObject({ code: 'network' });
+		expect(Date.now() - started).toBeLessThan(SIGN_OUT_TIMEOUT_MS + 2000);
+	}, 10_000);
+
+	it('makes no call without a session', async () => {
+		const fetchImpl = fetchMock(() => new Response(null, { status: 204 }));
+		const anonymous = createApiClient({ baseUrl: 'https://billing.test', fetch: fetchImpl });
+		await expect(anonymous.signOut()).resolves.toBeUndefined();
 		expect(fetchImpl.calls).toHaveLength(0);
 	});
 });
