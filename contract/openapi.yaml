@@ -102,12 +102,14 @@ paths:
         job. The limit is a guard against a client looping on submissions, not an allowance:
         what a plan allows is settled by the billing service.
 
-        A `stems` job is checked against the client's plan before it is queued: over the
-        plan's allowance the answer is `402 stem_allowance_exhausted`, with no active plan it
-        is `402 no_active_plan`, and when the plan can't be checked it is
-        `503 entitlement_unavailable`. Either way nothing was
-        queued and no GPU time was spent. Resubmitting a `job_id` that was already accepted
-        returns that job without checking again. Other operations are not checked.
+        Every job is checked against the client's plan before it is queued, and counts
+        against the plan's job allowance; a `stems` job also counts against its stem
+        allowance. Over the allowance the answer is `402 job_allowance_exhausted`, or
+        `402 stem_allowance_exhausted` for a `stems` job; with no active plan it is
+        `402 no_active_plan`, and when the plan can't be checked it is
+        `503 entitlement_unavailable`. Either way nothing was queued and nothing ran.
+        Resubmitting a `job_id` that was already accepted returns that job without checking
+        again.
       requestBody:
         required: true
         content:
@@ -197,9 +199,12 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "402":
           description: |
-            A `stems` job the client's plan doesn't allow. Nothing was queued.
-            `stem_allowance_exhausted`: the plan's stem or job allowance for this billing
-            period is used up. Upgrade the plan, or submit again in the next period.
+            A job the client's plan doesn't allow. Nothing was queued.
+            `job_allowance_exhausted`: the plan's job allowance for this billing period is
+            used up. Upgrade the plan, or submit again in the next period.
+            `stem_allowance_exhausted`: for a `stems` job, the plan's stem or job allowance
+            for this billing period is used up. Upgrade the plan, or submit again in the next
+            period.
             `no_active_plan`: no active plan is behind this API key (no subscription, or the
             account or key is inactive).
           content:
@@ -221,9 +226,9 @@ paths:
         "503":
           description: |
             `unavailable`: storage is unavailable; retry.
-            `entitlement_unavailable`: a `stems` job whose stem allowance couldn't be checked,
-            so it was refused rather than run unchecked. Nothing was queued; send the same
-            request again later.
+            `entitlement_unavailable`: the plan's allowance couldn't be checked, so the job
+            was refused rather than run unchecked. Nothing was queued; send the same request
+            again later.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -574,6 +579,7 @@ components:
             - rate_limited
             - unavailable
             - stem_allowance_exhausted
+            - job_allowance_exhausted
             - no_active_plan
             - entitlement_unavailable
         - type: string
