@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { apiFor, ApiError } from '#lib/api-client';
+import type { Cookies } from '@sveltejs/kit';
 import { SESSION_COOKIE } from '#lib/session';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -36,13 +37,21 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const confirmEmail = String(form.get('confirmEmail') ?? '').trim();
 		const client = apiFor(locals.sessionToken);
-		const account = await client.getAccount();
+		let account;
+		try {
+			account = await client.getAccount();
+		} catch (error) {
+			// The session has ended (EPSILON-114): the account is already gone, or signed out.
+			if (isUnauthorized(error)) signedOut(cookies);
+			throw error;
+		}
 		if (confirmEmail.toLowerCase() !== account.email.toLowerCase()) {
 			return fail(400, { deleteError: 'Type the email address of this account to confirm.' });
 		}
 		try {
 			await client.deleteAccount(confirmEmail);
 		} catch (error) {
+			if (isUnauthorized(error)) signedOut(cookies);
 			// The account may be half deleted (keys already revoked): say so and let them repeat it.
 			if (error instanceof ApiError)
 				return fail(error.code === 'network' ? 503 : 400, { deleteError: error.message });
@@ -52,3 +61,13 @@ export const actions: Actions = {
 		redirect(303, '/login?deleted=1');
 	}
 };
+
+function isUnauthorized(error: unknown): boolean {
+	return error instanceof ApiError && error.code === 'unauthorized';
+}
+
+/** Drop the dead session's cookie and send the user to sign in. */
+function signedOut(cookies: Cookies): never {
+	cookies.delete(SESSION_COOKIE, { path: '/' });
+	redirect(303, '/login');
+}

@@ -412,6 +412,9 @@ export type HttpAdapterOptions = {
 	now?: () => Date;
 };
 
+/** How long sign-out waits for the billing service before it clears the cookie anyway. */
+export const SIGN_OUT_TIMEOUT_MS = 3000;
+
 export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 	const baseUrl = options.baseUrl.replace(/\/+$/, '');
 	const sessionToken = options.sessionToken ?? null;
@@ -704,7 +707,12 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			// elsewhere, expired, or the account is gone), which is what signing out wants.
 			if (!sessionToken) return;
 			try {
-				await request<unknown>('/v1/auth/logout', { method: 'POST' });
+				// A deadline, so a hung billing service cannot hold the cookie deletion past the
+				// function's own timeout. The abort surfaces as a `network` error.
+				await request<unknown>('/v1/auth/logout', {
+					method: 'POST',
+					signal: AbortSignal.timeout(SIGN_OUT_TIMEOUT_MS)
+				});
 			} catch (error) {
 				if (error instanceof HttpApiError && error.code === 'unauthorized') return;
 				throw error;
