@@ -2,7 +2,10 @@
 
 export const SESSION_COOKIE = 'ak_console_session';
 
-/** Sessions are short-lived by design; the design leaves the exact lifetime open. */
+/**
+ * Sessions are short-lived by design. The billing service signs session tokens for the same 8
+ * hours and refuses older ones (EPSILON-114), so the cookie never outlives its token.
+ */
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export const DEFAULT_AFTER_LOGIN = '/dashboard';

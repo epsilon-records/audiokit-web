@@ -61,11 +61,17 @@ export type ConsoleApi = {
 	updateProfile(name: string, company?: string): Promise<Account>;
 	/**
 	 * Delete the signed-in account (decision 0042): billing records, API keys, the Stripe
-	 * customer and the API's jobs. `confirmEmail` must be the account's address. Safe to repeat:
-	 * resolves once the account is gone, also when it already was. Rejects with a retryable
+	 * customer and the API's jobs. `confirmEmail` must be the account's address. Safe to repeat
+	 * while it is incomplete; once the account is gone its sessions are too, so a repeat with the
+	 * same token is `unauthorized`. Rejects with a retryable
 	 * `server-error` when the service could only finish part of it; the same call resumes.
 	 */
 	deleteAccount(confirmEmail: string): Promise<void>;
+	/**
+	 * Sign out at the service (EPSILON-114): ends every session of this account, on every
+	 * device, not only this cookie's. Resolves when the session is already gone.
+	 */
+	signOut(): Promise<void>;
 	updateNotificationPreferences(next: NotificationPreferences): Promise<NotificationPreferences>;
 	startCheckout(planId: PlanId, interval?: 'month' | 'year'): Promise<CheckoutResult>;
 };

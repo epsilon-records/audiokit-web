@@ -209,6 +209,8 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			}
 		},
 
+		async signOut() {},
+
 		async updateNotificationPreferences(next: NotificationPreferences) {
 			preferences = { ...next };
 			return { ...preferences };

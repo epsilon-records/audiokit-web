@@ -82,7 +82,7 @@
 		<div class="panel-body">
 			<p class="muted">
 				You sign in with an email magic link — there is no password to manage. Use
-				<strong>Sign out</strong> below to end this session.
+				<strong>Sign out</strong> below to sign out on every device.
 			</p>
 		</div>
 	</section>
