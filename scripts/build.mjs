@@ -82,7 +82,7 @@ function header(meta) {
   return `<header class="site-header">
   <nav class="${meta.layout === "docs" ? "wrap-wide" : "wrap"} nav" aria-label="Main">
     <a class="brand" href="/"><span class="brand-mark">${LOGO}</span>AudioKit</a>
-    <div class="nav-links">${links}<a class="btn btn-primary btn-sm" href="${CONSOLE_LOGIN}">Sign in</a></div>
+    <div class="nav-links">${links}<button class="theme-toggle" type="button" data-theme-toggle>Light</button><a class="btn btn-primary btn-sm" href="${CONSOLE_LOGIN}">Sign in</a></div>
   </nav>
 </header>`;
 }
@@ -199,6 +199,18 @@ ${head}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+(function () {
+  var mode = "dark";
+  try {
+    var stored = localStorage.getItem("ak-theme");
+    mode = stored === "light" || stored === "dark"
+      ? stored
+      : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  } catch (e) { /* private mode: follow the system for this visit */ }
+  document.documentElement.setAttribute("data-theme", mode);
+})();
+</script>
 <link rel="stylesheet" href="/styles.css">
 ${sentryHead()}
 ${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-token="${esc(config.cloudflareWebAnalyticsToken)}" defer></script>` : ""}
@@ -208,7 +220,8 @@ ${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-to
 ${header(meta)}
 ${main}
 ${footer(meta, ctx)}
-${needsJs ? `<script src="/site.js" defer></script>\n` : ""}${firstTouchScript()}</body>
+<script src="/site.js" defer></script>
+${firstTouchScript()}</body>
 </html>
 `;
 }

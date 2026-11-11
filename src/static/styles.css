@@ -1,7 +1,7 @@
 /* AudioKit site — direction A "Console". One stylesheet for every page. */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
   --bg: #0c0e11;
   --bg-band: #101318;
   --panel: #14171c;
@@ -71,6 +71,54 @@ p code, li code, dd code, td code { overflow-wrap: anywhere; }
 .nav-links a:not(.btn) { color: var(--text-soft); padding: 12px 0; border-bottom: 2px solid transparent; }
 .nav-links a:not(.btn):hover { color: var(--accent); }
 .nav-links a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.theme-toggle {
+  font: 500 13px var(--mono); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); background: transparent; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); padding: 0 12px; min-height: 44px; cursor: pointer;
+}
+.theme-toggle:hover { color: var(--text); border-color: var(--line-strong); }
+
+/* Light theme (design decision D3a): paper ground, amber darkened for
+   contrast, and the code panels and console stay dark islands — a terminal
+   reads dark on paper. The islands restate their own internals so no
+   descendant picks up a light value. */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f4f2;
+  --bg-band: #ededeb;
+  --panel: #fbfbfa;
+  --panel-deep: #f0f0ee;
+  --line: #d6d7d3;
+  --line-strong: #565b62;
+  --text: #17181a;
+  --text-soft: #3c3e42;
+  --muted: #5c5f66;
+  --faint: #5f656c;
+  --code: #2a2d31;
+  --accent: #9a5b00;
+  --accent-soft: rgba(154, 91, 0, 0.1);
+  --accent-ink: #ffffff;
+  --ok: #1c7a43;
+  --warn: #8a5a00;
+}
+:root[data-theme='light'] .panel,
+:root[data-theme='light'] .console {
+  --panel: #14171c;
+  --panel-deep: #0f1215;
+  --line: #262b33;
+  --line-strong: #3a414b;
+  --text: #e6e8eb;
+  --text-soft: #c3c9d1;
+  --muted: #b4bcc6;
+  --faint: #9aa3ae;
+  --code: #d5dae0;
+  --accent: #ffb547;
+  --ok: #7fd69a;
+  --warn: #ff8a7a;
+}
+:root[data-theme='light'] mark.gap {
+  background: rgba(154, 91, 0, 0.12); color: #8a5a00; border-color: rgba(154, 91, 0, 0.5);
+}
 
 /* Buttons and links */
 .btn {
