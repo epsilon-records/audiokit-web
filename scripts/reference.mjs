@@ -220,7 +220,7 @@ const capitalise = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 export function webhookTestVector(doc) {
   const v = Object.values(doc.webhooks || {})[0]?.post?.["x-signature-test-vector"];
   if (!v) return "";
-  return `<div class="panel"><div class="panel-bar"><span>webhook signature test vector</span></div><pre class="code">secret  ${esc(v.secret)}
+  return `<div class="panel"><div class="panel-bar"><span>webhook signature test vector</span></div><pre class="code" tabindex="0">secret  ${esc(v.secret)}
 body    ${esc(v.body)}
 header  ${esc(v.header)}</pre></div>`;
 }
@@ -281,7 +281,7 @@ function endpoint(doc, path, method, op, pathParams) {
   if (body?.examples) {
     examples = Object.entries(body.examples)
       .map(
-        ([, ex]) => `<div class="panel"><div class="panel-bar"><span>${esc(ex.summary || "Example")}</span><span>request body</span></div><pre class="code">${esc(JSON.stringify(ex.value, null, 2))}</pre></div>`,
+        ([, ex]) => `<div class="panel"><div class="panel-bar"><span>${esc(ex.summary || "Example")}</span><span>request body</span></div><pre class="code" tabindex="0">${esc(JSON.stringify(ex.value, null, 2))}</pre></div>`,
       )
       .join("");
   }

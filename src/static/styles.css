@@ -42,6 +42,7 @@ ul, ol { padding: 0; list-style: none; }
 pre { margin: 0; }
 code, .mono { font-family: var(--mono); }
 code { font-size: 0.9em; }
+p code, li code, dd code, td code { overflow-wrap: anywhere; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -67,7 +68,7 @@ code { font-size: 0.9em; }
 .brand:hover { color: var(--text); }
 .brand-mark { color: var(--accent); display: inline-flex; }
 .nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 26px; font-size: 15px; }
-.nav-links a:not(.btn) { color: var(--text-soft); padding: 6px 0; border-bottom: 2px solid transparent; }
+.nav-links a:not(.btn) { color: var(--text-soft); padding: 12px 0; border-bottom: 2px solid transparent; }
 .nav-links a:not(.btn):hover { color: var(--accent); }
 .nav-links a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
 
@@ -135,7 +136,8 @@ code { font-size: 0.9em; }
 }
 .copy {
   font: 500 12px var(--mono); color: var(--muted); background: transparent; cursor: pointer;
-  border: 1px solid var(--line-strong); border-radius: 4px; padding: 4px 10px; min-height: 28px;
+  border: 1px solid var(--line-strong); border-radius: 4px; padding: 4px 10px; min-height: 44px; min-width: 44px;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .copy:hover { color: var(--accent); border-color: var(--accent); }
 
@@ -243,7 +245,14 @@ code { font-size: 0.9em; }
 .docs-main p, .docs-main li { font-size: 16.5px; line-height: 1.65; color: var(--muted); }
 .docs-main p code, .docs-main li code, .docs-main td code { color: var(--text); }
 .docs-main a:not(.btn):not(.side-page) { color: var(--accent); }
-.docs-main a:not(.btn):hover { text-decoration: underline; text-underline-offset: 3px; }
+.docs-main a:not(.btn):hover { text-decoration-color: currentColor; }
+/* Prose links are underlined at rest: colour alone is not a signal (design audit F-02). */
+main p a:not(.btn), main li a:not(.btn), main dd a:not(.btn), main td a:not(.btn),
+main .note a:not(.btn), main .lede a:not(.btn), .faq dd a:not(.btn) {
+  text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+}
+main p a:not(.btn):hover, main li a:not(.btn):hover, main dd a:not(.btn):hover, main td a:not(.btn):hover { text-decoration-color: currentColor; }
 .docs-main ul:not(.checklist):not(.next-links) { list-style: disc; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
 .doc-intro { gap: 20px !important; }
 .doc-intro .lede { font-size: 19px; }

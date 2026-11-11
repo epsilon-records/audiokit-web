@@ -18,7 +18,7 @@
   <p>Any client that supports Streamable HTTP with a custom header can connect. In a client's JSON config:</p>
   <div class="panel">
     <div class="panel-bar"><span>mcp config</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">{
+<pre class="code" tabindex="0">{
   "mcpServers": {
     "audiokit": {
       "type": "http",
@@ -31,7 +31,7 @@
   <p>Or with Claude Code:</p>
   <div class="panel">
     <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">claude mcp add --transport http audiokit {{API_BASE}}/mcp \
+<pre class="code" tabindex="0">claude mcp add --transport http audiokit {{API_BASE}}/mcp \
   --header "Authorization: Bearer ak_..."</pre>
   </div>
 </section>
@@ -140,7 +140,7 @@
   <p>A successful tool result carries the object in <code>structuredContent</code>, and the same object as JSON in its text content. Shapes match the HTTP API exactly: <code>health</code> returns <a href="/docs/reference/#schema-Health">Health</a>, <code>list_operations</code> returns <a href="/docs/reference/#schema-Capabilities">Capabilities</a>, and every job tool returns the <a href="/docs/reference/#schema-Job">Job</a>, as <code>GET /v1/jobs/{id}</code> does:</p>
   <div class="panel">
     <div class="panel-bar"><span>Job fields</span></div>
-<pre class="code">provider_job_id, job_id, operation,
+<pre class="code" tabindex="0">provider_job_id, job_id, operation,
 status        queued | running | succeeded | failed | canceled
 result, error, provenance,
 created_at, started_at, finished_at</pre>
@@ -158,7 +158,7 @@ created_at, started_at, finished_at</pre>
   <p>A refused call is a tool result with <code>isError: true</code> and <code>structuredContent</code> holding the API's error body:</p>
   <div class="panel">
     <div class="panel-bar"><span>structuredContent</span></div>
-<pre class="code">{ "error": { "code": "not_found", "message": "…" } }</pre>
+<pre class="code" tabindex="0">{ "error": { "code": "not_found", "message": "…" } }</pre>
   </div>
   <p>The codes are the HTTP API's: <code>invalid_request</code>, <code>operation_unavailable</code>, <code>idempotency_conflict</code>, <code>not_found</code>, <code>rate_limited</code> and <code>unavailable</code>. A <code>stems</code> job is checked against your plan before it is queued, so submitting one can also return <code>stem_allowance_exhausted</code>, <code>no_active_plan</code> or <code>entitlement_unavailable</code>; nothing was queued in any of those cases. Their meanings are in <a href="/docs/reference/#errors-api">the reference</a>. A missing or unknown key never reaches a tool: it gets HTTP <code>401</code> <code>unauthorized</code>, as described under <a href="#connect">Connect</a>.</p>
   <p>A failed job is not a tool error. It comes back as a Job with <code>status: "failed"</code> and <code>error.code</code> set to one of the <a href="/docs/reference/#errors-job">job error codes</a>.</p>

@@ -21,12 +21,12 @@
   <p>These two endpoints need no key. <code>/v1/capabilities</code> lists the operations the server runs right now.</p>
   <div class="panel">
     <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">curl {{API_BASE}}/v1/health
+<pre class="code" tabindex="0">curl {{API_BASE}}/v1/health
 curl {{API_BASE}}/v1/capabilities</pre>
   </div>
   <div class="panel">
     <div class="panel-bar"><span>responses, shortened</span></div>
-<pre class="code">{ "status": "ok", "version": "{{API_VERSION}}" }
+<pre class="code" tabindex="0">{ "status": "ok", "version": "{{API_VERSION}}" }
 
 { "operations": [
     { "operation": "loudness", "outputs": [], "async": true, "requires_consent": false },
@@ -41,7 +41,7 @@ curl {{API_BASE}}/v1/capabilities</pre>
   <p>This measures a file's loudness. <code>job_id</code> is yours: use something you can look up later. It's also the idempotency key.</p>
   <div class="panel">
     <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">curl {{API_BASE}}/v1/jobs \
+<pre class="code" tabindex="0">curl {{API_BASE}}/v1/jobs \
   -H "Authorization: Bearer $AUDIOKIT_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -64,12 +64,12 @@ curl {{API_BASE}}/v1/capabilities</pre>
   <p>When the job finishes, AudioKit POSTs a <code>job.succeeded</code>, <code>job.failed</code> or <code>job.canceled</code> event to your webhook, with the job as <code>data</code>. You can also fetch the job at any time:</p>
   <div class="panel">
     <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">curl {{API_BASE}}/v1/jobs/$PROVIDER_JOB_ID \
+<pre class="code" tabindex="0">curl {{API_BASE}}/v1/jobs/$PROVIDER_JOB_ID \
   -H "Authorization: Bearer $AUDIOKIT_KEY"</pre>
   </div>
   <div class="panel">
     <div class="panel-bar"><span>a succeeded loudness job</span></div>
-<pre class="code">{
+<pre class="code" tabindex="0">{
   "provider_job_id": "01a19981-fb9f-774e-b139-7cc6ac648659",
   "job_id": "job-0193",
   "operation": "loudness",
@@ -103,7 +103,7 @@ curl {{API_BASE}}/v1/capabilities</pre>
   <p>Each API key has its own webhook secret (<code>whsec_…</code>). The console shows it once, beside the key, when the key is created: store both then. If you lose it, create a new key and revoke the old one.</p>
   <div class="panel">
     <div class="panel-bar"><span>Node</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">import crypto from "node:crypto";
+<pre class="code" tabindex="0">import crypto from "node:crypto";
 
 export function verify(secret, rawBody, header, now = Date.now() / 1000) {
   const parts = Object.fromEntries(header.split(",").map((p) =&gt; p.split("=")));
@@ -116,7 +116,7 @@ export function verify(secret, rawBody, header, now = Date.now() / 1000) {
   </div>
   <div class="panel">
     <div class="panel-bar"><span>Python</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">import hashlib, hmac, time
+<pre class="code" tabindex="0">import hashlib, hmac, time
 
 def verify(secret: bytes, raw_body: bytes, header: str, now: float | None = None) -&gt; bool:
     parts = dict(p.split("=", 1) for p in header.split(",") if "=" in p)
@@ -141,7 +141,7 @@ def verify(secret: bytes, raw_body: bytes, header: str, now: float | None = None
   <p><code>transcode</code> and <code>preview</code> write a new audio file. Give AudioKit somewhere to put it: a signed PUT URL in <code>outputs.audio</code>, with any headers the signature needs. AudioKit sets <code>Content-Type</code> and <code>Content-Length</code> itself.</p>
   <div class="panel">
     <div class="panel-bar"><span>request body</span><button class="copy" type="button">Copy</button></div>
-<pre class="code">{
+<pre class="code" tabindex="0">{
   "job_id": "job-0194",
   "operation": "preview",
   "input": { "url": "https://storage.example.com/master.wav?signature=abc", "sha256": "837d2e9c…" },

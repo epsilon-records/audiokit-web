@@ -8,7 +8,7 @@
   <h2 id="typescript">TypeScript · Node.js 20+</h2>
   <p>Install with <code>npm install audiokit-ai</code>. The package is ESM and server-side only; never ship your API key to a browser.</p>
   <div class="panel"><div class="panel-bar"><span>submit a job</span></div>
-<pre class="code">import { AudioKit, ApiError, verifyWebhook } from 'audiokit-ai';
+<pre class="code" tabindex="0">import { AudioKit, ApiError, verifyWebhook } from 'audiokit-ai';
 
 const client = new AudioKit({ apiKey: process.env.AUDIOKIT_API_KEY! });
 const job = await client.submitJob({
@@ -19,7 +19,7 @@ const job = await client.submitJob({
 });
 const status = await client.getJob(job.provider_job_id);</pre></div>
   <div class="panel"><div class="panel-bar"><span>verify before parsing</span></div>
-<pre class="code">// rawBody is the original Buffer, not JSON.stringify(parsedBody).
+<pre class="code" tabindex="0">// rawBody is the original Buffer, not JSON.stringify(parsedBody).
 if (!verifyWebhook(rawBody, request.headers['x-signature'], webhookSecret)) {
   response.writeHead(401).end();
   return;
@@ -31,7 +31,7 @@ const event = JSON.parse(rawBody.toString('utf8'));
   <h2 id="python">Python · 3.11+</h2>
   <p><code>pip install audiokit-ai</code>. Import it as <code>audiokit_ai</code>. Requests and responses are ordinary dictionaries; generated <code>TypedDict</code> models are available in <code>audiokit_ai.models</code>.</p>
   <div class="panel"><div class="panel-bar"><span>submit a job</span></div>
-<pre class="code">import os
+<pre class="code" tabindex="0">import os
 from audiokit_ai import AudioKit, ApiError, verify_webhook
 
 with AudioKit(api_key=os.environ['AUDIOKIT_API_KEY']) as client:
@@ -43,7 +43,7 @@ with AudioKit(api_key=os.environ['AUDIOKIT_API_KEY']) as client:
     })
     status = client.get_job(job['provider_job_id'])</pre></div>
   <div class="panel"><div class="panel-bar"><span>verify before parsing</span></div>
-<pre class="code">import json
+<pre class="code" tabindex="0">import json
 
 # Read the original request body as bytes; do not reserialize JSON.
 if not verify_webhook(raw_body, signature_header, webhook_secret):
