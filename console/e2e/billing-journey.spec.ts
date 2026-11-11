@@ -40,15 +40,26 @@ test('creating a key reveals its webhook secret beside it, and the list never sh
   await page.getByRole('button', { name: 'Email me a signup link' }).click();
   await page.getByRole('link', { name: 'Open the magic link' }).click();
   await page.goto('/api-keys');
-  await page.getByRole('button', { name: 'Create key' }).first().click();
+  // The route may still be hydrating after goto; a click before then does nothing.
+  await page.waitForLoadState('networkidle');
+  const createDialog = page.getByRole('dialog', { name: 'Create API key' });
+  await expect(async () => {
+    await page.getByRole('button', { name: 'Create key' }).first().click();
+    await expect(createDialog).toBeVisible({ timeout: 1_000 });
+  }).toPass();
   await page.getByLabel('Label (optional)').fill('webhooks');
-  await page.getByRole('dialog').getByRole('button', { name: 'Create key' }).click();
+  await createDialog.getByRole('button', { name: 'Create key' }).click();
   const reveal = page.getByRole('dialog', { name: 'Key created — copy it now' });
   await expect(reveal.getByText('Webhook secret', { exact: true })).toBeVisible();
   const secret = reveal.locator('pre.code', { hasText: /^whsec_mock_/ });
   await expect(secret).toBeVisible();
   const value = (await secret.textContent())!.trim();
+  const key = (await reveal.locator('pre.code', { hasText: /^ak_/ }).textContent())!.trim();
   await reveal.getByRole('button', { name: 'Done' }).click();
+  await expect(reveal).toBeHidden();
+  // Done drops the reveal: neither the key nor its webhook secret stays in the DOM.
+  await expect(page.getByText(value)).toHaveCount(0);
+  await expect(page.getByText(key)).toHaveCount(0);
   await page.reload();
   await expect(page.getByText(value)).toHaveCount(0);
 });
