@@ -251,9 +251,9 @@ paths:
         `AUDIOKIT_RATE_LIMIT_EXEMPT_CLIENTS` does for one known ahead of time, and the two
         work together. It takes effect on the client's next request, with no redeploy.
 
-        Only the fields listed in the schema are part of the contract. Others are ignored
-        today, not rejected, so a misspelled `plan_less` leaves the client rate limited
-        without an error: send only what is listed.
+        Only the fields listed in the schema are accepted. Any other field is refused with
+        `422 invalid_request` and the stored client is left as it was, so a misspelled
+        `plan_less` is an error rather than a silent no-op.
 
         The admin token is one value, or two (`current,next`) while it rotates: either
         authenticates.
@@ -285,7 +285,7 @@ paths:
         "422":
           description: |
             `invalid_request`: `id`, `api_key_sha256`, `webhook_secret` or `plan_less` is
-            invalid. The id is 1-200 printable ASCII characters with no spaces, the hash is 64
+            invalid, or the body has a field the schema doesn't list. The id is 1-200 printable ASCII characters with no spaces, the hash is 64
             hex characters, the secret is 16+ characters and `plan_less` is a boolean. The
             stored client is left as it was.
           content:
@@ -306,19 +306,25 @@ paths:
 
         What happens to work already accepted:
 
-        - **Queued and running jobs are not canceled.** They run to the end and their records
-          stay (until the usual retention), but nothing can read them with the revoked key.
-          To stop a job, cancel it before revoking, or erase the client's data.
+        - **Queued jobs are canceled and running jobs are stopped.** A queued job becomes
+          `canceled` at once and never runs. A running job is asked to stop and its worker ends
+          it as `canceled` at its next check, which comes every 20 seconds or sooner; it does the same as
+          `POST /v1/jobs/{id}/cancel`, so no more compute is spent on results that cannot be
+          delivered. Their records stay (until the usual retention), but nothing can read them
+          with the revoked key. Jobs that had already finished are not touched.
         - **Webhooks for the client are not delivered.** Each is signed with the client's
-          secret, which is gone, so a delivery that is due after the revoke is given up on
-          without being sent, and no retry follows. A delivery already in flight when the
-          client is removed may still arrive.
+          secret, which is gone, so a delivery that is due after the revoke, including the one
+          for a job canceled by the revoke, is given up on without being sent, and no retry
+          follows. A delivery already in flight when the client is removed may still arrive.
         - **Resubmit under another client.** Because a revoked client's jobs can neither be
-          polled nor report back, jobs still unfinished when it is revoked should be
+          polled nor report back, work that was unfinished when it was revoked should be
           submitted again under another client.
 
-        Repeating the call answers `404`, which a caller that only wants the client gone can
-        treat as success. A client that is listed in `AUDIOKIT_CLIENTS` can't be removed here:
+        Repeating the call answers `404 client_not_found`, which a caller that only wants the
+        client gone can treat as success. Only that code means the client is gone: `404
+        not_found` is the answer for a path the server doesn't have, such as a wrong base URL,
+        and says nothing about the client. The repeat also cancels any of the client's jobs that are still
+        unfinished, so a revoke that was cut short can be finished by repeating it. A client that is listed in `AUDIOKIT_CLIENTS` can't be removed here:
         the variable would keep it on, so remove it there instead.
       security:
         - adminToken: []
@@ -327,7 +333,7 @@ paths:
           description: The client is gone.
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404":
-          description: "`not_found`: no client with this id."
+          description: "`client_not_found`: no client with this id."
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -562,6 +568,7 @@ components:
             - operation_unavailable
             - unauthorized
             - not_found
+            - client_not_found
             - idempotency_conflict
             - client_bootstrap
             - rate_limited
