@@ -13,7 +13,7 @@ test('passwordless signup creates a Free account and opens pricing', async ({ pa
   await expect(page.getByText('Mock mode: no email is sent.')).toBeVisible();
   await page.getByRole('link', { name: 'Open the magic link' }).click();
   await page.goto('/pricing');
-  await expect(page.getByText('100 jobs a month', { exact: false })).toBeVisible();
+  await expect(page.getByText('100 credits each calendar month', { exact: false })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Credit packs' })).toBeVisible();
   // AudioKit 0052 and 0058: no Pro plan, and nothing to buy while packs are not on sale.
   await expect(page.getByRole('heading', { name: 'Pro' })).toHaveCount(0);

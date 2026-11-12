@@ -18,7 +18,7 @@
 	title={form?.sent ? 'Check your inbox' : 'Create your AudioKit account'}
 	subtitle={form?.sent
 		? `We sent a verification link to ${form.email}. It works once and expires in 15 minutes.`
-		: 'Start free: 100 jobs/month, including up to 10 stem separations. No card or password.'}
+		: 'Start free: 100 credits each calendar month. No card or password.'}
 >
 	{#if form?.sent}
 		<div class="form-stack">

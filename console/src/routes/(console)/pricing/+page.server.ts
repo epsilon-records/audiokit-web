@@ -1,9 +1,6 @@
 import { fail } from '@sveltejs/kit';
-import { apiFor, ApiError, HttpApiError } from '#lib/api-client';
-import type { PlanId } from '#lib/types';
+import { apiFor, ApiError } from '#lib/api-client';
 import type { Actions, PageServerLoad } from './$types';
-
-const planIds: PlanId[] = ['free', 'pro', 'enterprise'];
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const client = apiFor(locals.sessionToken);
@@ -16,39 +13,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	// Downgrades are managed in Stripe's portal so the subscription remains
-	// active until the configured period end. The Checkout endpoint only
-	// supports Pro and must never be used to switch a customer to Free.
+	// The subscription Checkout action that lived here is gone: billing removes
+	// POST /v1/subscriptions/checkout with prepaid credits (AudioKit 0052, 0058,
+	// epsilon-billing#59), and this page has nothing to buy. The portal stays.
 	downgrade: async ({ locals }) => {
 		try {
 			return { portalUrl: await apiFor(locals.sessionToken).createBillingPortal() };
 		} catch (error) {
 			if (error instanceof ApiError) return fail(400, { error: error.message });
-			throw error;
-		}
-	},
-	upgrade: async ({ request, locals }) => {
-		const form = await request.formData();
-		const planId = String(form.get('planId') ?? '') as PlanId;
-		const interval = form.get('interval') === 'year' ? 'year' : 'month';
-		if (!planIds.includes(planId)) return fail(400, { error: 'Unknown plan.' });
-
-		try {
-			const checkout = await apiFor(locals.sessionToken).startCheckout(planId, interval);
-			// A real service hands off to a hosted checkout page; the mock does not.
-			// Return the URL to the browser. Cross-origin redirects from SvelteKit actions
-			// can surface as a 500 on the deployed console; navigate client-side instead.
-			return { checkout, planId };
-		} catch (error) {
-			if (error instanceof HttpApiError && error.status === 409) {
-				try {
-					return { portalUrl: await apiFor(locals.sessionToken).createBillingPortal(), planId };
-				} catch (portalError) {
-					if (portalError instanceof ApiError) return fail(400, { error: portalError.message, planId });
-					throw portalError;
-				}
-			}
-			if (error instanceof ApiError) return fail(400, { error: error.message, planId });
 			throw error;
 		}
 	}

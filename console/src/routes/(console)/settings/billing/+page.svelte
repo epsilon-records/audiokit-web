@@ -4,7 +4,7 @@
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import SettingsTabs from '#lib/components/SettingsTabs.svelte';
 	import StatusBadge from '#lib/components/StatusBadge.svelte';
-	import { formatDate, formatNumber } from '#lib/format';
+	import { formatDate } from '#lib/format';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -61,8 +61,10 @@
 					<dd>{planLabel}</dd>
 				</div>
 				<div>
-					<dt>Jobs / month</dt>
-					<dd>{data.plan?.jobLimit ? formatNumber(data.plan.jobLimit) : 'Custom'}</dd>
+					<!-- AudioKit 0052: Free is 100 credits a calendar month, not a job quota. Billing's
+					     plan row still carries the old 100-job quota, so it is not read here. -->
+					<dt>Free credits / month</dt>
+					<dd>100</dd>
 				</div>
 				<div>
 					<dt>{data.account.cancelsAt ? 'Access ends' : 'Renews / resets'}</dt>

@@ -27,8 +27,7 @@
 	<span>
 		<strong>Credit packs open soon.</strong>
 		AudioKit is in beta, and packs can't be bought yet. The prices below are what they will cost when
-		they open. Until credits are switched on, a Free account runs on the current allowance of 100 jobs
-		a month, 10 of them stem separations.
+		they open.
 	</span>
 </div>
 

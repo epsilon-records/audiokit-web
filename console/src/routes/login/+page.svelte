@@ -77,7 +77,7 @@
 
 		<p class="auth-sub">
 			New to AudioKit? <a class="link" href={`/signup${carry}`}>Start on the Free plan</a>
-			— 100 jobs a month, no card.
+			— 100 credits a month, no card.
 		</p>
 	{/if}
 </AuthCard>

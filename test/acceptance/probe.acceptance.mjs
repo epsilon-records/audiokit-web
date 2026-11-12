@@ -102,7 +102,8 @@ step("billing refuses anonymous account, credits, key and admin calls", async ()
     credits: (await billing("/v1/credits")).status,
     credits_checkout: (await billing("/v1/credits/checkout", { method: "POST", body: { pack: "credits_1000" } })).status,
     api_keys: (await billing("/v1/api-keys")).status,
-    quota: (await billing("/v1/usage/quota")).status,
+    // /v1/usage/quota goes with epsilon-billing#59 (404 for everyone); /current stays in both.
+    usage: (await billing("/v1/usage/current")).status,
     portal: (await billing("/v1/subscriptions/portal", { method: "POST", body: {} })).status,
     account_deletion: (await billing("/v1/account/deletion", { method: "POST", body: { confirm_email: "nobody@example.com" } })).status,
     jobs_bogus_key: (await billing("/v1/jobs?limit=1", { headers: BOGUS })).status,
