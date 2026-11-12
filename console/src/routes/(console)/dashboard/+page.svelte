@@ -49,13 +49,13 @@
 	<StatTile
 		label="Remaining"
 		value={formatNumber(remaining)}
-		hint={atLimit ? 'Quota reached — upgrade to keep submitting' : 'Until the period resets'}
+		hint={atLimit ? 'Quota reached. New jobs wait for the monthly reset' : 'Until the period resets'}
 		tone={atLimit ? 'warn' : 'default'}
 	/>
 
 	<StatTile label="Plan" value={planLabel} hint="Resets {formatDate(data.account.renewsAt)}">
 		<div class="actions">
-			<a class="btn btn-ghost btn-sm" href="/pricing">Upgrade</a>
+			<a class="btn btn-ghost btn-sm" href="/pricing">Pricing</a>
 		</div>
 	</StatTile>
 

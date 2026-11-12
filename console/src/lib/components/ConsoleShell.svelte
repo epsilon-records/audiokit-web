@@ -80,7 +80,7 @@
 					You've used {usage.jobsUsed} of your {usage.jobLimit} jobs this period.
 				</span>
 				<div class="actions">
-					<a class="btn btn-primary btn-sm" href="/pricing">Upgrade to Pro</a>
+					<a class="btn btn-primary btn-sm" href="/pricing">See pricing</a>
 				</div>
 			</Alert>
 		{/if}

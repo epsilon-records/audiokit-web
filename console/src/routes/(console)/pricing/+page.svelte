@@ -1,30 +1,16 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import PageHeader from '#lib/components/PageHeader.svelte';
-	import PlanCard from '#lib/components/PlanCard.svelte';
-	import { formatDate } from '#lib/format';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	// Copy only, matching audiokit.ai/pricing (AudioKit decisions 0052 and 0057, shared 0040).
+	// Nothing here can be bought: the subscription Checkout this page used to post to is being
+	// removed from billing (AudioKit 0058), and credit packs are not on sale during the beta.
+	// The console itself is removed by EPSILON-169 (AudioKit 0053).
+	let { data }: PageProps = $props();
 
 	const planLabel = $derived(
 		{ free: 'Free', pro: 'Pro', enterprise: 'Enterprise' }[data.account.plan] ?? data.account.plan
 	);
-	const checkout = $derived(form && 'checkout' in form ? form.checkout : null);
-	const checkoutPlan = $derived(
-		form && 'planId' in form ? data.plans.find((plan) => plan.id === form?.planId) : null
-	);
-	const actionError = $derived(form && 'error' in form ? form.error : null);
-	let interval = $state<'month' | 'year'>('month');
-
-	// SvelteKit action redirects to an external Stripe domain can fail on Netlify.
-	// The action returns the URL; a browser navigation performs the handoff.
-	$effect(() => {
-		const target = form && 'portalUrl' in form ? form.portalUrl : checkout?.url;
-		if (typeof target === 'string' && /^https:\/\//.test(target)) {
-			window.location.assign(target);
-		}
-	});
 </script>
 
 <svelte:head>
@@ -34,84 +20,88 @@
 <PageHeader
 	title="Plan"
 	kicker="Pricing"
-	description="You're on the {planLabel} plan. Change plan here; the public pricing page stays the marketing page."
+	description="You're on the {planLabel} plan. AudioKit is priced in prepaid credits, with no subscription. One credit is $0.01."
 />
 
-{#if checkout?.status === 'success'}
-	<div class="notice notice-ok" role="status">
-		<span>
-			<strong>You're on {checkoutPlan?.name ?? planLabel}.</strong>
-			{checkout.renewsAt ? `Renews ${formatDate(checkout.renewsAt)}.` : ''}
-			Mock checkout — no card was charged.
-		</span>
-		<div class="actions"><a class="link" href="/settings/billing">View billing</a></div>
-	</div>
-{:else if checkout?.status === 'processing'}
-	<div class="notice notice-info" role="status">
-		Payment received — activating your plan. This usually takes a few seconds.
-	</div>
-{:else if checkout?.status === 'cancelled'}
-	<div class="notice" role="status">Checkout cancelled — you haven't been charged.</div>
-{:else if checkout?.status === 'failed'}
-	<div class="notice notice-warn" role="alert">
-		That payment did not go through. Nothing has changed.
-	</div>
-{/if}
-
-{#if actionError}
-	<p class="notice notice-warn" role="alert">{actionError}</p>
-{/if}
+<div class="notice notice-info" role="note" style="margin-bottom: 24px">
+	<span>
+		<strong>Credit packs open soon.</strong>
+		AudioKit is in beta, and packs can't be bought yet. The prices below are what they will cost when
+		they open. Until credits are switched on, a Free account runs on the current allowance of 100 jobs
+		a month, 10 of them stem separations.
+	</span>
+</div>
 
 <div class="pricing-grid">
-	{#each data.plans as plan (plan.id)}
-		{@const current = plan.id === data.account.plan}
-		<PlanCard {plan} {current}>
-			{#if current}
-				<button type="button" class="btn btn-ghost" disabled>Current plan</button>
-			{:else if plan.id === 'enterprise'}
-				<!-- No contact channel to point at yet: sales@audiokit.ai is not set up, so this must not
-				     read as a working mailbox. Enterprise is sales-assisted (AudioKit decision 0023);
-				     add the address here once one exists and receives. -->
-				<p class="field-hint">Enterprise is arranged with us directly.</p>
-			{:else if plan.id === 'free'}
-				<form method="POST" action="?/downgrade" use:enhance>
-					<button type="submit" class="btn btn-primary">Manage downgrade in billing portal</button>
-				</form>
-			{:else}
-				<form method="POST" action="?/upgrade" use:enhance>
-					<input type="hidden" name="planId" value={plan.id} />
-					{#if plan.id === 'pro'}
-						<label class="field-hint"
-							>Billing interval
-							<select name="interval" bind:value={interval}>
-								<option value="month">Monthly · $99/month</option>
-								<option value="year">Annual · $990/year</option>
-							</select>
-						</label>
-					{/if}
-					<button type="submit" class="btn btn-primary">
-						`Upgrade to ${plan.name}`
-					</button>
-				</form>
-			{/if}
-		</PlanCard>
-	{/each}
+	<article class="pricing-card" class:pricing-card-current={data.account.plan === 'free'}>
+		<div class="pricing-header">
+			<h2>Free</h2>
+			<p class="pricing-description">
+				{data.account.plan === 'free'
+					? 'Your current plan'
+					: 'For trying AudioKit and small projects'}
+			</p>
+		</div>
+		<div class="pricing-price">
+			<span class="price-amount">$0</span>
+			<span class="price-period">/ month</span>
+		</div>
+		<ul class="pricing-features">
+			<li>100 credits each calendar month (UTC)</li>
+			<li>Unspent free credits lapse at the end of the month</li>
+			<li>All analysis and processing operations</li>
+			<li>HMAC-signed webhook delivery</li>
+			<li>No card needed</li>
+		</ul>
+	</article>
+
+	<article class="pricing-card">
+		<span class="pricing-badge">Opens soon</span>
+		<div class="pricing-header">
+			<h2>Credit packs</h2>
+			<p class="pricing-description">One-time purchases, no subscription</p>
+		</div>
+		<ul class="pricing-features">
+			<li>$10 for 1,000 credits</li>
+			<li>$50 for 5,500 credits</li>
+			<li>$200 for 24,000 credits</li>
+			<li>Bought credits stay valid for 12 months after purchase</li>
+			<li>Credit packs are non-refundable</li>
+		</ul>
+		<p class="field-hint">Packs open soon. Nothing can be bought during the beta.</p>
+	</article>
 </div>
 
-<div class="section-block" style="margin-top: 32px">
-	<h2>What changes</h2>
+<section class="section-block" style="margin-top: 32px" aria-labelledby="rates-heading">
+	<h2 id="rates-heading">What each operation costs</h2>
+	<div class="table-box">
+		<table>
+			<thead>
+				<tr><th scope="col">Operation</th><th scope="col">Credits</th></tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td
+						>Analysis: <code>probe</code>, <code>loudness</code>, <code>waveform</code>,
+						<code>tempo</code>, <code>key</code>, <code>fingerprint</code>, <code>tags</code></td
+					>
+					<td>1 per track</td>
+				</tr>
+				<tr><td>The <code>analyze</code> bundle</td><td>3 per track</td></tr>
+				<tr>
+					<td><code>stems</code></td>
+					<td>3 per audio minute, metered per second, at least 10 per job</td>
+				</tr>
+				<tr>
+					<td><code>transcode</code>, <code>preview</code>, <code>normalize</code></td>
+					<td>1 per audio minute</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	<p class="muted">
-		Free includes 100 jobs a month, of which 10 can be stem separations, and hard-stops at the
-		limit. Pro includes 1,000 jobs a month, of which 250 can be stem separations, plus priority
-		processing; overage is billed at the end of the period at $0.15 per stem over the stem allowance
-		and $0.01 per other job over the job allowance. A stem uses a slot in both allowances but is
-		billed once — never at both rates. Enterprise starts at $499 a month for 5,000 jobs and 1,500
-		stems. Plan changes are applied at the period boundary by the billing service; this scaffold
-		applies them immediately so the flow can be walked.
+		A per-minute job is accepted when your balance covers the operation's minimum, and charged for
+		the audio's real length when it finishes. The full terms are on the
+		<a class="link" href="https://audiokit.ai/pricing/">pricing page</a>.
 	</p>
-	<p class="faint">
-		Already paid? Manage payment details and invoices in <a class="link" href="/settings/billing"
-			>Billing</a
-		>.
-	</p>
-</div>
+</section>
