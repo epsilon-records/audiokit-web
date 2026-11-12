@@ -93,9 +93,9 @@ address with no account creates it on the Free plan when it is opened (billing `
 /v1/auth/signup` and `/v1/auth/magic-link`, AudioKit decision 0033). `/auth/callback` then shows
 the account's first API key once and sends the customer through `/onboarding`.
 
-No contact mailbox is advertised, because `sales@audiokit.ai` is not set up: the Enterprise card
-and the pricing FAQ state the plan without a contact link, and the console's plan screen says
-"Enterprise is arranged with us directly". Put an address back on all three once one exists and is
+No contact mailbox is advertised, because `sales@audiokit.ai` is not set up. The pricing page
+shows prepaid credits (AudioKit decision 0052) with no Enterprise card, and the console's plan
+screen says "Enterprise is arranged with us directly". Put an address back once one exists and is
 shown to receive mail.
 
 ## Deploy
