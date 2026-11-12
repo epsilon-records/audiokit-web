@@ -36,15 +36,17 @@ const files = await htmlFiles();
 for (const file of files) {
   const html = await readFile(file, 'utf8');
   const where = file.pathname;
-  for (const [tag] of html.matchAll(/<script\b[^>]*>/g)) {
+  for (const [, tag, body] of html.matchAll(/(<script\b[^>]*>)([\s\S]*?)<\/script>/g)) {
     // JSON-LD is a data block: never executed, so script-src does not apply. It must still parse.
-    if (/\stype="application\/ld\+json"/.test(tag)) continue;
+    // A browser reads the first type attribute, so only that one decides.
+    const type = /\stype\s*=\s*"([^"]*)"/i.exec(tag)?.[1].trim().toLowerCase();
+    if (type === 'application/ld+json') {
+      assert.doesNotThrow(() => JSON.parse(body), `${where}: JSON-LD does not parse`);
+      continue;
+    }
     const src = /\ssrc="([^"]+)"/.exec(tag)?.[1];
     assert.ok(src, `${where}: inline script ${tag}`);
     assert.ok(allows('script-src', src), `${where}: script-src does not allow ${src}`);
-  }
-  for (const [, json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
-    assert.doesNotThrow(() => JSON.parse(json), `${where}: JSON-LD does not parse`);
   }
   assert.doesNotMatch(html, /<style\b/, `${where}: inline <style>`);
   assert.doesNotMatch(html, /<[^>]+\sstyle="/, `${where}: inline style attribute`);
