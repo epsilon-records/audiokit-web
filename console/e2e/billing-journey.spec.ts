@@ -5,6 +5,8 @@ import { test, expect } from '@playwright/test';
 // Stripe test mode and test clocks; these tests must never charge a card.
 test('passwordless signup creates a Free account and opens pricing', async ({ page }) => {
   await page.goto('/signup');
+  // Submit only once the form has hydrated; an earlier click can be lost.
+  await page.waitForLoadState('networkidle');
   await expect(page.getByRole('heading', { name: 'Create your AudioKit account' })).toBeVisible();
   await page.getByLabel('Email').fill('stripe-e2e@example.test');
   await page.getByRole('button', { name: 'Email me a signup link' }).click();
@@ -26,6 +28,8 @@ test('signed-out users cannot access billing settings', async ({ page }) => {
 // EPSILON-124: the webhook secret is revealed once, beside the key, on both reveal screens.
 test('signup reveals the default key and its webhook secret once', async ({ page }) => {
   await page.goto('/signup');
+  // Submit only once the form has hydrated; an earlier click can be lost.
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Email').fill('webhook-secret-e2e@example.test');
   await page.getByRole('button', { name: 'Email me a signup link' }).click();
   await page.getByRole('link', { name: 'Open the magic link' }).click();
@@ -39,6 +43,8 @@ test('creating a key reveals its webhook secret beside it, and the list never sh
   page
 }) => {
   await page.goto('/signup');
+  // Submit only once the form has hydrated; an earlier click can be lost.
+  await page.waitForLoadState('networkidle');
   await page.getByLabel('Email').fill('webhook-secret-keys-e2e@example.test');
   await page.getByRole('button', { name: 'Email me a signup link' }).click();
   await page.getByRole('link', { name: 'Open the magic link' }).click();
