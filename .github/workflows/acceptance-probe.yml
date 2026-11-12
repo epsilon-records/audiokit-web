@@ -1,0 +1,38 @@
+name: Acceptance probe (read-only)
+
+# Read-only checks against PRODUCTION: public endpoints answer, protected ones refuse an
+# anonymous caller, unsigned webhooks are refused, pricing page release claims. It creates,
+# changes and deletes nothing, and needs no secret (see test/acceptance/README.md).
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "test/acceptance/**"
+      - ".github/workflows/acceptance-probe.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acceptance-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run the read-only probe
+        run: npm run test:acceptance:probe
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acceptance-probe-evidence
+          path: acceptance-probe-evidence.jsonl
+          if-no-files-found: ignore

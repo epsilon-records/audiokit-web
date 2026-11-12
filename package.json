@@ -11,7 +11,8 @@
     "test": "node --test test/*.test.mjs",
     "test:build": "npm run build && node test/analytics-output.mjs && node test/csp-output.mjs",
     "test:analytics:browser": "node test/analytics.browser.mjs",
-    "test:acceptance": "node --test test/acceptance/smoke.acceptance.mjs"
+    "test:acceptance": "node --test test/acceptance/smoke.acceptance.mjs",
+    "test:acceptance:probe": "node --test --test-concurrency=1 test/acceptance/probe.acceptance.mjs"
   },
   "engines": {
     "node": ">=20"

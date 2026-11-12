@@ -1,6 +1,15 @@
 # Launch acceptance suite
 
-An on-demand smoke suite for the AudioKit launch path. It runs against **production** with
+Two on-demand suites for the AudioKit launch path.
+
+**The read-only probe** (`probe.acceptance.mjs`) needs nothing: no account, email, key or
+confirmation. It checks that the API, billing and the site answer, that protected routes and
+unsigned webhooks refuse an anonymous caller, billing's CORS origins, the pricing page's release
+claims (shared 0040, AudioKit 0052) and the anonymous rate limit. It creates, changes and deletes
+nothing. Run it with `npm run test:acceptance:probe`, or the **Acceptance probe (read-only)**
+workflow, which also runs on pull requests that touch this folder.
+
+**The smoke suite** (`smoke.acceptance.mjs`) is described below. It runs against **production** with
 **Stripe in test mode** and creates one throwaway account, which it deletes at the end
 (through self-serve account deletion, which it also proves).
 
@@ -12,12 +21,13 @@ It is not part of `npm test` and no workflow runs it on push. Start it by hand.
 | --- | --- | --- |
 | Services answer | yes | |
 | Signup by magic link, first API key shown once | yes (needs the link token) | |
-| Free plan and limits | yes | |
+| Free plan, limits and the 100 monthly credits | yes | |
 | First analysis job, idempotent replay not recounted | yes | |
 | One stems job | yes, opt-in | |
-| Free quota hard stop | no: it takes 100 jobs or 10 stems | [checklist.md](checklist.md) section 2 |
-| Pro Checkout session is test mode | yes (stops the run if not) | paying it: checklist section 3 |
-| Webhook idempotency, cancel, failed payment, refund | no: need Stripe | checklist sections 4 to 8 |
+| Free credits hard stop | no: it spends the whole allowance | [checklist.md](checklist.md) section 2 |
+| Credit pack Checkout session is test mode | yes (stops the run if not) | paying it: checklist section 3 |
+| Legacy Pro Checkout is refused | yes | |
+| Webhook idempotency, failed payment, refund | no: need Stripe | checklist sections 4 to 8 |
 | Customer portal session is test mode | yes | using it: checklist section 5 |
 | Account deletion, then key and session rejected | yes | |
 
