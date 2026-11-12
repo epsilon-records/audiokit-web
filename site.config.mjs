@@ -4,11 +4,8 @@ export default {
   // Canonical site origin: https, no trailing slash. Used for <link rel="canonical">,
   // Open Graph URLs and sitemap.xml.
   siteUrl: "https://audiokit.ai",
-  // Public site_token for the exact audiokit.ai manual-install site (auto_install:false).
-  // Manual snippet site ebab0074d66844459b2ab8132c1f7355, verified by configuration owner.
-  // Keep unmerged until reviewed; setting this empty disables injection entirely.
-  // Never use an API credential or a documentation/example token here.
-  cloudflareWebAnalyticsToken: "d868aef5241e4bbc9b4a748f58ce1c48",
+  // The Cloudflare Web Analytics site token is not set here: the build reads it from the
+  // PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN environment variable (scripts/analytics-config.mjs).
   // The API's production base URL: https origin, no trailing slash.
   // The build also reads the contract from `${apiBaseUrl}/v1/openapi.yaml`,
   // falling back to contract/openapi.yaml if that fetch fails.

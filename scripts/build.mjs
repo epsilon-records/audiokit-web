@@ -17,6 +17,7 @@ import YAML from "yaml";
 import config from "../site.config.mjs";
 import { renderReference, renderOperationList, operationModel, webhookTestVector } from "./reference.mjs";
 import { assertNoGaps, findGaps, isRelease } from "./release-gaps.mjs";
+import { analyticsToken } from "./analytics-config.mjs";
 import { applyKitBlocks, normalizeKitFormId, productUpdatesForm } from "./kit-form.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -139,7 +140,9 @@ const SENTRY_BUNDLE_VERSION = "11.11.0";
 const KIT_FORM_ID = normalizeKitFormId(config.kitFormId);
 const KIT_ENABLED = KIT_FORM_ID !== "";
 const KIT_DISCLOSURE = KIT_ENABLED || config.kitDisclosure === true;
-const ANALYTICS_ENABLED = /^[a-f0-9]{32}$/i.test(config.cloudflareWebAnalyticsToken || "");
+// Cloudflare Web Analytics: the token comes from the environment, production context only.
+const ANALYTICS_TOKEN = analyticsToken();
+const ANALYTICS_ENABLED = ANALYTICS_TOKEN !== "";
 
 // Sentry.init runs from /sentry-init.js, written by the build, not from an inline script: the
 // Content-Security-Policy in netlify.toml allows no inline scripts (EPSILON-118).
@@ -208,7 +211,7 @@ ${head}
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 ${sentryHead()}
-${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-token="${esc(config.cloudflareWebAnalyticsToken)}" defer></script>` : ""}
+${!meta.noindex && ANALYTICS_ENABLED ? `<script src="/analytics.js" data-site-token="${esc(ANALYTICS_TOKEN)}" defer></script>` : ""}
 </head>
 <body class="layout-${meta.layout || "site"}">
 <a class="skip" href="#main">Skip to content</a>

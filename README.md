@@ -102,4 +102,12 @@ shown to receive mail.
 
 Netlify site `audiokit` (https://audiokit.ai; https://audiokit.netlify.app redirects there), linked to this repo: every push to `main` deploys production, and pull requests get deploy previews.
 
+### Cloudflare Web Analytics
+
+The site loads Cloudflare Web Analytics on its public pages (shared decision [0011](https://github.com/epsilon-records/knowledge/blob/main/shared/decisions/0011-cloudflare-web-analytics.md)) through the guarded loader in `src/static/analytics.js`. The site token is not in the repo. The build reads it from the `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN` environment variable (`scripts/analytics-config.mjs`), the same name LabelKit uses.
+
+- Set it on the `audiokit` Netlify site, in the **Production** context only. The token is public (it ships in the page), but it stays out of git.
+- The beacon is built in only when the variable is 32 hex characters **and** Netlify's `CONTEXT` is `production`. Unset, malformed, deploy previews, branch deploys and local builds produce pages without the loader, the privacy notice says analytics is disabled, and the build does not fail.
+- Changing the variable needs a new production deploy, because the token is read at build time.
+
 The site no longer builds any function, so `RESEND_API_KEY` and `AUDIOKIT_FROM_EMAIL` on the `audiokit` Netlify site are unused. Console email goes through the billing service (see [`epsilon-records/epsilon-billing`](https://github.com/epsilon-records/epsilon-billing)), which has its own keys.
