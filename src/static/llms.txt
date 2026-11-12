@@ -22,7 +22,7 @@ Planned, not available yet: denoise, stem separation (see above), transcription,
 
 ## Pricing
 
-- [Pricing](https://audiokit.ai/pricing/): priced in credits; one credit is $0.01. During the beta, credits are not switched on yet and a Free account gets 100 jobs a month, 10 of them stem separations. Once credits are on, every account gets 100 free credits a month. Analysis operations cost 1 credit per track, `analyze` 3 per track, `stems` 3 per audio minute (minimum 10 per job), `transcode`/`preview`/`normalize` 1 per audio minute. Credit packs are not on sale yet during the beta.
+- [Pricing](https://audiokit.ai/pricing/): priced in credits; one credit is $0.01. Every account gets 100 free credits each calendar month (UTC); unspent free credits lapse at the month's end. Free credits are spent first, then credits from packs, then granted credits. Analysis operations cost 1 credit per track, `analyze` 3 per track, `stems` 3 per audio minute (minimum 10 per job), `transcode`/`preview`/`normalize` 1 per audio minute. Credit packs are not on sale yet during the beta.
 
 ## Account
 

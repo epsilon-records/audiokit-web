@@ -33,9 +33,9 @@ Expect: the next job is refused with an insufficient-credits error before any wo
 negative balance is created by a per-track job, and a replay of an accepted `job_id` still
 answers `200` and is not charged again. A stems job needs at least 10 credits to be admitted.
 
-Note (2026-11-12): billing on `main` holds the credit ledger and pack Checkout, but jobs are still
-counted against the old 100-jobs quota. Until the debit at the entitlement check ships, this
-section can only show the old quota stop. Record which behaviour you saw.
+Note: jobs spend credits at the entitlement check (epsilon-billing#59), so the stop above is the
+insufficient-credits refusal; the old 100-jobs quota and its 10-stem cap are gone. Free credits
+are spent before purchased ones, then granted ones (AudioKit decision 0063). Record what you saw.
 
 ## 3. Buy a credit pack
 
@@ -47,6 +47,11 @@ section can only show the old quota stop. Record which behaviour you saw.
       purchased lot shows an expiry 12 months out, and the Free lot is unchanged.
 - [ ] Note `cs_test_`, `cus_`, `pi_` and `in_`. Expect one paid invoice in the dashboard.
 - [ ] Buying a second pack works and adds a second lot (packs are not "already subscribed").
+- [ ] Spending order: on a fresh throwaway account that still holds its Free credits, buy one pack,
+      record each lot's balance, submit one `probe` job (1 credit), and record the balances again.
+      Expect: the Free lot is down by 1 and the purchased lot is unchanged. Free credits are spent
+      before purchased ones (AudioKit decision 0063); the account in section 2 has no Free credits
+      left, so it cannot show this.
 
 ## 4. Webhook idempotency
 
