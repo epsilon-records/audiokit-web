@@ -28,7 +28,7 @@
 
 <AuthCard
 	title="Welcome to AudioKit"
-	subtitle="Your email is verified. Your Free plan is ready: 100 jobs/month, including up to 10 stem separations. No card required."
+	subtitle="Your email is verified. Your Free plan is ready: 100 credits each calendar month. No card required."
 >
 	<form method="POST" action="/onboarding?/complete" class="form-stack">
 		<input type="hidden" name="next" value={next} />

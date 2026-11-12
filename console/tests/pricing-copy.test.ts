@@ -3,6 +3,10 @@ import pricingPage from '../src/routes/(console)/pricing/+page.svelte?raw';
 import consoleShell from '../src/lib/components/ConsoleShell.svelte?raw';
 import dashboardPage from '../src/routes/(console)/dashboard/+page.svelte?raw';
 import billingPage from '../src/routes/(console)/settings/billing/+page.svelte?raw';
+import pricingServer from '../src/routes/(console)/pricing/+page.server.ts?raw';
+import welcome from '../src/lib/components/Welcome.svelte?raw';
+import signupPage from '../src/routes/signup/+page.svelte?raw';
+import loginPage from '../src/routes/login/+page.svelte?raw';
 
 /**
  * The console's plan page states prepaid credits, the same way audiokit.ai/pricing does
@@ -57,9 +61,8 @@ describe('console plan page: prepaid credits only', () => {
 
 	it('keeps the beta note from the pricing page', () => {
 		expect(text).toContain('Credit packs open soon.');
-		expect(text).toContain(
-			'Until credits are switched on, a Free account runs on the current allowance of 100 jobs a month, 10 of them stem separations.'
-		);
+		// Once epsilon-billing#59 deploys, jobs spend credits: no job or stem quota may be stated.
+		expect(text).not.toMatch(/\bjobs? (a|per|\/) ?month|stem separations/i);
 	});
 
 	it('has nothing to buy: no form, button or checkout (0058, shared 0040)', () => {
@@ -77,6 +80,30 @@ describe('upsell links elsewhere in the console', () => {
 		it(`${name} does not offer Pro or an upgrade`, () => {
 			const copy = textOf(source);
 			expect(copy).not.toMatch(/\bPro\b|upgrade/i);
+		});
+	}
+});
+
+// epsilon-billing#59 (EPSILON-157): jobs spend credits, POST /v1/subscriptions/checkout and
+// GET /v1/usage/quota answer 404, and Free has no job or stem quota.
+describe('Free copy under prepaid credits', () => {
+	it('no console route starts a subscription Checkout', () => {
+		expect(pricingServer).not.toMatch(/startCheckout|upgrade/);
+	});
+
+	for (const [name, source] of [
+		['Welcome', welcome],
+		['signup', signupPage],
+		['login', loginPage],
+		['settings/billing', billingPage]
+	] as const) {
+		it(`${name} states the Free credits, not a job or stem quota`, () => {
+			// Markup with attributes kept: the auth cards put this copy in a `subtitle` prop.
+			const copy = source
+				.replace(/<script[\s\S]*?<\/script>/g, ' ')
+				.replace(/<!--[\s\S]*?-->/g, ' ');
+			expect(copy).toMatch(/100 credits|Free credits/);
+			expect(copy).not.toMatch(/\bjobs? ?(a|per|\/) ?month|stem separations/i);
 		});
 	}
 });

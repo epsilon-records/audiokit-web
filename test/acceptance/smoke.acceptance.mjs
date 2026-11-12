@@ -113,17 +113,33 @@ step("signup: exchanging the link creates the account and reveals the first key 
   evidence({ step: "exchange-single-use", status: again.status });
 });
 
-step("account starts on Free with the documented limits", async () => {
+// Billing is switching from quotas to prepaid credits (EPSILON-157, epsilon-billing#59). Until it
+// deploys, Free is a 100-job quota read at /v1/usage/quota. Once it deploys that route answers 404
+// and Free is 100 credits a calendar month (decision 0052). These steps pass against either.
+// /v1/subscriptions/current and /v1/usage/current answer in both (billing's
+// test/legacy-console.db.test.ts pins them), so the steps lean on those first.
+step("account starts on Free with the documented allowance", async () => {
   const me = await billing("/v1/auth/me", { headers: bearer(s.session) });
   assert.equal(me.status, 200);
   const sub = await billing("/v1/subscriptions/current", { headers: bearer(s.session) });
   assert.equal(sub.status, 200);
+  assert.equal((sub.body.subscription ?? sub.body).tier, "free", "a new account is on Free");
   const quota = await billing("/v1/usage/quota", { headers: bearer(s.session) });
-  assert.equal(quota.status, 200);
-  const q = quota.body.quota ?? quota.body;
-  assert.equal(q.tier, "free");
-  assert.equal(q.limit, 100, "Free allows 100 jobs a month");
-  evidence({ step: "free-limits", me: me.status, subscription: sub.status, quota: q });
+  if (quota.status === 200) {
+    // Quota billing, before epsilon-billing#59.
+    const q = quota.body.quota ?? quota.body;
+    assert.equal(q.tier, "free");
+    assert.equal(q.limit, 100, "Free allows 100 jobs a month");
+    evidence({ step: "free-limits", billing: "quota", me: me.status, subscription: sub.status, quota: q });
+  } else {
+    // Credits billing: the quota route is gone and Free is the monthly credit allowance.
+    assert.equal(quota.status, 404, `/v1/usage/quota answered ${quota.status}; expected 200 (quota) or 404 (credits)`);
+    const credits = await billing("/v1/credits", { headers: bearer(s.session) });
+    assert.equal(credits.status, 200, `credits answered ${credits.status}: ${credits.text.slice(0, 200)}`);
+    const balance = (credits.body.credits ?? credits.body).balance;
+    assert.equal(balance, 100, "a new Free account holds the month's 100 credits (decision 0052)");
+    evidence({ step: "free-limits", billing: "credits", me: me.status, subscription: sub.status, quota: quota.status, balance });
+  }
   const keys = await billing("/v1/api-keys", { headers: bearer(s.session) });
   assert.equal(keys.status, 200);
   assert.ok(JSON.stringify(keys.body).includes(String(s.apiKey).slice(0, 7)), "the first key is listed by prefix");
@@ -156,14 +172,23 @@ step("first analysis job: accepted, counted once, finishes, replay is not recoun
   assert.equal(r.status, 202, `submit answered ${r.status}: ${r.text.slice(0, 200)}`);
   const job = r.body.job ?? r.body;
   s.jobIds.push(job.provider_job_id);
-  const after1 = await billing("/v1/usage/quota", { headers: bearer(s.session) });
-  const used1 = (after1.body.quota ?? after1.body).usage;
+  // Jobs counted and credits held, read from routes that answer under quota and credits billing.
+  const counted = async () => {
+    const usage = await billing("/v1/usage/current", { headers: bearer(s.session) });
+    assert.equal(usage.status, 200, `usage answered ${usage.status}`);
+    const credits = await billing("/v1/credits", { headers: bearer(s.session) });
+    assert.equal(credits.status, 200, `credits answered ${credits.status}`);
+    return { jobs: (usage.body.usage ?? usage.body).jobCount, balance: (credits.body.credits ?? credits.body).balance };
+  };
+  const after1 = await counted();
+  assert.ok(after1.jobs >= 1, "the accepted job is counted");
+  const used1 = after1.jobs;
   const replay = await submit(jobId, "analyze");
   assert.equal(replay.status, 200, "an idempotent replay answers 200");
   assert.equal((replay.body.job ?? replay.body).provider_job_id, job.provider_job_id);
-  const after2 = await billing("/v1/usage/quota", { headers: bearer(s.session) });
-  const used2 = (after2.body.quota ?? after2.body).usage;
-  assert.equal(used2, used1, "a replay must not be counted again");
+  const after2 = await counted();
+  assert.equal(after2.jobs, after1.jobs, "a replay must not be counted again");
+  assert.equal(after2.balance, after1.balance, "a replay must not be charged again");
   const done = await pollJob(job.provider_job_id, { timeoutMs: 180_000 });
   const credits = await billing("/v1/credits", { headers: bearer(s.session) });
   evidence({ step: "analysis-job-credits", status: credits.status, balance_after: (credits.body?.credits ?? credits.body)?.balance, note: "0052: analyze costs 3 credits once the debit ships" });
