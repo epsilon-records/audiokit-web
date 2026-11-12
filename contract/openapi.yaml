@@ -805,7 +805,9 @@ components:
         sha256:
           allOf: [{ $ref: "#/components/schemas/Sha256" }]
           description: The file's sha256. The job fails with `input_hash_mismatch` if the download differs.
-        filename: { type: string, description: Original filename, used only as a format hint. }
+        filename:
+          type: [string, "null"]
+          description: Original filename, used only as a format hint. `null` is the same as leaving it out.
 
     OutputTarget:
       type: object
@@ -833,7 +835,7 @@ components:
       description: Your authorization decision, stored with the job for provenance. AudioKit never needs the documents behind it.
       properties:
         decision_id: { type: string }
-        purpose: { type: string }
+        purpose: { type: [string, "null"], description: "`null` is the same as leaving it out." }
 
     NoParams:
       type: object

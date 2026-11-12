@@ -169,6 +169,27 @@ function firstTouchScript() {
   return `<script src="/first-touch.js" data-console-url="${esc(config.consoleUrl)}" defer></script>\n`;
 }
 
+// Structured data for the home page (schema.org WebAPI), so search engines and AI models read
+// what AudioKit is from the site itself. A JSON-LD data block: browsers never execute it, so the
+// CSP's script-src does not apply (test/csp-output.mjs allows only this type inline).
+function structuredData(ctx) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "WebAPI",
+    "@id": `${ctx.siteUrl}/#api`,
+    name: "AudioKit",
+    url: `${ctx.siteUrl}/`,
+    description:
+      "Audio analysis and processing API: loudness, tempo, key, fingerprints, genre and mood tags, transcodes and previews, delivered by signed webhook with provenance on every result.",
+    documentation: `${ctx.siteUrl}/docs/`,
+    image: `${ctx.siteUrl}/og.png`,
+    logo: `${ctx.siteUrl}/logo.png`,
+    provider: { "@type": "Organization", name: "AudioKit", url: `${ctx.siteUrl}/`, logo: `${ctx.siteUrl}/logo.png` },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", description: "Free plan", url: `${ctx.siteUrl}/pricing/` },
+  };
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>`;
+}
+
 function page(meta, body, ctx, route = "/") {
   const title = meta.title ? `${meta.title} · AudioKit` : "AudioKit";
   const desc = meta.description || "";
@@ -188,9 +209,15 @@ function page(meta, body, ctx, route = "/") {
     '<meta property="og:site_name" content="AudioKit">',
     '<meta property="og:locale" content="en">',
     canonical ? `<meta property="og:url" content="${esc(canonical)}">` : "",
-    '<meta name="twitter:card" content="summary">',
+    `<meta property="og:image" content="${esc(`${ctx.siteUrl}/og.png`)}">`,
+    '<meta property="og:image:width" content="1200">',
+    '<meta property="og:image:height" content="630">',
+    '<meta property="og:image:alt" content="AudioKit: audio analysis and processing, one job at a time.">',
+    '<meta name="twitter:card" content="summary_large_image">',
     `<meta name="twitter:title" content="${esc(title)}">`,
     desc ? `<meta name="twitter:description" content="${esc(desc)}">` : "",
+    `<meta name="twitter:image" content="${esc(`${ctx.siteUrl}/og.png`)}">`,
+    route === "/" && !meta.noindex ? structuredData(ctx) : "",
     meta.noindex ? '<meta name="robots" content="noindex">' : "",
   ]
     .filter(Boolean)
