@@ -147,3 +147,36 @@ export async function call(base, path, { method = "GET", headers = {}, body, tim
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Release checks on the public pricing page (shared decision 0040, AudioKit 0052). Pure, so it
+ * is tested offline. Each finding names something the page must not say, or should say, before
+ * AudioKit sells credits.
+ */
+export function pricingFindings(html) {
+  const text = String(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/g, " ")
+    .replace(/\s+/g, " ");
+  return {
+    sells_pro_99: /\$\s?99\b/.test(text),
+    mentions_pro_plan: /\bPro\b/.test(text),
+    uptime_sla_claim: /99\.9\s?%/.test(text),
+    mentions_credits: /\bcredits?\b/i.test(text),
+    pack_10_for_1000: /\$\s?10\b[\s\S]{0,80}1,?000\s+credits|1,?000\s+credits[\s\S]{0,80}\$\s?10\b/i.test(text),
+    mailto_links: (String(html).match(/mailto:/gi) ?? []).length,
+  };
+}
+
+/** Header-only summary of a page response, for evidence. */
+export function headerSummary(headers) {
+  const get = (k) => headers.get(k);
+  return {
+    hsts: Boolean(get("strict-transport-security")),
+    csp: Boolean(get("content-security-policy")),
+    x_content_type_options: get("x-content-type-options"),
+    frame_protection: Boolean(get("x-frame-options")) || /frame-ancestors/.test(get("content-security-policy") ?? ""),
+  };
+}

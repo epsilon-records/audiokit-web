@@ -20,87 +20,82 @@ For each step write down the time, what you saw, and the test-mode ids (`cs_test
 
 - [ ] The suite's signup, key, Free limits and first job steps pass.
 
-## 2. Free quota hard stop
+## 2. Free credits hard stop
 
-The suite cannot reach the limit (100 jobs, 10 stems) without spending compute. Check it once,
-by one of these, and record which:
+Free is 100 credits a calendar month (UTC), AudioKit decision 0052. Reaching zero takes about 34
+analyze jobs (3 credits each) or 100 single analyses. Check it once, by one of these, and record
+which:
 
-- [ ] Submit jobs on a throwaway Free account until the quota answers, or
-- [ ] ask the service owner to lower the limit for one throwaway account for this check.
+- [ ] Submit `probe` jobs (1 credit) on a throwaway Free account until the balance is spent, or
+- [ ] ask the service owner to set one throwaway account's balance near zero for this check.
 
-Expect: the next job answers `429 quota_exceeded` with the usage and limit, no overage is
-recorded, and a stems job past 10 answers the stem cap, not a charge. A replay of an accepted
-`job_id` still answers `200`.
+Expect: the next job is refused with an insufficient-credits error before any work starts, no
+negative balance is created by a per-track job, and a replay of an accepted `job_id` still
+answers `200` and is not charged again. A stems job needs at least 10 credits to be admitted.
 
-## 3. Pro Checkout
+Note (2026-11-12): billing on `main` holds the credit ledger and pack Checkout, but jobs are still
+counted against the old 100-jobs quota. Until the debit at the entitlement check ships, this
+section can only show the old quota stop. Record which behaviour you saw.
 
-- [ ] Sign in to the console as the throwaway account and choose Pro monthly.
-- [ ] The hosted page shows the test banner. Pay with card `4242 4242 4242 4242`, any future
-      expiry, any CVC, any postcode and a real-format billing address (Stripe Tax needs one).
-- [ ] You return to the console. Expect: the plan shows Pro within a minute, the quota shows
-      1,000 jobs and 250 stems, and there is no trial.
-- [ ] Note `cs_test_`, `cus_`, `sub_` and the first `in_`. Expect one active subscription and a
-      paid invoice in the dashboard. The API key still works and now has Pro limits.
-- [ ] Starting Checkout again answers "already subscribed" and points at the portal.
+## 3. Buy a credit pack
+
+- [ ] Sign in to the console as the throwaway account and buy the $10 pack (1,000 credits).
+- [ ] The hosted page shows the test banner and is a one-time payment, not a subscription. Pay
+      with card `4242 4242 4242 4242`, any future expiry, any CVC, any postcode and a
+      real-format billing address (Stripe Tax needs one).
+- [ ] You return to the console. Expect: within a minute the balance rises by 1,000, a
+      purchased lot shows an expiry 12 months out, and the Free lot is unchanged.
+- [ ] Note `cs_test_`, `cus_`, `pi_` and `in_`. Expect one paid invoice in the dashboard.
+- [ ] Buying a second pack works and adds a second lot (packs are not "already subscribed").
 
 ## 4. Webhook idempotency
 
-- [ ] In the dashboard open Developers, Webhooks, the endpoint, and the delivery for
-      `checkout.session.completed` or `customer.subscription.created`.
+- [ ] In the dashboard open Developers, Webhooks, the endpoint, and the delivery for the pack's
+      `checkout.session.completed`.
 - [ ] Resend it two times.
-- [ ] Expect: each resend answers `200`; the service log shows the event as a duplicate; the
-      account still has one subscription, the tier is unchanged and no second invoice or receipt
-      appears. Record the `evt_` id and the three response times.
-- [ ] With the signature header removed or altered, a delivery answers `400` or `401` and
-      changes nothing (use the dashboard's "send test webhook" with a wrong secret, or ask the
-      owner for a one-off request).
+- [ ] Expect: each resend answers `200`; the balance still rose by 1,000 only once and there is
+      one purchased lot. Record the `evt_` id and the three response times.
+- [ ] With the signature header removed or altered, a delivery answers `400` and changes nothing
+      (the read-only probe checks the unsigned case on every run).
 
 ## 5. Customer portal
 
-- [ ] From the console open the portal. The URL is `billing.stripe.com/p/session/test_...`.
-- [ ] Expect: the plan, invoices and payment method are listed; switching to yearly works and
-      the console follows; the portal's cancellation is set to cancel at period end.
+- [ ] From the console open billing or invoices. If it opens the Stripe portal, the URL is
+      `billing.stripe.com/p/session/test_...` and the pack invoices are listed.
+- [ ] Expect: nothing in the console or portal still offers Pro, a subscription or a downgrade.
 
-## 6. Downgrade and cancel
+## 6. Expiry and the monthly Free lapse
 
-Use a Stripe test clock attached to the customer if you need to move time (create the customer
-on the clock before Checkout, or use a second throwaway account for this section).
+Use a Stripe test clock only if the service owner has a way to move the service's clock too; the
+ledger uses the service's own time. Otherwise record this section as not run.
 
-- [ ] Cancel in the portal.
-- [ ] Expect: the plan still shows Pro and the key keeps Pro limits until the period end.
-- [ ] Advance the clock past the period end. Expect: `customer.subscription.deleted`, the plan
-      and key move to Free, the account and key are kept, and the final period's overage (if any)
-      is invoiced separately. Compare the invoice to the usage the console shows.
-- [ ] Downgrading to Free from the console opens the portal and does not call Checkout.
+- [ ] Expect: unspent Free credits lapse at the end of the UTC month and 100 new ones appear;
+      purchased credits are spent before they expire and are gone 12 months after purchase.
 
 ## 7. Failed payment
 
-- [ ] On an active Pro throwaway account, add card `4000 0000 0000 0341` in the portal (it
-      attaches, then fails on charge).
-- [ ] Advance the test clock to the next renewal.
-- [ ] Expect: `invoice.payment_failed`, the subscription `past_due`, Pro access kept while
-      Stripe retries, and an email about the failed payment. Record the first failure time.
-- [ ] Advance seven calendar days past the first failure. Expect: Pro access ends and the account
-      moves to Free; account and keys remain.
-- [ ] Replace the card with `4242 4242 4242 4242` and pay the open invoice. Expect: Pro is
-      restored.
-- [ ] Repeat a second failure on the same account. Expect: no double downgrade and no error.
+- [ ] Start a pack Checkout and pay with `4000 0000 0000 0002` (declined).
+- [ ] Expect: Checkout shows the decline, no credits are added, no lot is created, and the
+      account keeps working on its existing balance.
+- [ ] Pay with `4000 0000 0000 9995` (insufficient funds). Same expectation.
 
 ## 8. Refunds
 
-- [ ] In the dashboard refund the throwaway payment, fully, from the test payment.
-- [ ] Expect: the refund shows `succeeded` in Stripe. Record what the service does (receipt,
-      plan, usage) and whether that matches the refund policy. A refund that leaves Pro active
-      is expected unless the policy says otherwise; note it as a finding either way.
+Policy (shared decision 0040): refunds for errors only, no pro-rata refunds.
 
-## 9. Account deletion while Pro
+- [ ] In the dashboard refund the throwaway pack payment, fully.
+- [ ] Expect: the refund shows `succeeded` in Stripe. Record what the service does with the
+      lot (kept, removed, or left to an operator). Note it as a finding either way: no decision
+      yet says what a refunded pack's credits do.
 
-- [ ] On a throwaway account that is on Pro, delete the account from the console (type the
-      address to confirm).
-- [ ] Expect: the console signs out; the Stripe subscription is canceled immediately, with no
-      refund and no final invoice; the Stripe customer is deleted; invoices remain in Stripe.
+## 9. Account deletion with a credit balance
+
+- [ ] On a throwaway account holding purchased credits, delete the account from the console
+      (type the address to confirm).
+- [ ] Expect: the console signs out; no refund is made for unspent credits; the Stripe customer
+      is deleted; invoices remain in Stripe.
 - [ ] The old API key answers `401` from both the billing service and the API, and signing in
-      with the same address starts a brand new account.
+      with the same address starts a brand new account with only the Free allowance.
 - [ ] No confirmation email is sent.
 
 ## 10. Clean up

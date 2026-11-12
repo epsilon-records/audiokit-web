@@ -11,6 +11,7 @@ import {
   redactEmail,
   shorten,
   validateConfig,
+  pricingFindings,
 } from "./acceptance/lib.mjs";
 import { makeToneWav } from "./acceptance/make-fixture.mjs";
 
@@ -55,4 +56,17 @@ test("the fixture is a short mono WAV", () => {
   assert.equal(wav.toString("ascii", 0, 4), "RIFF");
   assert.equal(wav.readUInt32LE(24), 44100);
   assert.ok(wav.length < 600_000);
+});
+
+test("pricing findings flag the $99 Pro plan, the SLA claim and missing credits", () => {
+  const old = pricingFindings("<h2>Pro</h2><p>$99 / month</p><p>99.9% uptime SLA</p><a href='mailto:a@b.c'>x</a>");
+  assert.equal(old.sells_pro_99, true);
+  assert.equal(old.uptime_sla_claim, true);
+  assert.equal(old.mentions_credits, false);
+  assert.equal(old.mailto_links, 1);
+  const now = pricingFindings("<h2>Credits</h2><p>$10</p><p>1,000 credits</p><script>var x='$99 99.9%'</script>");
+  assert.equal(now.sells_pro_99, false, "scripts are ignored");
+  assert.equal(now.uptime_sla_claim, false);
+  assert.equal(now.mentions_credits, true);
+  assert.equal(now.pack_10_for_1000, true);
 });

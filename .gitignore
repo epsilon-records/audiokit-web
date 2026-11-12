@@ -3,3 +3,4 @@
 node_modules/
 dist/
 acceptance-evidence.jsonl
+acceptance-probe-evidence.jsonl

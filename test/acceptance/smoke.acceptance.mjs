@@ -165,6 +165,8 @@ step("first analysis job: accepted, counted once, finishes, replay is not recoun
   const used2 = (after2.body.quota ?? after2.body).usage;
   assert.equal(used2, used1, "a replay must not be counted again");
   const done = await pollJob(job.provider_job_id, { timeoutMs: 180_000 });
+  const credits = await billing("/v1/credits", { headers: bearer(s.session) });
+  evidence({ step: "analysis-job-credits", status: credits.status, balance_after: (credits.body?.credits ?? credits.body)?.balance, note: "0052: analyze costs 3 credits once the debit ships" });
   evidence({ step: "analysis-job", submit: r.status, replay: replay.status, provider_job_id: shorten(job.provider_job_id, cfg), used_after_submit: used1, final_status: done.status });
   assert.equal(done.status, "succeeded", `the analysis job ended ${done.status}`);
 });
@@ -182,13 +184,31 @@ step("one stems job (opt-in): checked against the plan, finishes, cost logged if
   assert.equal(done.status, "succeeded", `the stems job ended ${done.status}`);
 });
 
-step("Pro Checkout: the session is Stripe test mode (stops the run if not)", async () => {
-  const r = await billing("/v1/subscriptions/checkout", { method: "POST", headers: bearer(s.session), body: { interval: "month" } });
-  assert.equal(r.status, 200, `checkout answered ${r.status}: ${r.text.slice(0, 200)}`);
+step("credits: a Free account holds the monthly 100 credits (decision 0052)", async () => {
+  const r = await billing("/v1/credits", { headers: bearer(s.session) });
+  assert.equal(r.status, 200, `credits answered ${r.status}: ${r.text.slice(0, 200)}`);
+  assertNotLive(r.body, "credits");
+  const c = r.body.credits ?? r.body;
+  const packs = (c.packs ?? []).map((p) => `${p.pack}:${p.credits}/${p.price_cents}`);
+  evidence({ step: "credits-balance", status: r.status, balance: c.balance, lots: (c.lots ?? []).map((l) => `${l.source}:${l.remaining}`), recent: (c.entries ?? []).slice(0, 5).map((e) => `${e.kind}:${e.credits}`), packs_on_sale: packs });
+  assert.ok(Number.isFinite(c.balance), "a balance is reported");
+  assert.deepEqual(packs.sort(), ["credits_1000:1000/1000", "credits_24000:24000/20000", "credits_5500:5500/5000"], "the three packs of decision 0052 are on sale");
+});
+
+step("credits Checkout: the $10 pack session is Stripe test mode (stops the run if not)", async () => {
+  const r = await billing("/v1/credits/checkout", { method: "POST", headers: bearer(s.session), body: { pack: "credits_1000" } });
+  assert.equal(r.status, 200, `credits checkout answered ${r.status}: ${r.text.slice(0, 200)}`);
   const checkout = r.body.checkout ?? r.body;
   assertCheckoutIsTestMode(checkout);
-  evidence({ step: "checkout-session", status: r.status, session_id: shorten(checkout.session_id, cfg, 24), host: new URL(checkout.url).hostname, test_mode: true });
-  console.log("\nCheckout is test mode. Pay it by hand (checklist section 3), or the remaining billing steps stay manual.\n");
+  evidence({ step: "credits-checkout-session", status: r.status, pack: checkout.pack, session_id: shorten(checkout.session_id, cfg, 24), host: new URL(checkout.url).hostname, test_mode: true });
+  console.log("\nCredits Checkout is test mode. Pay it by hand (checklist section 3), or the remaining billing steps stay manual.\n");
+});
+
+step("legacy Pro Checkout is retired (decision 0052 supersedes 0023)", async () => {
+  const r = await billing("/v1/subscriptions/checkout", { method: "POST", headers: bearer(s.session), body: { interval: "month" } });
+  if (r.status === 200) assertCheckoutIsTestMode(r.body.checkout ?? r.body);
+  evidence({ step: "legacy-pro-checkout", status: r.status, error: r.body?.error });
+  assert.notEqual(r.status, 200, "Pro Checkout still opens a session; it should be refused now that credits replace Pro");
 });
 
 step("customer portal: the session is Stripe test mode", async () => {
