@@ -52,9 +52,10 @@ section can only show the old quota stop. Record which behaviour you saw.
 
 - [ ] In the dashboard open Developers, Webhooks, the endpoint, and the delivery for the pack's
       `checkout.session.completed`.
+- [ ] Before resending, record the account's credit balance and its number of purchased lots.
 - [ ] Resend it two times.
-- [ ] Expect: each resend answers `200`; the balance still rose by 1,000 only once and there is
-      one purchased lot. Record the `evt_` id and the three response times.
+- [ ] Expect: each resend answers `200`, and the balance and the lot count are unchanged from what
+      you recorded. Record the `evt_` id and the three response times.
 - [ ] With the signature header removed or altered, a delivery answers `400` and changes nothing
       (the read-only probe checks the unsigned case on every run).
 
@@ -81,12 +82,12 @@ ledger uses the service's own time. Otherwise record this section as not run.
 
 ## 8. Refunds
 
-Policy (shared decision 0040): refunds for errors only, no pro-rata refunds.
+Policy: credit packs are not refunded (AudioKit decision 0057); billing does not handle
+`charge.refunded`. Shared decision 0040 allows refunds for errors during the beta.
 
 - [ ] In the dashboard refund the throwaway pack payment, fully.
-- [ ] Expect: the refund shows `succeeded` in Stripe. Record what the service does with the
-      lot (kept, removed, or left to an operator). Note it as a finding either way: no decision
-      yet says what a refunded pack's credits do.
+- [ ] Expect: the refund shows `succeeded` in Stripe, and billing leaves the lot unchanged.
+      Record the balance before and after.
 
 ## 9. Account deletion with a credit balance
 

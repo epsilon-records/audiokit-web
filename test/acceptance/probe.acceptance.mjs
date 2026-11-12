@@ -135,7 +135,11 @@ step("billing CORS allows audiokit.ai and refuses other origins", async () => {
       signal: AbortSignal.timeout(30_000),
     });
     await res.text();
-    return { status: res.status, allow_origin: res.headers.get("access-control-allow-origin") };
+    return {
+      status: res.status,
+      allow_origin: res.headers.get("access-control-allow-origin"),
+      allow_headers: res.headers.get("access-control-allow-headers"),
+    };
   };
   const site = await pre(cfg.siteUrl);
   const old = await pre(cfg.oldConsoleUrl);
@@ -144,6 +148,11 @@ step("billing CORS allows audiokit.ai and refuses other origins", async () => {
   assert.notEqual(other.allow_origin, "https://acceptance-probe.example");
   // 0053: billing's allowed origins move to audiokit.ai before the console host goes.
   assert.equal(site.allow_origin, cfg.siteUrl, "audiokit.ai must be an allowed origin (decision 0053)");
+  assert.ok(site.status >= 200 && site.status < 300, `audiokit.ai preflight answered ${site.status}; a browser needs 2xx`);
+  assert.ok(
+    (site.allow_headers ?? "").toLowerCase().split(",").map((h) => h.trim()).some((h) => h === "authorization" || h === "*"),
+    `audiokit.ai preflight does not allow the authorization header (got ${site.allow_headers})`,
+  );
   return { site, old_console: old, other };
 });
 
@@ -153,7 +162,13 @@ step("public site pages answer, with security headers", async () => {
     const r = await page(cfg.siteUrl, p);
     out[p] = { status: r.status, location: r.location, ...headerSummary(r.headers) };
   }
-  for (const [p, r] of Object.entries(out)) assert.equal(r.status, 200, `${p} answered ${r.status}`);
+  for (const [p, r] of Object.entries(out)) {
+    assert.equal(r.status, 200, `${p} answered ${r.status}`);
+    assert.equal(r.hsts, true, `${p} has no Strict-Transport-Security`);
+    assert.equal(r.csp, true, `${p} has no Content-Security-Policy`);
+    assert.equal(r.x_content_type_options, "nosniff", `${p} X-Content-Type-Options is ${r.x_content_type_options}, not nosniff`);
+    assert.equal(r.frame_protection, true, `${p} has neither X-Frame-Options nor a frame-ancestors policy`);
+  }
   return { pages: out };
 });
 
