@@ -33,9 +33,9 @@
 <SettingsTabs />
 
 {#if data.checkoutResult?.status === 'success'}
-	<p class="notice notice-ok" role="status">Checkout complete. Pro is active.</p>
+	<p class="notice notice-ok" role="status">Checkout complete.</p>
 {:else if data.checkoutResult?.status === 'processing'}
-	<p class="notice notice-info" role="status">Payment received — activating Pro. Refresh shortly to check your plan.</p>
+	<p class="notice notice-info" role="status">Payment received. Refresh shortly to check your plan.</p>
 {:else if data.checkoutResult?.status === 'cancelled'}
 	<p class="notice" role="status">Checkout canceled. You have not been charged.</p>
 {/if}
@@ -66,11 +66,11 @@
 				</div>
 				<div>
 					<dt>{data.account.cancelsAt ? 'Access ends' : 'Renews / resets'}</dt>
-					<dd>{data.account.cancelsAt ? `Pro until ${formatDate(data.account.cancelsAt)}` : formatDate(data.account.renewsAt)}</dd>
+					<dd>{data.account.cancelsAt ? `${planLabel} until ${formatDate(data.account.cancelsAt)}` : formatDate(data.account.renewsAt)}</dd>
 				</div>
 			</dl>
 			<div class="actions">
-				<a class="btn btn-primary" href="/pricing">Change plan</a>
+				<a class="btn btn-primary" href="/pricing">See pricing</a>
 				<form method="POST" action="?/portal" use:enhance><button type="submit" class="btn btn-ghost">Manage billing ↗</button></form>
 			</div>
 		</div>
