@@ -47,11 +47,11 @@
     <li><strong>Where you came from:</strong> if you arrived through the site, the referring host name, <code>utm_</code> tags and landing path described <a href="#site-source">above</a>, with the time of signup. These are set once, when the account is created, and never updated. If you arrive at the console directly, the host name of the page that linked to it (from your browser's <code>Referer</code> header) may be used instead. Internet addresses, email addresses and full URLs are discarded.</li>
     <li><strong>API keys:</strong> a hash of each key (never the key itself after it is shown to you once), its name, its first characters for display, and when it was created, last used and revoked.</li>
     <li><strong>Plan and usage:</strong> your plan, billing periods, and counts of jobs by operation per period.</li>
-    <li><strong>Email preferences:</strong> whether you want quota warnings, payment receipts and product updates. Product updates are off unless you turn them on.</li>
+    <li><strong>Email preferences:</strong> whether you want payment receipts and product updates. Product updates are off unless you turn them on.</li>
     <li><strong>Payments:</strong> if you subscribe to a paid plan, your Stripe customer and subscription identifiers, invoice records (amounts, tax, status, period, and a link to the invoice at Stripe), and the subscription events Stripe sends us. Card details are entered on Stripe's own page; we never see or store your card number.</li>
   </ul>
   <h3 id="account-email" data-toc="Email we send">Email we send</h3>
-  <p>We send sign-in links, quota warnings, a notice when a free quota is used up, and payment receipts. They are sent through Resend from <code>mail.audiokit.ai</code>. Resend processes your address and the message content to deliver them.</p>
+  <p>We send sign-in links and payment receipts. They are sent through Resend from <code>mail.audiokit.ai</code>. Resend processes your address and the message content to deliver them.</p>
   <h3 id="account-reports" data-toc="Internal reports">Internal reports</h3>
   <p>We count, from our own account database, how many accounts go from signup to a first API key, a first job, a first stem job and a paid plan, together with weekly usage. The results are aggregate numbers emailed to the team once a week. No tracking script is involved.</p>
 </section>
@@ -80,7 +80,7 @@
 <section>
   <h2 id="bases">Why we process it (legal bases)</h2>
   <div class="table-box"><table class="fields"><thead><tr><th scope="col">Purpose</th><th scope="col">Legal basis (GDPR art. 6(1))</th></tr></thead><tbody>
-    <tr><td>Creating and running your account, signing you in, running your jobs, keeping usage within your plan, sending service email (sign-in links, quota and payment notices)</td><td>Performance of our contract with you (b)</td></tr>
+    <tr><td>Creating and running your account, signing you in, running your jobs, keeping usage within your plan, sending service email (sign-in links and payment notices)</td><td>Performance of our contract with you (b)</td></tr>
     <tr><td>Taking payments and keeping invoices and tax records</td><td>Contract (b) and our legal obligations (c)</td></tr>
     <tr><td>Keeping the service secure and available: rate limits, request logs, error monitoring</td><td>Our legitimate interest in a reliable, secure service (f)</td></tr>
     <tr><td>Serving the website and its fonts</td><td>Our legitimate interest in delivering the site (f)</td></tr>
