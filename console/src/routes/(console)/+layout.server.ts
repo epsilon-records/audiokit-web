@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { apiFor, HttpApiError } from '#lib/api-client';
+import { apiFor, HttpApiError, type ConsoleApi } from '#lib/api-client';
 import { CREDITS_DEADLINE_MS } from '#lib/credits';
 import { apiVersion } from '#lib/fixtures';
 import { SESSION_COOKIE } from '#lib/session';
@@ -7,16 +7,22 @@ import type { Credits } from '#lib/types';
 import type { LayoutServerLoad } from './$types';
 
 /**
- * The balance, or null when billing rejects or does not answer within the deadline. The timer is
- * cleared once the race settles so it does not outlive the request.
+ * The balance, or null when billing rejects or does not answer within the deadline. At the
+ * deadline the request is aborted so a billing outage does not leave one more open request per
+ * page load; the abort surfaces as a rejection and reads as null like any other failure. The
+ * timer is cleared once the race settles so it does not outlive the request.
  */
-async function creditsOrNull(read: Promise<Credits>): Promise<Credits | null> {
+async function creditsOrNull(client: ConsoleApi): Promise<Credits | null> {
+	const controller = new AbortController();
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	const deadline = new Promise<null>((resolve) => {
-		timer = setTimeout(() => resolve(null), CREDITS_DEADLINE_MS);
+		timer = setTimeout(() => {
+			controller.abort();
+			resolve(null);
+		}, CREDITS_DEADLINE_MS);
 	});
 	try {
-		return await Promise.race([read.catch(() => null), deadline]);
+		return await Promise.race([client.getCredits(controller.signal).catch(() => null), deadline]);
 	} finally {
 		clearTimeout(timer);
 	}
@@ -41,7 +47,7 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 		client.getUsage(),
 		// The banner is the only reader, so a billing service that errors or stalls leaves it hidden
 		// rather than taking the console down. A bad session fails getAccount() above all the same.
-		creditsOrNull(client.getCredits())
+		creditsOrNull(client)
 	]).catch((error) => {
 		if (error instanceof HttpApiError && error.code === 'unauthorized') {
 			cookies.delete(SESSION_COOKIE, { path: '/' });

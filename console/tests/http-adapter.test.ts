@@ -672,6 +672,29 @@ describe('http adapter: credits', () => {
 		expect(header(fetchImpl.calls[0].init, 'authorization')).toBe('Bearer session');
 	});
 
+	it('passes the abort signal to fetch', async () => {
+		const { client, fetchImpl } = clientFor({ credits: { balance: 1 } });
+		const controller = new AbortController();
+		await client.getCredits(controller.signal);
+		expect(fetchImpl.calls[0].init.signal).toBe(controller.signal);
+	});
+
+	it('maps an aborted read to a network error', async () => {
+		const controller = new AbortController();
+		const fetchImpl = ((_url: string, init: RequestInit) =>
+			new Promise((_resolve, reject) => {
+				init.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+			})) as unknown as typeof fetch;
+		const client = createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session',
+			fetch: fetchImpl
+		});
+		const read = client.getCredits(controller.signal);
+		controller.abort();
+		await expect(read).rejects.toMatchObject({ code: 'network' });
+	});
+
 	it('reads the balance from a bare body, and keeps a negative one', async () => {
 		expect(await clientFor({ balance: -12, lots: [] }).client.getCredits()).toEqual({
 			balance: -12

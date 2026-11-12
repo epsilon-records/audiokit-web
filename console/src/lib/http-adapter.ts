@@ -592,8 +592,11 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			return payload.jobs.map(toJob);
 		},
 
-		async getCredits(): Promise<Credits> {
-			const wire = unwrap<Partial<WireCredits>>(await request<unknown>('/v1/credits'), 'credits');
+		async getCredits(signal?: AbortSignal): Promise<Credits> {
+			const wire = unwrap<Partial<WireCredits>>(
+				await request<unknown>('/v1/credits', { signal }),
+				'credits'
+			);
 			if (typeof wire?.balance !== 'number' || !Number.isFinite(wire.balance)) {
 				throw new HttpApiError('server-error', 'The billing service returned no credit balance.');
 			}

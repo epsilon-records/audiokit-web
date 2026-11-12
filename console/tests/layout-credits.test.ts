@@ -19,6 +19,10 @@ const { CREDITS_DEADLINE_MS } = await import('../src/lib/credits');
 const account = { id: 'a', email: 'you@example.com' };
 const usage = { jobsUsed: 1 };
 
+function signalOfLastRead(): AbortSignal {
+	return client.getCredits.mock.calls.at(-1)?.[0] as AbortSignal;
+}
+
 function run() {
 	return load({
 		locals: { session: { email: 'you@example.com' }, sessionToken: 'token' },
@@ -43,6 +47,7 @@ describe('layout load: credit balance', () => {
 		client.getCredits.mockResolvedValue({ balance: 16 });
 		expect((await run()).credits).toEqual({ balance: 16 });
 		expect(vi.getTimerCount()).toBe(0);
+		expect(signalOfLastRead().aborted).toBe(false);
 	});
 
 	it('returns null when the read rejects', async () => {
@@ -63,5 +68,18 @@ describe('layout load: credit balance', () => {
 		await vi.advanceTimersByTimeAsync(1);
 		expect((await result).credits).toBeNull();
 		expect(vi.getTimerCount()).toBe(0);
+		expect(signalOfLastRead().aborted).toBe(true);
+	});
+
+	it('returns null when the abort rejects the read', async () => {
+		client.getCredits.mockImplementation(
+			(signal: AbortSignal) =>
+				new Promise((_resolve, reject) => {
+					signal.addEventListener('abort', () => reject(new Error('aborted')));
+				})
+		);
+		const result = run();
+		await vi.advanceTimersByTimeAsync(CREDITS_DEADLINE_MS);
+		expect((await result).credits).toBeNull();
 	});
 });
