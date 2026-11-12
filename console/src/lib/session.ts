@@ -17,16 +17,22 @@ const RESOLVE_BASE = 'https://console.invalid';
  * Only allow same-origin, absolute paths as post-login destinations. This keeps
  * the magic-link `next` parameter from becoming an open redirect.
  *
- * The value is checked twice: as text (an absolute path, with no backslash and no control
- * character, since URL parsers drop or rewrite those) and as a URL (resolved against a base,
- * it must stay on that base's origin).
+ * The value is checked twice: as text (an absolute path, with no control character and no
+ * backslash before the query, since URL parsers drop or rewrite those) and as a URL
+ * (resolved against a base, it must stay on that base's origin and not start with `//`).
  */
 export function safeNext(next: string | null | undefined): string {
 	if (!next) return DEFAULT_AFTER_LOGIN;
 	if (!next.startsWith('/') || next.startsWith('//')) return DEFAULT_AFTER_LOGIN;
-	if (/[\\\u0000-\u001f\u007f]/.test(next)) return DEFAULT_AFTER_LOGIN;
+	if (/[\u0000-\u001f\u007f]/.test(next)) return DEFAULT_AFTER_LOGIN;
+	// A backslash reads as a slash in the path; in the query or fragment it is plain data.
+	if (next.split(/[?#]/, 1)[0].includes('\\')) return DEFAULT_AFTER_LOGIN;
 	try {
-		if (new URL(next, RESOLVE_BASE).origin !== RESOLVE_BASE) return DEFAULT_AFTER_LOGIN;
+		const resolved = new URL(next, RESOLVE_BASE);
+		// `/..//host` stays on this origin but normalises to `//host`; refuse it too.
+		if (resolved.origin !== RESOLVE_BASE || resolved.pathname.startsWith('//')) {
+			return DEFAULT_AFTER_LOGIN;
+		}
 	} catch {
 		return DEFAULT_AFTER_LOGIN;
 	}
