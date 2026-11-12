@@ -5,6 +5,6 @@
 	let { data, children }: LayoutProps = $props();
 </script>
 
-<ConsoleShell account={data.account} usage={data.usage} apiVersion={data.apiVersion}>
+<ConsoleShell account={data.account} credits={data.credits} apiVersion={data.apiVersion}>
 	{@render children()}
 </ConsoleShell>

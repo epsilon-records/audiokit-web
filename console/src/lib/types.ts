@@ -73,6 +73,11 @@ export type UsageSummary = {
 	}[];
 };
 
+/** The account's prepaid credit balance from billing's `GET /v1/credits`. May be negative (debt). */
+export type Credits = {
+	balance: number;
+};
+
 export type ApiKey = {
 	id: string;
 	label: string;

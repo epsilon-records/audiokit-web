@@ -10,6 +10,7 @@
 
 import type {
 	Account,
+	Credits,
 	ApiKey,
 	BillingSummary,
 	Job,
@@ -108,6 +109,9 @@ export const recentJobs: Job[] = [
 		createdAt: '2026-11-14T09:15:00.000Z'
 	}
 ];
+
+/** Free's 100 credits less the 84 jobs the usage fixture counts at one credit each. */
+export const credits: Credits = { balance: 16 };
 
 export const usage: UsageSummary = {
 	periodStart: '2026-11-01T00:00:00.000Z',

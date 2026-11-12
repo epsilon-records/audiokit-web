@@ -10,14 +10,19 @@
 	});
 </script>
 
-<!--
-	Only the current-plan state is shown. The card prints its own "jobs / month" line for a plan
-	that is not current, and that copy still has to move to credits in the component.
--->
 <Story name="Free, current">
 	{#snippet template()}
 		<PlanCard plan={freePlan} current>
 			<button type="button" class="btn btn-ghost" disabled>Current plan</button>
+		</PlanCard>
+	{/snippet}
+</Story>
+
+<!-- Shown to an account on another plan: the card states Free's 100 credits a month (0052). -->
+<Story name="Free, not current">
+	{#snippet template()}
+		<PlanCard plan={freePlan} current={false}>
+			<button type="button" class="btn btn-ghost">Choose Free</button>
 		</PlanCard>
 	{/snippet}
 </Story>

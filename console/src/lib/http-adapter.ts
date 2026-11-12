@@ -24,6 +24,8 @@
  *   Usage
  *     GET  /v1/usage/current              Bearer session     (exists)
  *     GET  /v1/usage/history?limit=       Bearer session     (exists)
+ *   Credits (billing #59, decision 0052)
+ *     GET  /v1/credits                    Bearer session     (exists; the console reads `balance`)
  *   API keys
  *     GET/POST /v1/api-keys, DELETE /v1/api-keys/:id         (exist)
  *   Subscriptions
@@ -46,6 +48,7 @@ import type {
 	BillingSummary,
 	CheckoutResult,
 	CreatedApiKey,
+	Credits,
 	Job,
 	JobStatus,
 	MagicLinkExchange,
@@ -131,6 +134,11 @@ type WireUsageCurrent = {
 	periodEnd: string;
 	/** Jobs per calendar day in the period, from the service. */
 	daily?: { date: string; count: number }[];
+};
+
+type WireCredits = {
+	balance: number;
+	/** Lots, entries and packs also come back; the console reads only the balance. */
 };
 
 type WireUsageHistory = {
@@ -582,6 +590,14 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 				`/v1/jobs?limit=${encodeURIComponent(String(limit))}`
 			);
 			return payload.jobs.map(toJob);
+		},
+
+		async getCredits(): Promise<Credits> {
+			const wire = unwrap<Partial<WireCredits>>(await request<unknown>('/v1/credits'), 'credits');
+			if (typeof wire?.balance !== 'number' || !Number.isFinite(wire.balance)) {
+				throw new HttpApiError('server-error', 'The billing service returned no credit balance.');
+			}
+			return { balance: wire.balance };
 		},
 
 		async getUsage() {

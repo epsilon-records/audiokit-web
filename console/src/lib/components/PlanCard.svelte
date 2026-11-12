@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { FREE_CREDITS_PER_MONTH } from '#lib/credits';
 	import type { Plan } from '#lib/types';
 
 	type Props = {
@@ -22,8 +23,9 @@
 	<div class="pricing-header">
 		<h2>{plan.name}</h2>
 		<p class="pricing-description">
-			{#if current}Your current plan{:else if plan.jobLimit}{plan.jobLimit.toLocaleString('en-GB')} jobs
-				/ month{:else}Custom volume{/if}
+			{#if current}Your current plan{:else if plan.id === 'free'}{FREE_CREDITS_PER_MONTH.toLocaleString(
+					'en-GB'
+				)} credits / month{:else}Custom volume{/if}
 		</p>
 	</div>
 	<div class="pricing-price">

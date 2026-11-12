@@ -163,6 +163,10 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			};
 		},
 
+		async getCredits() {
+			return { ...fixtures.credits };
+		},
+
 		async getNotificationPreferences() {
 			return { ...preferences };
 		},
