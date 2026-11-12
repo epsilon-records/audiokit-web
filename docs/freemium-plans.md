@@ -1,5 +1,9 @@
 # AudioKit freemium plans
 
+> **Superseded by [audiokit 0052](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0052-prepaid-credits.md) (prepaid credits).**
+> The public [pricing page](../src/pages/pricing.html) now states credits, not these plans. This
+> document still describes what the legacy console shows until it is retired (audiokit 0053).
+
 **Status: approved — [audiokit 0023](../../knowledge/audiokit/decisions/0023-freemium-plans-and-prices.md), [audiokit 0024](../../knowledge/audiokit/decisions/0024-no-free-trial.md).**
 This document defines the Free, Pro and Enterprise plans that back the
 [pricing page](../src/pages/pricing.html). It exists so the plan rules, quotas, overage handling and

@@ -1,101 +1,71 @@
-<!-- {"title": "Pricing", "description": "Simple, transparent pricing for AudioKit API. Start free and scale as you grow.", "layout": "site", "nav": "pricing"} -->
+<!-- {"title": "Pricing", "description": "AudioKit API pricing: prepaid credits at $0.01 each, with 100 free credits every month.", "layout": "site", "nav": "pricing"} -->
 <section class="wrap hero">
   <div class="hero-copy">
     <p class="kicker">API v{{API_VERSION}}</p>
-    <h1>Simple, transparent pricing</h1>
-    <p class="lede">Start free and scale as you grow. No hidden fees, no surprises. Pay only for what you process.</p>
+    <h1>Prepaid credits, no subscription</h1>
+    <p class="lede">AudioKit is priced in credits. One credit is $0.01. Every account gets 100 free credits a month, and credit packs top you up when you need more.</p>
   </div>
 </section>
 
 <section class="wrap section">
+  <div class="callout callout-soon" role="note">
+    <h2>Credit packs open soon</h2>
+    <p>AudioKit is in beta, and packs can't be bought yet. The prices below are what they will cost when they open. Until credits are switched on, a Free account runs on the current allowance of 100 jobs a month, 10 of them stem separations.</p>
+  </div>
+
   <div class="pricing-grid">
     <article class="pricing-card">
       <div class="pricing-header">
         <h2>Free</h2>
-        <p class="pricing-description">Perfect for testing and small projects</p>
+        <p class="pricing-description">For trying AudioKit and small projects</p>
       </div>
       <div class="pricing-price">
         <span class="price-amount">$0</span>
         <span class="price-period">/month</span>
       </div>
       <ul class="pricing-features">
-        <li>100 jobs per month</li>
-        <li>10 stem separations included</li>
-        <li>All analysis operations</li>
-        <li>All processing operations</li>
-        <li>Webhook delivery</li>
-        <li>Community support</li>
-        <li>HMAC-signed webhooks</li>
+        <li>100 credits each calendar month (UTC)</li>
+        <li>Unspent free credits lapse at the end of the month</li>
+        <li>All analysis and processing operations</li>
+        <li>HMAC-signed webhook delivery</li>
+        <li>No card needed</li>
       </ul>
       <a class="btn btn-ghost btn-lg" href="{{CONSOLE_SIGNUP}}">Start free</a>
     </article>
 
     <article class="pricing-card pricing-card-featured">
-      <div class="pricing-badge">Most popular</div>
+      <div class="pricing-badge">Opens soon</div>
       <div class="pricing-header">
-        <h2>Pro</h2>
-        <p class="pricing-description">For growing businesses and production use</p>
+        <h2>Credit packs</h2>
+        <p class="pricing-description">One-time purchases, no subscription</p>
       </div>
-      <div class="pricing-price">
-        <span class="price-amount">$99</span>
-        <span class="price-period">/month</span>
-      </div>
-      <p class="pricing-note">or $990/year</p>
       <ul class="pricing-features">
-        <li>1,000 jobs per month</li>
-        <li>250 stem separations included</li>
-        <li>All analysis operations</li>
-        <li>All processing operations</li>
-        <li>Priority processing</li>
-        <li>Webhook delivery</li>
-        <li>Email support</li>
-        <li>HMAC-signed webhooks</li>
-        <li>99.9% uptime SLA</li>
+        <li>$10 for 1,000 credits</li>
+        <li>$50 for 5,500 credits</li>
+        <li>$200 for 24,000 credits</li>
+        <li>Bought credits stay valid for 12 months after purchase</li>
+        <li>Credit packs are non-refundable</li>
       </ul>
-      <a class="btn btn-primary btn-lg" href="{{CONSOLE_LOGIN}}">Sign in</a>
-    </article>
-
-    <article class="pricing-card">
-      <div class="pricing-header">
-        <h2>Enterprise</h2>
-        <p class="pricing-description">Custom solutions for large-scale operations</p>
-      </div>
-      <div class="pricing-price">
-        <span class="price-period">from</span>
-        <span class="price-amount">$499</span>
-        <span class="price-period">/month</span>
-      </div>
-      <p class="pricing-note">annual, invoiced — arranged with us directly</p>
-      <ul class="pricing-features">
-        <li>5,000 jobs per month</li>
-        <li>1,500 stem separations included</li>
-        <li>All analysis operations</li>
-        <li>All processing operations</li>
-        <li>Dedicated infrastructure</li>
-        <li>Custom integrations</li>
-        <li>Priority support</li>
-        <li>Custom SLAs</li>
-        <li>Volume discounts</li>
-        <li>Dedicated account manager</li>
-      </ul>
-      <a class="btn btn-ghost btn-lg" href="{{CONSOLE_LOGIN}}">Sign in</a>
+      <p class="pricing-note">Packs open soon. Nothing can be bought during the beta.</p>
     </article>
   </div>
 </section>
 
 <section class="band section">
   <div class="wrap">
-    <h2>Usage-based pricing details</h2>
-    <div class="split">
-      <div class="split-copy">
-        <h3>What counts as a job?</h3>
-        <p>Every operation you submit counts as one job, regardless of the audio file size or processing time. Whether you're analyzing tempo, transcoding, or generating fingerprints—each request is one job. A retry that reuses the same job ID is not counted twice.</p>
-        <p>Stem separation is the one GPU-heavy operation, so it has its own allowance inside your job quota. A stem separation uses one slot from each allowance &mdash; it counts as one job <em>and</em> one stem &mdash; but it is <em>charged once</em>, at the stem rate.</p>
-      </div>
-      <div class="split-copy">
-        <h3>Overage pricing</h3>
-        <p>On Pro, overage is invoiced at the end of the billing period: $0.15 for each stem beyond your stem allowance, and $0.01 for each other job beyond your job allowance. A stem that is over the stem allowance is billed at $0.15 only &mdash; the $0.01 job rate does not also apply to it, and no unit is ever charged twice. Free tier users will need to upgrade to continue processing.</p>
-      </div>
+    <h2>What each operation costs</h2>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr><th scope="col">Operation</th><th scope="col">Credits</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Analysis: <code>probe</code>, <code>loudness</code>, <code>waveform</code>, <code>tempo</code>, <code>key</code>, <code>fingerprint</code>, <code>tags</code></td><td>1 per track</td></tr>
+          <tr><td>The <code>analyze</code> bundle</td><td>3 per track</td></tr>
+          <tr><td><code>stems</code></td><td>3 per audio minute, metered per second, at least 10 per job</td></tr>
+          <tr><td><code>transcode</code>, <code>preview</code>, <code>normalize</code></td><td>1 per audio minute</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>
@@ -104,36 +74,28 @@
   <h2>Frequently asked questions</h2>
   <dl class="faq">
     <div class="faq-item">
-      <dt>Can I switch plans anytime?</dt>
-      <dd>Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of your next billing cycle.</dd>
+      <dt>How much is a credit?</dt>
+      <dd>One credit is $0.01. A three-minute stem separation, for example, costs 9 credits, but the 10-credit minimum per job applies, so it is charged 10.</dd>
     </div>
     <div class="faq-item">
-      <dt>What happens when I reach my job limit?</dt>
-      <dd>On the Free plan, processing stops until the next billing cycle or you upgrade. On Pro, we bill overage at the end of the period: $0.15 per stem over the stem allowance and $0.01 per other job over the job allowance. A stem is billed once, never as both a stem and a job. Enterprise plans have volume rates in their agreement.</dd>
+      <dt>When can I buy a credit pack?</dt>
+      <dd>Not yet. AudioKit is in beta and packs open once credits are switched on. You can sign up for the Free plan today.</dd>
     </div>
     <div class="faq-item">
-      <dt>Do I pay the job rate and the stem rate for one separation?</dt>
-      <dd>No. Stems use a slot from both allowances, so the separation is <em>counted</em> twice, but it is <em>billed</em> once &mdash; at $0.15 for a stem over your stem allowance, with no $0.01 job charge on top.</dd>
+      <dt>Do credits expire?</dt>
+      <dd>Free credits lapse at the end of each calendar month (UTC). Credits from a pack stay valid for 12 months after you buy it.</dd>
     </div>
     <div class="faq-item">
-      <dt>Do you offer discounts for non-profits or education?</dt>
-      <dd>Yes! We offer special pricing for verified non-profit organizations and educational institutions.</dd>
+      <dt>How are per-minute jobs charged?</dt>
+      <dd>A job is accepted when your balance covers the operation's minimum. When it finishes, it is charged for the audio's real length. One long job can take your balance below zero; new jobs are then refused until you top up.</dd>
     </div>
     <div class="faq-item">
-      <dt>Can I try AudioKit before choosing a paid plan?</dt>
-      <dd>The Free plan is the best way to try AudioKit, with 100 jobs per month and no credit card required. Pro starts as a paid subscription at checkout. Enterprise plans are sales-assisted.</dd>
+      <dt>Can I get a refund on a credit pack?</dt>
+      <dd>No. Credit packs are non-refundable.</dd>
     </div>
     <div class="faq-item">
-      <dt>What payment methods do you accept?</dt>
-      <dd>We accept all major credit cards (Visa, MasterCard, American Express) and bank transfers for Enterprise customers.</dd>
-    </div>
-    <div class="faq-item">
-      <dt>Are there any setup fees or long-term contracts?</dt>
-      <dd>No setup fees. Free and Pro plans are month-to-month with no commitment. Enterprise plans have flexible contract terms.</dd>
-    </div>
-    <div class="faq-item">
-      <dt>What's included in the 99.9% uptime SLA?</dt>
-      <dd>Pro and Enterprise plans include guaranteed uptime with service credits if we don't meet our commitment. See our full SLA documentation for details.</dd>
+      <dt>Is there a subscription or contract?</dt>
+      <dd>No. There are no subscriptions, setup fees or long-term contracts. You pay for credit packs when you need them.</dd>
     </div>
   </dl>
 </section>
@@ -141,9 +103,10 @@
 <section class="band section">
   <div class="wrap access">
     <h2>Ready to get started?</h2>
-    <p>Join labels, distributors and developers using AudioKit in production.</p>
+    <p>Create a Free account and get your first API key.</p>
     <div class="actions">
-      <a class="btn btn-primary btn-lg" href="{{CONSOLE_LOGIN}}">Sign in to the console</a>
+      <a class="btn btn-primary btn-lg" href="{{CONSOLE_SIGNUP}}">Start free</a>
+      <a class="btn btn-ghost btn-lg" href="{{CONSOLE_LOGIN}}">Sign in to the console</a>
       <a class="btn btn-ghost btn-lg" href="/docs/">Read the docs</a>
     </div>
   </div>

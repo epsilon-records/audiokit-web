@@ -1,65 +1,69 @@
-// The pricing page must not read as if a stem is charged twice.
-// AudioKit decision 0023: stems are a sub-cap of the job allowance, so a stem uses a slot in both.
-// AudioKit decision 0027: a stem over that sub-cap is billed at the stem rate ONLY.
-// Counting twice is correct; charging twice is wrong, and the page used to imply the latter by
-// putting "$0.01 per job" next to "$0.15 per stem" with no qualifier.
+// The pricing page states prepaid credits and nothing else.
+// AudioKit decision 0052: credits replace the Pro and Enterprise subscriptions (supersedes 0023,
+// 0024 and 0027). 1 credit = $0.01; Free 100 credits a month; packs $10/1,000, $50/5,500,
+// $200/24,000, valid 12 months; per-operation rates below.
+// AudioKit decision 0057: packs are non-refundable.
+// Shared decision 0040: no AudioKit sales until credits ship, and no uptime SLA claim. So the page
+// shows pack prices with an "opens soon" note and no way to buy one.
 // Run: npm test
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { pricingFindings } from "./acceptance/lib.mjs";
 
 const html = await readFile(new URL("../src/pages/pricing.html", import.meta.url), "utf8");
 
-const toText = (markup) =>
-  markup
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&mdash;/g, "—")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+const text = html
+  .replace(/<!--[\s\S]*?-->/g, " ")
+  .replace(/<[^>]+>/g, " ")
+  .replace(/&mdash;/g, "—")
+  .replace(/&nbsp;/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
 
-/** Prose blocks a customer reads as one unit: paragraphs, definition bodies, list items. */
-const blocks = [...html.matchAll(/<(p|dd|li)\b[^>]*>([\s\S]*?)<\/\1>/g)]
-  .map(([, , inner]) => toText(inner))
-  .filter(Boolean);
-
-const BILLED_ONCE = /once|only|never|does not also/;
-
-test("states the Pro rates from decision 0023", () => {
-  const text = blocks.join(" ");
-  assert.match(text, /\$0\.15 per stem|\$0\.15 for each stem/, "the stem rate is published");
-  assert.match(
-    text,
-    /\$0\.01 per other job|\$0\.01 for each other job/,
-    "the job rate must be qualified as the *other* job rate",
-  );
+test("passes the acceptance probe's pricing checks (shared 0040, AudioKit 0052)", () => {
+  const f = pricingFindings(html);
+  assert.equal(f.sells_pro_99, false, "the page must not sell Pro at $99");
+  assert.equal(f.uptime_sla_claim, false, "the 99.9% uptime SLA claim must stay off");
+  assert.equal(f.mentions_credits, true, "the page must show prepaid credits");
+  assert.equal(f.pack_10_for_1000, true, "the $10 / 1,000 credits pack must be shown");
+  assert.equal(f.mailto_links, 0, "no unpublished mailbox");
 });
 
-test("every block that quotes the stem rate says it is charged once", () => {
-  const rateBlocks = blocks.filter((block) => block.includes("$0.15"));
-  assert.ok(rateBlocks.length >= 2, "expected the rate to appear in both the copy and the FAQ");
-  for (const block of rateBlocks) {
-    assert.match(
-      block,
-      BILLED_ONCE,
-      `a block quotes the stem rate without saying it is charged once: "${block}"`,
-    );
+test("no subscription plan, SLA or discount is offered", () => {
+  assert.doesNotMatch(text, /\bPro\b/, "Pro is gone (0052)");
+  assert.doesNotMatch(text, /\bEnterprise\b/, "Enterprise subscriptions are gone (0052)");
+  assert.doesNotMatch(text, /\bSLA\b|uptime/i, "no uptime claim until uptime is measured (shared 0040)");
+  assert.doesNotMatch(text, /overage|\$0\.15|\$990|\$499/, "no subscription overage or price is left");
+  assert.doesNotMatch(text, /discount|special pricing/i, "list price only during the beta (shared 0040)");
+});
+
+test("states the credit price, the Free allowance and every pack from 0052", () => {
+  assert.match(text, /One credit is \$0\.01/);
+  assert.match(text, /100 credits each calendar month \(UTC\)/);
+  assert.match(text, /lapse at the end of/);
+  for (const [price, credits] of [["$10", "1,000"], ["$50", "5,500"], ["$200", "24,000"]]) {
+    assert.ok(text.includes(`${price} for ${credits} credits`), `missing the ${price} pack (${credits} credits)`);
   }
+  assert.match(text, /valid for 12 months after/);
 });
 
-test("the block that counts a stem as a job also says it is charged once", () => {
-  // Only the stem paragraph states the counting rule; the paragraph before it defines "a job".
-  const counting = blocks.filter((block) => /one job and one stem/i.test(block));
-  assert.equal(counting.length, 1, "the counting rule should be stated in exactly one place");
-  assert.match(
-    counting[0],
-    BILLED_ONCE,
-    `counting is stated without the charging rule: "${counting[0]}"`,
-  );
+test("states every rate from 0052", () => {
+  assert.match(text, /probe , loudness , waveform , tempo , key , fingerprint , tags 1 per track/);
+  assert.match(text, /analyze bundle 3 per track/);
+  assert.match(text, /stems 3 per audio minute, metered per second, at least 10 per job/);
+  assert.match(text, /transcode , preview , normalize 1 per audio minute/);
 });
 
-test("never prices a stem at the sum of both rates", () => {
-  const text = blocks.join(" ");
-  assert.doesNotMatch(text, /\$0\.16/, "the page must not add the job rate to the stem rate");
+test("says packs are non-refundable (0057)", () => {
+  assert.match(text, /non-refundable/);
+});
+
+test("nothing can be bought yet, and Free sign-up still works (shared 0040)", () => {
+  assert.match(text, /Credit packs open soon/);
+  assert.doesNotMatch(html, /checkout/i, "no purchase link or button while credits are not spendable");
+  const packCard = html.slice(html.indexOf("<h2>Credit packs</h2>"), html.indexOf("</article>", html.indexOf("<h2>Credit packs</h2>")));
+  assert.doesNotMatch(packCard, /<a\b|<button\b|<form\b/, "the pack card carries no link, button or form");
+  assert.match(html, /href="\{\{CONSOLE_SIGNUP\}\}">Start free</, "the Free sign-up CTA stays");
 });
