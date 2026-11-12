@@ -33,9 +33,9 @@ Expect: the next job is refused with an insufficient-credits error before any wo
 negative balance is created by a per-track job, and a replay of an accepted `job_id` still
 answers `200` and is not charged again. A stems job needs at least 10 credits to be admitted.
 
-Note (2026-11-12): billing on `main` holds the credit ledger and pack Checkout, but jobs are still
-counted against the old 100-jobs quota. Until the debit at the entitlement check ships, this
-section can only show the old quota stop. Record which behaviour you saw.
+Note: jobs spend credits at the entitlement check (epsilon-billing#59), so the stop above is the
+insufficient-credits refusal; the old 100-jobs quota and its 10-stem cap are gone. Free credits
+are spent before purchased ones, then granted ones (AudioKit decision 0063). Record what you saw.
 
 ## 3. Buy a credit pack
 
