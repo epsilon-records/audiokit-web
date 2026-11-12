@@ -4,12 +4,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import config from '../site.config.mjs';
+import { analyticsToken } from '../scripts/analytics-config.mjs';
+const token = analyticsToken();
 assert.ok(process.env.PLAYWRIGHT_MODULE, 'Set PLAYWRIGHT_MODULE to an existing Playwright index.mjs; this command installs nothing');
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE);
 const loader = await readFile(new URL('../src/static/analytics.js', import.meta.url), 'utf8');
 const built = await readFile(new URL('../dist/index.html', import.meta.url), 'utf8');
-if (config.cloudflareWebAnalyticsToken) assert.ok(built.includes(`data-site-token="${config.cloudflareWebAnalyticsToken}"`));
+if (token) assert.ok(built.includes(`data-site-token="${token}"`));
 else assert.doesNotMatch(built, /src="\/analytics.js"|data-cf-beacon/);
 // Fetch only the public script. All browser traffic below is fulfilled/aborted locally.
 const vendorResponse = await fetch('https://static.cloudflareinsights.com/beacon.min.js');
