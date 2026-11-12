@@ -51,6 +51,28 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Health" }
 
+  /v1/ready:
+    get:
+      tags: [Service]
+      operationId: getReady
+      summary: Readiness, including the database
+      description: |
+        `/v1/health` plus a round trip to the database, bounded at 2 seconds. `503` when the
+        database fails or does not answer in time; the process may still be alive. One check
+        answers for a second, so probes in the same second share it. Never rate limited.
+      security: []
+      responses:
+        "200":
+          description: The service and its database are up.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ready" }
+        "503":
+          description: The database failed or did not answer in time.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ready" }
+
   /v1/capabilities:
     get:
       tags: [Service]
@@ -525,6 +547,17 @@ components:
       properties:
         status: { const: ok }
         version: { type: string, description: AudioKit version. }
+
+    Ready:
+      type: object
+      additionalProperties: false
+      required: [status, version, database]
+      properties:
+        status: { enum: [ok, unavailable] }
+        version: { type: string, description: AudioKit version. }
+        database:
+          enum: [ok, unavailable, timeout]
+          description: "`timeout` when the database did not answer within 2 seconds."
 
     Capabilities:
       type: object
