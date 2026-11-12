@@ -36,7 +36,14 @@ const files = await htmlFiles();
 for (const file of files) {
   const html = await readFile(file, 'utf8');
   const where = file.pathname;
-  for (const [tag] of html.matchAll(/<script\b[^>]*>/g)) {
+  for (const [, tag, body] of html.matchAll(/(<script\b[^>]*>)([\s\S]*?)<\/script>/g)) {
+    // JSON-LD is a data block: never executed, so script-src does not apply. It must still parse.
+    // A browser reads the first type attribute, so only that one decides.
+    const type = /\stype\s*=\s*"([^"]*)"/i.exec(tag)?.[1].trim().toLowerCase();
+    if (type === 'application/ld+json') {
+      assert.doesNotThrow(() => JSON.parse(body), `${where}: JSON-LD does not parse`);
+      continue;
+    }
     const src = /\ssrc="([^"]+)"/.exec(tag)?.[1];
     assert.ok(src, `${where}: inline script ${tag}`);
     assert.ok(allows('script-src', src), `${where}: script-src does not allow ${src}`);
