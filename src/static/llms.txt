@@ -1,0 +1,33 @@
+# AudioKit
+
+> AudioKit is an audio analysis and processing API. You send it a signed URL to an audio file and the job you want done; it verifies the file's sha256, does the work, writes any new files to upload URLs you provide, and calls your webhook with an HMAC-signed result. Originals are never changed, and every result records the input hash, AudioKit version and settings that produced it. AudioKit is in early access (API v0.1.0).
+
+## Operations
+
+Twelve job operations are defined; `GET https://api.audiokit.ai/v1/capabilities` lists the ones the server runs right now:
+
+- Files: `probe` (container, codec, format, duration), `loudness` (EBU R128 integrated loudness, loudness range, true peak, sample peak), `waveform` (peak envelope), `transcode` (WAV, FLAC, MP3, AAC), `preview` (short excerpt with fades), `normalize`
+- Music analysis: `tempo`, `key`, `fingerprint`, `tags` (genre and mood), `analyze` (several analyses from one read)
+- Separation: `stems` (on the roadmap; check capabilities before relying on it)
+
+Planned, not available yet: denoise, stem separation (see above), transcription, mastering, consent-gated voice cloning, MIDI to audio, music generation, sound search, song ID.
+
+## Docs
+
+- [API documentation](https://audiokit.ai/docs/): how a job runs, authentication, webhooks, every operation
+- [API reference](https://audiokit.ai/docs/reference/): every endpoint and schema
+- [OpenAPI 3.1 contract](https://api.audiokit.ai/v1/openapi.yaml): the machine-readable API description; the docs and SDKs are generated from it
+- [MCP for agents](https://audiokit.ai/docs/mcp/): AI agents can call AudioKit through the Model Context Protocol at `POST https://api.audiokit.ai/mcp`, with the same API keys and jobs (early access)
+- [SDKs](https://audiokit.ai/docs/sdks/)
+
+## Pricing
+
+- [Pricing](https://audiokit.ai/pricing/): priced in credits; one credit is $0.01. During the beta, credits are not switched on yet and a Free account gets 100 jobs a month, 10 of them stem separations. Once credits are on, every account gets 100 free credits a month. Analysis operations cost 1 credit per track, `analyze` 3 per track, `stems` 3 per audio minute (minimum 10 per job), `transcode`/`preview`/`normalize` 1 per audio minute. Credit packs are not on sale yet during the beta.
+
+## Account
+
+- [Console](https://console.audiokit.ai/login): sign in with a magic link (no password, no card) to get an API key and see usage
+
+## Optional
+
+- [Privacy notice](https://audiokit.ai/privacy/)
