@@ -50,5 +50,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      # A story that no longer compiles, or that imports something that has moved, fails here
+      # (knowledge decision 0064). The Storybook site is built by Netlify from storybook-site/.
+      - name: Build Storybook
+        run: npm run build-storybook -- --disable-telemetry
+
       - name: Test
         run: npm test

@@ -1,0 +1,59 @@
+# The storybook.audiokit.ai Netlify site (knowledge shared 0064). Its base directory is
+# storybook-site/, so Netlify reads this file instead of the console's and the static site's
+# netlify.toml. The Storybook itself lives in console/ next to the components it shows.
+# Same shape as labelkit's storybook-site/netlify.toml.
+[build]
+  command = "cd ../console && npm ci && npm run build-storybook -- --disable-telemetry -o ../storybook-site/dist"
+  publish = "dist"
+  # Each production deploy costs 15 Free-plan credits: only build when the UI or Storybook changed.
+  # An uncached build (the site's first, or after "clear cache") has CACHED_COMMIT_REF equal to
+  # COMMIT_REF, so the diff alone is always empty and the build would always be skipped. Build
+  # when the refs are equal. Build when either is missing too: with an empty ref the unquoted
+  # variable vanishes and git diff compares the working tree, which is empty, so the build would
+  # be skipped (labelkit's rule has that gap). test/storybook-site.test.mjs runs this command
+  # against a throwaway repo.
+  ignore = "[ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ../console/src/lib ../console/src/stories ../console/src/app.css ../console/static ../console/.storybook ../console/vite.config.ts ../console/tsconfig.json ../console/package.json ../console/package-lock.json ."
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Every path stays out of search results (shared 0062, 0064).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Robots-Tag = "noindex"
+
+# The hub at storybook.epsilonrecords.com composes this Storybook (`refs`): its browser fetches
+# index.json and the static assets from this origin, so they must allow that origin.
+[[headers]]
+  for = "/index.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
+
+[[headers]]
+  for = "/project.json"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
+
+[[headers]]
+  for = "/sb-manager/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
+
+[[headers]]
+  for = "/sb-addons/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
+
+[[headers]]
+  for = "/sb-common-assets/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "https://storybook.epsilonrecords.com"
