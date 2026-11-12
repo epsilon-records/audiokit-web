@@ -208,7 +208,7 @@ step("legacy Pro Checkout is retired (decision 0052 supersedes 0023)", async () 
   const r = await billing("/v1/subscriptions/checkout", { method: "POST", headers: bearer(s.session), body: { interval: "month" } });
   if (r.status === 200) assertCheckoutIsTestMode(r.body.checkout ?? r.body);
   evidence({ step: "legacy-pro-checkout", status: r.status, error: r.body?.error });
-  assert.notEqual(r.status, 200, "Pro Checkout still opens a session; it should be refused now that credits replace Pro");
+  assert.ok(r.status >= 400 && r.status < 500, `Pro Checkout must be refused with a 4xx now that credits replace Pro; got ${r.status}`);
 });
 
 step("customer portal: the session is Stripe test mode", async () => {
