@@ -1,8 +1,26 @@
 import { redirect } from '@sveltejs/kit';
 import { apiFor, HttpApiError } from '#lib/api-client';
+import { CREDITS_DEADLINE_MS } from '#lib/credits';
 import { apiVersion } from '#lib/fixtures';
 import { SESSION_COOKIE } from '#lib/session';
+import type { Credits } from '#lib/types';
 import type { LayoutServerLoad } from './$types';
+
+/**
+ * The balance, or null when billing rejects or does not answer within the deadline. The timer is
+ * cleared once the race settles so it does not outlive the request.
+ */
+async function creditsOrNull(read: Promise<Credits>): Promise<Credits | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const deadline = new Promise<null>((resolve) => {
+		timer = setTimeout(() => resolve(null), CREDITS_DEADLINE_MS);
+	});
+	try {
+		return await Promise.race([read.catch(() => null), deadline]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
 
 /**
  * The signed-in shell. Every route in this group requires a session; the deep
@@ -21,9 +39,9 @@ export const load: LayoutServerLoad = async ({ locals, url, cookies }) => {
 	const data = await Promise.all([
 		client.getAccount(),
 		client.getUsage(),
-		// The banner is the only reader, so a billing service that cannot answer leaves it hidden
+		// The banner is the only reader, so a billing service that errors or stalls leaves it hidden
 		// rather than taking the console down. A bad session fails getAccount() above all the same.
-		client.getCredits().catch(() => null)
+		creditsOrNull(client.getCredits())
 	]).catch((error) => {
 		if (error instanceof HttpApiError && error.code === 'unauthorized') {
 			cookies.delete(SESSION_COOKIE, { path: '/' });
