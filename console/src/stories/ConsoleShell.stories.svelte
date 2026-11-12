@@ -15,8 +15,8 @@
 </script>
 
 <Story name="Dashboard">
-	{#snippet template()}
-		<ConsoleShell {account} usage={roomyUsage} {apiVersion}>
+	{#snippet template(args)}
+		<ConsoleShell account={args.account} usage={args.usage} apiVersion={args.apiVersion}>
 			<PageHeader title="Dashboard" description="Your credits and recent jobs." />
 			<StatTile
 				label="Credits left"
@@ -27,17 +27,17 @@
 	{/snippet}
 </Story>
 
-<Story name="Email not confirmed">
-	{#snippet template()}
-		<ConsoleShell usage={roomyUsage} {apiVersion} account={{ ...account, emailVerified: false }}>
+<Story name="Email not confirmed" args={{ account: { ...account, emailVerified: false } }}>
+	{#snippet template(args)}
+		<ConsoleShell account={args.account} usage={args.usage} apiVersion={args.apiVersion}>
 			<PageHeader title="Dashboard" />
 		</ConsoleShell>
 	{/snippet}
 </Story>
 
-<Story name="Payment failed">
-	{#snippet template()}
-		<ConsoleShell usage={roomyUsage} {apiVersion} account={{ ...account, pastDue: true }}>
+<Story name="Payment failed" args={{ account: { ...account, pastDue: true } }}>
+	{#snippet template(args)}
+		<ConsoleShell account={args.account} usage={args.usage} apiVersion={args.apiVersion}>
 			<PageHeader title="Dashboard" />
 		</ConsoleShell>
 	{/snippet}

@@ -13,7 +13,7 @@
 <Story name="Sign in">
 	{#snippet template()}
 		<AuthCard title="Sign in" subtitle="We email you a link. No password.">
-			<form class="form-stack">
+			<form class="form-stack" onsubmit={(event) => event.preventDefault()}>
 				<div class="field">
 					<label for="email">Email</label>
 					<input class="input" id="email" type="email" value="you@example.com" />

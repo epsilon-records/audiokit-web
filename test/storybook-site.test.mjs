@@ -14,6 +14,30 @@ import { join } from "node:path";
 const toml = readFileSync(new URL("../storybook-site/netlify.toml", import.meta.url), "utf8");
 const HUB = "https://storybook.epsilonrecords.com";
 
+// Git repository-location variables that would make a fixture git call act on the caller's repo.
+const GIT_LOCATION_VARS = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_INDEX_FILE",
+  "GIT_COMMON_DIR",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+];
+
+// Environment for fixture git calls: no inherited repo location, and a fixed identity so commits
+// do not depend on the caller's global git config.
+function fixtureGitEnv() {
+  const env = { ...process.env };
+  for (const key of GIT_LOCATION_VARS) delete env[key];
+  return {
+    ...env,
+    GIT_AUTHOR_NAME: "t",
+    GIT_AUTHOR_EMAIL: "t@example.com",
+    GIT_COMMITTER_NAME: "t",
+    GIT_COMMITTER_EMAIL: "t@example.com",
+  };
+}
+
 // TOML basic strings use the same escapes as JSON strings, so JSON.parse reads the value.
 const ignore = JSON.parse(toml.match(/^\s*ignore\s*=\s*("(?:[^"\\]|\\.)*")/m)[1]);
 
@@ -67,14 +91,14 @@ test("ignore skips unrelated changes and builds for UI, Storybook or uncached", 
   const root = mkdtempSync(join(tmpdir(), "sb-ignore-"));
   try {
     const git = (...args) =>
-      execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+      execFileSync("git", args, { cwd: root, encoding: "utf8", env: fixtureGitEnv() }).trim();
     const write = (rel, text) => {
       mkdirSync(join(root, rel, ".."), { recursive: true });
       writeFileSync(join(root, rel), text);
     };
     const commit = (message) => {
       git("add", "-A");
-      git("-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", message);
+      git("-c", "commit.gpgsign=false", "commit", "-q", "-m", message);
       return git("rev-parse", "HEAD");
     };
 
