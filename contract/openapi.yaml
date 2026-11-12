@@ -124,9 +124,15 @@ paths:
         job. The limit is a guard against a client looping on submissions, not an allowance:
         what a plan allows is settled by the billing service.
 
-        Every job is checked against the client's plan before it is queued, and counts
-        against the plan's job allowance; a `stems` job also counts against its stem
-        allowance. Over the allowance the answer is `402 job_allowance_exhausted`, or
+        Every job is checked with billing before it is queued, and holds the job's
+        prepaid credits; without enough credits the answer is `402 insufficient_credits`.
+        A client with no plan behind it (an instance's own clients, flagged plan-less) is
+        not checked and spends no credits. A per-minute operation (`stems`, `transcode`,
+        `preview`, `normalize`) is priced when it finishes on the audio's length: the
+        result's `duration_seconds`; when the result has none, the input file's length,
+        which AudioKit measures; when neither is known, the operation's minimum.
+        A billing service that still counts plan allowances answers, over the allowance,
+        `402 job_allowance_exhausted`, or
         `402 stem_allowance_exhausted` for a `stems` job; with no active plan it is
         `402 no_active_plan`, and when the plan can't be checked it is
         `503 entitlement_unavailable`. Either way nothing was queued and nothing ran.
@@ -222,6 +228,9 @@ paths:
         "402":
           description: |
             A job the client's plan doesn't allow. Nothing was queued.
+            `insufficient_credits`: the account's prepaid credits don't cover the job's
+            admission cost (its flat cost, or the minimum of a per-minute operation). Buy a
+            credit pack, or wait for next month's free credits.
             `job_allowance_exhausted`: the plan's job allowance for this billing period is
             used up. Upgrade the plan, or submit again in the next period.
             `stem_allowance_exhausted`: for a `stems` job, the plan's stem or job allowance
@@ -247,10 +256,13 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
         "503":
           description: |
-            `unavailable`: storage is unavailable; retry.
+            `unavailable`: storage is unavailable, or another submission of this `job_id` is
+            still being decided or no database connection came free in time (with
+            `Retry-After`); retry.
             `entitlement_unavailable`: the plan's allowance couldn't be checked, so the job
-            was refused rather than run unchecked. Nothing was queued; send the same request
-            again later.
+            was refused rather than run unchecked: billing didn't answer, or it refused this
+            attempt as stale (with `Retry-After`; the retry is checked as a new attempt).
+            Nothing was queued; send the same request again later.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -611,6 +623,7 @@ components:
             - client_bootstrap
             - rate_limited
             - unavailable
+            - insufficient_credits
             - stem_allowance_exhausted
             - job_allowance_exhausted
             - no_active_plan
