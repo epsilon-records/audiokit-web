@@ -16,4 +16,27 @@ describe('safeNext', () => {
 		expect(safeNext('/\\evil.example/steal')).toBe(DEFAULT_AFTER_LOGIN);
 		expect(safeNext('usage')).toBe(DEFAULT_AFTER_LOGIN);
 	});
+
+	it('falls back for a path a URL parser would read differently', () => {
+		for (const value of [
+			'/\t/evil.example',
+			'/\n/evil.example',
+			'/\r/evil.example',
+			'/a\\b',
+			'/a\u0000b'
+		]) {
+			expect(safeNext(value), JSON.stringify(value)).toBe(DEFAULT_AFTER_LOGIN);
+		}
+	});
+
+	it('falls back for a path that normalises to two leading slashes', () => {
+		for (const value of ['/..//evil.example', '/.//evil.example', '/%2e%2e//evil.example']) {
+			expect(safeNext(value), JSON.stringify(value)).toBe(DEFAULT_AFTER_LOGIN);
+		}
+	});
+
+	it('keeps a backslash in the query or fragment', () => {
+		expect(safeNext('/dashboard/keys?q=a\\b')).toBe('/dashboard/keys?q=a\\b');
+		expect(safeNext('/usage#a\\b')).toBe('/usage#a\\b');
+	});
 });
