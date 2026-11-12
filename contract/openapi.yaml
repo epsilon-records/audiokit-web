@@ -229,8 +229,8 @@ paths:
           description: |
             A job the client's plan doesn't allow. Nothing was queued.
             `insufficient_credits`: the account's prepaid credits don't cover the job's
-            admission cost (its flat cost, or the minimum of a per-minute operation). Buy a
-            credit pack, or wait for next month's free credits.
+            admission cost (its flat cost, or the minimum of a per-minute operation). Wait
+            for next month's free credits.
             `job_allowance_exhausted`: the plan's job allowance for this billing period is
             used up. Upgrade the plan, or submit again in the next period.
             `stem_allowance_exhausted`: for a `stems` job, the plan's stem or job allowance
