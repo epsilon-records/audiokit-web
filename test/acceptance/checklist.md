@@ -47,6 +47,11 @@ are spent before purchased ones, then granted ones (AudioKit decision 0063). Rec
       purchased lot shows an expiry 12 months out, and the Free lot is unchanged.
 - [ ] Note `cs_test_`, `cus_`, `pi_` and `in_`. Expect one paid invoice in the dashboard.
 - [ ] Buying a second pack works and adds a second lot (packs are not "already subscribed").
+- [ ] Spending order: on a fresh throwaway account that still holds its Free credits, buy one pack,
+      record each lot's balance, submit one `probe` job (1 credit), and record the balances again.
+      Expect: the Free lot is down by 1 and the purchased lot is unchanged. Free credits are spent
+      before purchased ones (AudioKit decision 0063); the account in section 2 has no Free credits
+      left, so it cannot show this.
 
 ## 4. Webhook idempotency
 
