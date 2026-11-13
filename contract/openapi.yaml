@@ -131,11 +131,9 @@ paths:
         `preview`, `normalize`) is priced when it finishes on the audio's length: the
         result's `duration_seconds`; when the result has none, the input file's length,
         which AudioKit measures; when neither is known, the operation's minimum.
-        A billing service that still counts plan allowances answers, over the allowance,
-        `402 job_allowance_exhausted`, or
-        `402 stem_allowance_exhausted` for a `stems` job; with no active plan it is
-        `402 no_active_plan`, and when the plan can't be checked it is
-        `503 entitlement_unavailable`. Either way nothing was queued and nothing ran.
+        With no active plan the answer is `402 no_active_plan`, and when the plan can't be
+        checked it is `503 entitlement_unavailable`. Either way nothing was queued and nothing
+        ran.
         Resubmitting a `job_id` that was already accepted returns that job without checking
         again.
       requestBody:
@@ -231,11 +229,6 @@ paths:
             `insufficient_credits`: the account's prepaid credits don't cover the job's
             admission cost (its flat cost, or the minimum of a per-minute operation). Wait
             for next month's free credits.
-            `job_allowance_exhausted`: the plan's job allowance for this billing period is
-            used up. Upgrade the plan, or submit again in the next period.
-            `stem_allowance_exhausted`: for a `stems` job, the plan's stem or job allowance
-            for this billing period is used up. Upgrade the plan, or submit again in the next
-            period.
             `no_active_plan`: no active plan is behind this API key (no subscription, or the
             account or key is inactive).
           content:
@@ -624,10 +617,13 @@ components:
             - rate_limited
             - unavailable
             - insufficient_credits
-            - stem_allowance_exhausted
-            - job_allowance_exhausted
             - no_active_plan
             - entitlement_unavailable
+        - enum:
+            - stem_allowance_exhausted
+            - job_allowance_exhausted
+          deprecated: true
+          description: No longer returned. Out-of-credit jobs return 402 insufficient_credits.
         - type: string
 
     ClientErased:
