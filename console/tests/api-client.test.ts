@@ -122,7 +122,7 @@ describe('mock client: API keys', () => {
 	});
 });
 
-describe('mock client: settings and checkout', () => {
+describe('mock client: settings', () => {
 	it('updates the profile and notification preferences', async () => {
 		const client = newClient();
 		const account = await client.updateProfile('  Example Person ');
@@ -138,22 +138,10 @@ describe('mock client: settings and checkout', () => {
 		expect((await client.getNotificationPreferences()).quotaWarnings).toBe(false);
 	});
 
-	it('applies the plan change on checkout and refuses enterprise self-serve', async () => {
-		const client = newClient();
-		const result = await client.startCheckout('pro');
-
-		expect(result.status).toBe('success');
-		expect(result.plan).toBe('pro');
-		expect((await client.getAccount()).plan).toBe('pro');
-		expect((await client.getBilling()).plan).toBe('pro');
-
-		await expect(client.startCheckout('enterprise')).rejects.toMatchObject({
-			code: 'enterprise-contact'
+	it('has no billing portal in mock mode', async () => {
+		await expect(newClient().createBillingPortal()).rejects.toMatchObject({
+			code: 'not-supported'
 		});
-		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({
-			status: 'cancelled'
-		});
-		await expect(client.createBillingPortal()).rejects.toMatchObject({ code: 'not-supported' });
 	});
 });
 

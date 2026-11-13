@@ -459,51 +459,21 @@ describe('http adapter: session token', () => {
 });
 
 describe('http adapter: errors', () => {
-	it('starts annual Checkout, opens the portal, and reads the confirmed return', async () => {
-		const fetchImpl = fetchMock((url) => {
-			if (url.endsWith('/v1/subscriptions/checkout')) {
-				return jsonResponse({
-					status: 'processing',
-					tier: 'pro',
-					url: 'https://checkout.stripe.com/session',
-					session_id: 'cs_test'
-				});
-			}
-			if (url.endsWith('/v1/subscriptions/portal'))
-				return jsonResponse({ url: 'https://billing.stripe.com/session' });
-			if (url.endsWith('/v1/subscriptions/current'))
-				return jsonResponse({
-					subscription: {
-						id: 's1',
-						tier: 'pro',
-						status: 'active',
-						current_period_start: '2026-11-01T00:00:00.000Z',
-						current_period_end: '2026-12-01T00:00:00.000Z'
-					}
-				});
-			return jsonResponse({}, 404);
-		});
+	it('opens the billing portal', async () => {
+		const fetchImpl = fetchMock((url) =>
+			url.endsWith('/v1/subscriptions/portal')
+				? jsonResponse({ url: 'https://billing.stripe.com/session' })
+				: jsonResponse({}, 404)
+		);
 		const client = createApiClient({
 			baseUrl: 'https://billing.test',
 			sessionToken: 'token',
 			fetch: fetchImpl
 		});
 
-		await expect(client.startCheckout('pro', 'year')).resolves.toMatchObject({
-			url: 'https://checkout.stripe.com/session'
-		});
-		expect(JSON.parse(String(fetchImpl.calls[0].init.body))).toEqual({
-			tier: 'pro',
-			interval: 'year'
-		});
 		await expect(client.createBillingPortal()).resolves.toBe('https://billing.stripe.com/session');
-		await expect(client.getCheckoutResult('success')).resolves.toMatchObject({
-			status: 'success',
-			plan: 'pro'
-		});
-		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({
-			status: 'cancelled'
-		});
+		expect(fetchImpl.calls).toHaveLength(1);
+		expect(fetchImpl.calls[0].init.method).toBe('POST');
 	});
 
 	it('maps service errors to typed failures', async () => {
@@ -533,18 +503,6 @@ describe('http adapter: errors', () => {
 		});
 
 		await expect(client.getAccount()).rejects.toMatchObject({ code: 'network' });
-	});
-
-	it('refuses self-serve enterprise checkout', async () => {
-		const client = createApiClient({
-			baseUrl: 'https://billing.test',
-			sessionToken: 'session-token',
-			fetch: fetchMock(() => jsonResponse({}))
-		});
-
-		await expect(client.startCheckout('enterprise')).rejects.toMatchObject({
-			code: 'invalid-request'
-		});
 	});
 });
 

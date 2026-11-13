@@ -22,7 +22,6 @@ import type {
 	Account,
 	ApiKey,
 	BillingSummary,
-	CheckoutResult,
 	CreatedApiKey,
 	Credits,
 	Job,
@@ -30,7 +29,6 @@ import type {
 	MagicLinkRequest,
 	NotificationPreferences,
 	Plan,
-	PlanId,
 	Session,
 	UsageSummary
 } from './types';
@@ -59,7 +57,6 @@ export type ConsoleApi = {
 	getApiKeys(): Promise<ApiKey[]>;
 	getBilling(): Promise<BillingSummary>;
 	getNotificationPreferences(): Promise<NotificationPreferences>;
-	getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult>;
 	createBillingPortal(): Promise<string>;
 
 	createApiKey(label: string): Promise<CreatedApiKey>;
@@ -79,7 +76,6 @@ export type ConsoleApi = {
 	 */
 	signOut(): Promise<void>;
 	updateNotificationPreferences(next: NotificationPreferences): Promise<NotificationPreferences>;
-	startCheckout(planId: PlanId, interval?: 'month' | 'year'): Promise<CheckoutResult>;
 };
 
 export type ApiAdapter = 'mock' | 'http';

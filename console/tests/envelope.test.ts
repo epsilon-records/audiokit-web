@@ -106,17 +106,6 @@ describe('http adapter: envelope transition (decision 0031)', () => {
 		expect(named.prefix).toBe('ak_live_012');
 	});
 
-	it('reads checkout bare or under `checkout`', async () => {
-		const fields = { status: 'processing', tier: 'pro', url: 'https://checkout.test/a', session_id: 'cs_1' };
-
-		const legacy = await clientFor(() => jsonResponse(fields)).startCheckout('pro');
-		const named = await clientFor(() => jsonResponse({ checkout: fields })).startCheckout('pro');
-
-		expect(named).toEqual(legacy);
-		expect(legacy.url).toBe('https://checkout.test/a');
-		expect(legacy.status).toBe('processing');
-	});
-
 	it('tolerates a 204 with no body where `{ success: true }` used to be', async () => {
 		const client = clientFor((url) =>
 			url.includes('/v1/api-keys/k1') ? jsonResponse(undefined, 204) : jsonResponse({ api_keys: [] })
