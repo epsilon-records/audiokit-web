@@ -19,12 +19,10 @@ import type {
 	Account,
 	ApiKey,
 	BillingSummary,
-	CheckoutResult,
 	CreatedApiKey,
 	MagicLinkExchange,
 	MagicLinkRequest,
 	NotificationPreferences,
-	PlanId,
 	Session
 } from './types';
 import type { SignupSource } from './signup-source';
@@ -84,7 +82,7 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 	// Mutable copies of the fixtures: the mock is a demo, not a database.
 	let account: Account = { ...fixtures.account };
 	let keys: ApiKey[] = fixtures.apiKeys.map((key) => ({ ...key }));
-	let billing: BillingSummary = {
+	const billing: BillingSummary = {
 		...fixtures.billing,
 		invoices: fixtures.billing.invoices.map((invoice) => ({ ...invoice }))
 	};
@@ -171,11 +169,6 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 			return { ...preferences };
 		},
 
-		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
-			if (outcome === 'canceled') return { status: 'cancelled' };
-			return { status: 'success', plan: account.plan, renewsAt: account.renewsAt };
-		},
-
 		async createBillingPortal(): Promise<string> {
 			throw new MockApiError('not-supported', 'Billing portal is unavailable in mock mode.');
 		},
@@ -218,23 +211,6 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		async updateNotificationPreferences(next: NotificationPreferences) {
 			preferences = { ...next };
 			return { ...preferences };
-		},
-
-		async startCheckout(
-			planId: PlanId,
-			_interval: 'month' | 'year' = 'month'
-		): Promise<CheckoutResult> {
-			if (planId === 'enterprise') {
-				throw new MockApiError(
-					'enterprise-contact',
-					'Enterprise plans are arranged with sales, not checkout.'
-				);
-			}
-			// A real adapter returns `processing` until the webhook confirms the plan;
-			// the mock is synchronous so it can show the success state.
-			account = { ...account, plan: planId };
-			billing = { ...billing, plan: planId };
-			return { status: 'success', plan: planId, renewsAt: account.renewsAt };
 		}
 	};
 }

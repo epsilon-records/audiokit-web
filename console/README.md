@@ -88,7 +88,7 @@ so the shell can resolve the session.
 `src/lib/api-client.ts` is the only boundary between screens and the billing/accounts service.
 It exports:
 
-- a `ConsoleApi` type (account, plans, jobs, usage, keys, billing, preferences, checkout, auth);
+- a `ConsoleApi` type (account, plans, jobs, usage, keys, billing, preferences, auth);
 - `createApiClient()`, which selects the adapter (see **Billing API** below);
 - `apiFor(sessionToken)`, the signed-in client the server routes use;
 - `api`, the adapter for the unauthenticated auth flow.
@@ -111,8 +111,8 @@ cold start. That is deliberate for a scaffold: there is no database behind it.
 `src/lib/http-adapter.ts` maps `ConsoleApi` onto the service's real routes (`src/routes/` in
 `epsilon-records/epsilon-billing`): `/v1/auth/me`, `/v1/subscriptions/current`,
 `/v1/usage/current`, `/v1/usage/history`, `/v1/api-keys` and `/v1/jobs`. Routes the service does
-not have yet (the magic-link endpoints, plans, notification preferences, profile update and
-checkout) are documented as `ASSUMED` at the top of the file and tracked on the knowledge board;
+not have yet (the magic-link endpoints, plans, notification preferences, profile update) are
+documented as `ASSUMED` at the top of the file and tracked on the knowledge board;
 the service's wire format is snake_case and the adapter translates it to the console's types.
 
 ## Develop

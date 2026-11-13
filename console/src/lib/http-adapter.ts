@@ -31,7 +31,6 @@
  *   Subscriptions
  *     GET  /v1/subscriptions/current      Bearer session     (exists)
  *     GET  /v1/subscriptions/plans        Bearer session     ASSUMED
- *     POST /v1/subscriptions/checkout     { tier }           ASSUMED (Stripe task)
  *
  * The session cookie holds the service's JWT. `parseSessionToken` decodes it
  * without verifying it so the server hooks can resolve `locals.session`; every
@@ -47,7 +46,6 @@ import type {
 	Account,
 	ApiKey,
 	BillingSummary,
-	CheckoutResult,
 	CreatedApiKey,
 	Credits,
 	Job,
@@ -188,12 +186,6 @@ type WireNotificationPreferences = {
 	product_updates: boolean;
 };
 
-type WireCheckout = {
-	status?: CheckoutResult['status'];
-	tier?: PlanId;
-	current_period_end?: string;
-	url?: string;
-};
 type WirePortal = { url: string };
 
 type WireError = { error?: string; message?: string };
@@ -640,25 +632,6 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			);
 		},
 
-		async getCheckoutResult(outcome?: 'success' | 'canceled'): Promise<CheckoutResult> {
-			if (outcome === 'canceled') return { status: 'cancelled' };
-			if (outcome !== 'success') return { status: 'processing' };
-			// Stripe's webhook updates the plan asynchronously. Poll briefly so the
-			// return page reflects the confirmed subscription when it is ready.
-			for (let attempt = 0; attempt < 5; attempt += 1) {
-				const subscription = await getSubscription();
-				if (subscription.tier === 'pro') {
-					return {
-						status: 'success',
-						plan: subscription.tier,
-						renewsAt: subscription.current_period_end
-					};
-				}
-				if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 1000));
-			}
-			return { status: 'processing' };
-		},
-
 		async createBillingPortal(): Promise<string> {
 			// 0031: `{ portal: { url } }` instead of a bare `{ url }`.
 			const payload = await request<unknown>('/v1/subscriptions/portal', { method: 'POST' });
@@ -753,30 +726,6 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			return toNotificationPreferences(
 				unwrap<WireNotificationPreferences>(payload, 'notifications')
 			);
-		},
-
-		async startCheckout(
-			planId: PlanId,
-			interval: 'month' | 'year' = 'month'
-		): Promise<CheckoutResult> {
-			if (planId === 'enterprise') {
-				throw new HttpApiError(
-					'invalid-request',
-					'Enterprise plans are arranged with sales, not checkout.'
-				);
-			}
-			const payload = await request<unknown>('/v1/subscriptions/checkout', {
-				method: 'POST',
-				...json({ tier: planId, interval })
-			});
-			// 0031: `{ checkout: { status, tier, url, session_id } }`.
-			const checkout = unwrap<WireCheckout>(payload, 'checkout') ?? {};
-			return {
-				status: checkout.status ?? 'processing',
-				plan: checkout.tier ?? planId,
-				renewsAt: checkout.current_period_end,
-				url: checkout.url
-			};
 		}
 	};
 }

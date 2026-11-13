@@ -32,13 +32,6 @@
 
 <SettingsTabs />
 
-{#if data.checkoutResult?.status === 'success'}
-	<p class="notice notice-ok" role="status">Checkout complete.</p>
-{:else if data.checkoutResult?.status === 'processing'}
-	<p class="notice notice-info" role="status">Payment received. Refresh shortly to check your plan.</p>
-{:else if data.checkoutResult?.status === 'cancelled'}
-	<p class="notice" role="status">Checkout canceled. You have not been charged.</p>
-{/if}
 {#if actionError}<p class="notice notice-warn" role="alert">{actionError}</p>{/if}
 
 {#if data.account.pastDue}
