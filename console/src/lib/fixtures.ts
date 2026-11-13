@@ -36,8 +36,7 @@ export const plans: Plan[] = [
 		priceLabel: '$0',
 		jobLimit: 100,
 		features: [
-			'100 jobs per month',
-			'10 stem separations included',
+			'100 credits / month',
 			'All analysis operations',
 			'All processing operations',
 			'Webhook delivery',
@@ -51,13 +50,11 @@ export const plans: Plan[] = [
 		priceLabel: '$99',
 		jobLimit: 1_000,
 		features: [
-			'1,000 jobs per month',
 			'250 stem separations included',
 			'Priority processing',
 			'Overage at $0.15 per stem and $0.01 per other job, never both on one stem',
 			'Email support'
 		],
-		delta: 'Adds 900 jobs and 240 stems per month',
 		featured: true
 	},
 	{
@@ -67,7 +64,6 @@ export const plans: Plan[] = [
 		priceLabel: 'From $499',
 		jobLimit: 5_000,
 		features: [
-			'5,000 jobs per month',
 			'1,500 stem separations included',
 			'Priority processing',
 			'Dedicated support',

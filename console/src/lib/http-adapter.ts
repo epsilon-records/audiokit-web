@@ -39,6 +39,7 @@
  * a forged cookie cannot read data.
  */
 
+import { FREE_CREDITS_PER_MONTH } from './credits';
 import { ApiError } from './errors';
 import { toWireSignupSource, type SignupSource } from './signup-source';
 import type { ConsoleApi } from './api-client';
@@ -230,13 +231,15 @@ function toAccount(user: WireUser, subscription: WireSubscription): Account {
 
 function toPlan(wire: WirePlan): Plan {
 	const quota = wire.monthly_job_quota;
-	const features: string[] = [
-		quota === -1 ? 'Unlimited jobs' : `${quota.toLocaleString('en-GB')} jobs per month`
-	];
-	// Stems are a sub-cap of the job allowance (decision 0023). The service sends these columns from
-	// subscription_plans; dropping them made a Pro card read "1,000 jobs per month · Overage at
-	// $0.01 per job", which implies a stem separation costs a penny instead of $0.15.
-	if (wire.monthly_stem_quota != null) {
+	// Free is 100 credits a calendar month (decision 0052), whatever job quota the plan row still
+	// carries. The only credit number the decisions give a plan is Free's, so the other tiers state
+	// no job allowance here; they are retired subscriptions (0052, 0058).
+	const features: string[] = [];
+	if (wire.tier === 'free') features.push(`${FREE_CREDITS_PER_MONTH} credits / month`);
+	// Stems were a sub-cap of the job allowance (decision 0023), which credits replace for Free.
+	// The service still sends these columns for the retired paid tiers; dropping them made a Pro
+	// card read "Overage at $0.01 per job", which implies a stem costs a penny instead of $0.15.
+	if (wire.tier !== 'free' && wire.monthly_stem_quota != null) {
 		features.push(`${wire.monthly_stem_quota.toLocaleString('en-GB')} stem separations included`);
 	}
 	const jobOverageCents = wire.overage_price_cents;

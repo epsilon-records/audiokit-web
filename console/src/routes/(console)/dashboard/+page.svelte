@@ -1,7 +1,6 @@
 <script lang="ts">
 	import CopyButton from '#lib/components/CopyButton.svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
-	import Meter from '#lib/components/Meter.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import StatTile from '#lib/components/StatTile.svelte';
 	import StatusBadge from '#lib/components/StatusBadge.svelte';
@@ -10,8 +9,10 @@
 
 	let { data }: PageProps = $props();
 
-	const remaining = $derived(Math.max(0, data.usage.jobLimit - data.usage.jobsUsed));
-	const atLimit = $derived(remaining === 0);
+	// The balance comes from the layout (billing's GET /v1/credits); null means billing did not
+	// answer in time, so no number is shown rather than a guess.
+	const balance = $derived(data.credits?.balance ?? null);
+	const outOfCredits = $derived(balance !== null && balance <= 0);
 	const planLabel = $derived(
 		{ free: 'Free', pro: 'Pro', enterprise: 'Enterprise' }[data.account.plan] ?? data.account.plan
 	);
@@ -27,30 +28,24 @@
 <PageHeader
 	title="Dashboard"
 	kicker="Overview"
-	description="This period at a glance: jobs, quota, your plan and the keys that are active."
+	description="Your credit balance, this month's jobs, your plan and the keys that are active."
 	meta="Times shown in UTC"
 />
 
 <div class="stat-grid">
 	<StatTile
-		label="Jobs / month"
-		value={formatNumber(data.usage.jobsUsed)}
-		hint="{planLabel} · {formatNumber(data.usage.jobLimit)} limit"
-		tone={atLimit ? 'warn' : 'default'}
-	>
-		<Meter
-			used={data.usage.jobsUsed}
-			limit={data.usage.jobLimit}
-			label="Jobs used this period"
-			showCaption={false}
-		/>
-	</StatTile>
+		label="Credit balance"
+		value={balance === null ? 'Balance unavailable' : formatNumber(balance)}
+		hint={outOfCredits
+			? 'Out of credits. New jobs are refused until the account tops up'
+			: 'Free credits renew each calendar month (UTC)'}
+		tone={outOfCredits ? 'warn' : 'default'}
+	/>
 
 	<StatTile
-		label="Remaining"
-		value={formatNumber(remaining)}
-		hint={atLimit ? 'Quota reached. New jobs wait for the monthly reset' : 'Until the period resets'}
-		tone={atLimit ? 'warn' : 'default'}
+		label="Jobs this month"
+		value={formatNumber(data.usage.jobsUsed)}
+		hint="Submitted this period · {planLabel} plan"
 	/>
 
 	<StatTile label="Plan" value={planLabel} hint="Resets {formatDate(data.account.renewsAt)}">
@@ -62,7 +57,7 @@
 	<StatTile
 		label="API keys"
 		value="{data.activeKeys} active"
-		hint="Keys authorise jobs and are billed to your plan"
+		hint="Keys authorise jobs, which spend your credits"
 	>
 		<div class="actions">
 			<a class="btn btn-ghost btn-sm" href="/api-keys">Manage</a>

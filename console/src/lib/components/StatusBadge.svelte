@@ -8,10 +8,7 @@
 		| 'revoked'
 		| 'paid'
 		| 'open'
-		| 'past due'
-		| 'within quota'
-		| 'quota reached'
-		| 'overage';
+		| 'past due';
 
 	type Props = { status: BadgeStatus };
 
@@ -26,10 +23,7 @@
 		revoked: { tone: 'muted', label: 'revoked' },
 		paid: { tone: 'ok', label: 'paid' },
 		open: { tone: 'accent', label: 'open' },
-		'past due': { tone: 'warn', label: 'past due' },
-		'within quota': { tone: 'ok', label: 'within quota' },
-		'quota reached': { tone: 'warn', label: 'quota reached' },
-		overage: { tone: 'warn', label: 'overage' }
+		'past due': { tone: 'warn', label: 'past due' }
 	};
 
 	const tone = $derived(tones[status] ?? { tone: 'muted', label: status });

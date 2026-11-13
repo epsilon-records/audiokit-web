@@ -2,9 +2,8 @@
  * Mocked data for the stories, read through the console's own mock adapter and fixtures.
  * Nothing here touches the network: `createMockAdapter` returns fixtures and in-memory copies.
  *
- * Plans are credits now (AudioKit decision 0052): Free is 100 credits a month. The fixtures
- * still carry the retired job-based plan copy that the console's tests pin, so the story copy
- * lives here and the fixtures stay as they are.
+ * Plans are credits now (AudioKit decision 0052): Free is 100 credits a month. The fixtures'
+ * Free plan states the same, and this one adds the lapse and expiry lines for the plan card story.
  */
 
 import { createMockAdapter } from '#lib/mock-adapter';
@@ -21,7 +20,7 @@ export const recentJobs = await api.getRecentJobs(5);
 export const apiKeys = await api.getApiKeys();
 export const apiVersion = '0.1';
 
-/** The Free plan as the plan card shows it, in credits. `jobLimit` is the field the card reads. */
+/** The Free plan as the plan card shows it, in credits. */
 export const freePlan: Plan = {
 	id: 'free',
 	name: 'Free',
@@ -31,7 +30,7 @@ export const freePlan: Plan = {
 	features: [
 		'100 credits every calendar month',
 		'Unspent Free credits lapse at the end of the month',
-		'Buy a credit pack when you need more',
+		'Credit packs are not on sale yet',
 		'Bought credits expire 12 months after purchase'
 	]
 };

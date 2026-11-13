@@ -28,20 +28,20 @@ const esc = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const docs = await read("../docs/freemium-plans.md");
 const fixtures = await read("../console/src/lib/fixtures.ts");
 
-test("the console's mock plans state every limit from 0023", () => {
-  for (const [tier, plan] of Object.entries(PLANS)) {
-    assert.match(
-      fixtures,
-      new RegExp(esc(`${plan.jobs} jobs per month`)),
-      `fixtures are missing the ${tier} job allowance`,
-    );
+test("the console's mock plans keep the stem allowances from 0023 and state Free in credits", () => {
+  // Free is credits now (0052): no job or stem quota. The retired paid tiers keep their stem line
+  // and no job line, because the decisions give no credit equivalent for a subscription allowance.
+  assert.match(fixtures, /'100 credits \/ month'/, "fixtures are missing Free's monthly credits");
+  assert.doesNotMatch(fixtures, /jobs per month/, "no fixture may state a job allowance");
+  for (const tier of ["pro", "enterprise"]) {
+    const plan = PLANS[tier];
     assert.match(
       fixtures,
       new RegExp(esc(`${plan.stems} stem separations included`)),
       `fixtures are missing the ${tier} stem allowance`,
     );
   }
-  // jobLimit drives the card and the upgrade form; enterprise is priced by sales.
+  // jobLimit is no longer read by the plan card; the values stay pinned as the service's rows.
   assert.match(fixtures, /jobLimit: 100/);
   assert.match(fixtures, /jobLimit: 1_000/);
   assert.match(fixtures, /jobLimit: 5_000/);

@@ -409,8 +409,9 @@ describe('http adapter: plans', () => {
 	it('keeps Free free of overage copy', async () => {
 		const [free] = await plansClient([freeRow, proRow]).getPlans();
 
-		expect(free.features).toContain('10 stem separations included');
-		expect(free.features.join(' ')).not.toMatch(/overage/i);
+		// Free is credits (0052): no stem or job allowance line, whatever quota the row still carries.
+		expect(free.features).toContain('100 credits / month');
+		expect(free.features.join(' ')).not.toMatch(/overage|stem separations|\bjobs?\b/i);
 	});
 
 	it('keeps Enterprise volume rates out of the card', async () => {

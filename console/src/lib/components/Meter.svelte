@@ -31,7 +31,7 @@
 	</div>
 	{#if showCaption}
 		<div class="meter-caption">
-			<span>{atLimit ? 'Quota reached' : `${formatPercent(value)} used`}</span>
+			<span>{atLimit ? 'Fully used' : `${formatPercent(value)} used`}</span>
 			<span>{used} / {limit}</span>
 		</div>
 	{/if}

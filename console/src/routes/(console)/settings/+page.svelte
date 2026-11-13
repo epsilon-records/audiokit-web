@@ -93,13 +93,6 @@
 		</div>
 		<form method="POST" action="?/savePreferences" class="panel-body form-stack" use:enhance>
 			<label class="checkbox">
-				<input type="checkbox" name="quotaWarnings" checked={data.preferences.quotaWarnings} />
-				<span>
-					<strong>Quota warnings</strong>
-					<span class="field-hint">Email at 80% of the limit and again when it is reached.</span>
-				</span>
-			</label>
-			<label class="checkbox">
 				<input type="checkbox" name="paymentReceipts" checked={data.preferences.paymentReceipts} />
 				<span>
 					<strong>Payment receipts</strong>

@@ -9,15 +9,27 @@
 		component: StatTile,
 		tags: ['autodocs'],
 		args: {
-			label: 'Credits left',
+			label: 'Credit balance',
 			value: String(creditsLeft),
-			hint: 'Free credits reset on 1 December (UTC)'
+			hint: 'Free credits renew each calendar month (UTC)'
 		}
 	});
 </script>
 
 <Story name="Default" />
-<Story name="Warning" args={{ tone: 'warn', value: '3', hint: 'Buy a pack to keep going' }} />
+<Story
+	name="Out of credits"
+	args={{
+		tone: 'warn',
+		value: '0',
+		hint: 'Out of credits. New jobs are refused until the account tops up'
+	}}
+/>
+<Story name="Balance unavailable" args={{ value: 'Balance unavailable' }} />
+<Story
+	name="Jobs this month"
+	args={{ label: 'Jobs this month', value: '84', hint: 'Submitted this period · Free plan' }}
+/>
 <Story name="With meter">
 	{#snippet template(args)}
 		<StatTile {...args}>
