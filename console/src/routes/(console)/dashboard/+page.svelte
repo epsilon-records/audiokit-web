@@ -4,6 +4,7 @@
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import StatTile from '#lib/components/StatTile.svelte';
 	import StatusBadge from '#lib/components/StatusBadge.svelte';
+	import { outOfCreditsNotice } from '#lib/credits';
 	import { formatDate, formatNumber, formatTime } from '#lib/format';
 	import type { PageProps } from './$types';
 
@@ -37,7 +38,7 @@
 		label="Credit balance"
 		value={balance === null ? 'Balance unavailable' : formatNumber(balance)}
 		hint={outOfCredits
-			? 'Out of credits. New jobs are refused until the account tops up'
+			? `Out of credits. ${outOfCreditsNotice(new Date())}`
 			: 'Free credits renew each calendar month (UTC)'}
 		tone={outOfCredits ? 'warn' : 'default'}
 	/>

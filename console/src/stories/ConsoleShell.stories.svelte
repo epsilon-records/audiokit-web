@@ -43,9 +43,17 @@
 	{/snippet}
 </Story>
 
-<Story name="Out of credits" args={{ credits: emptyCredits }}>
+<Story
+	name="Out of credits"
+	args={{ credits: emptyCredits, now: new Date('2026-11-14T12:00:00.000Z') }}
+>
 	{#snippet template(args)}
-		<ConsoleShell account={args.account} credits={args.credits} apiVersion={args.apiVersion}>
+		<ConsoleShell
+			account={args.account}
+			credits={args.credits}
+			now={args.now}
+			apiVersion={args.apiVersion}
+		>
 			<PageHeader title="Dashboard" />
 		</ConsoleShell>
 	{/snippet}

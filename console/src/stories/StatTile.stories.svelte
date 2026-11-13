@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import StatTile from '#lib/components/StatTile.svelte';
+	import { outOfCreditsNotice } from '#lib/credits';
 	import Meter from '#lib/components/Meter.svelte';
 	import { FREE_CREDITS_PER_MONTH, creditsLeft, creditsUsed } from './mock-data';
 
@@ -22,7 +23,7 @@
 	args={{
 		tone: 'warn',
 		value: '0',
-		hint: 'Out of credits. New jobs are refused until the account tops up'
+		hint: `Out of credits. ${outOfCreditsNotice(new Date('2026-11-14T12:00:00.000Z'))}`
 	}}
 />
 <Story name="Balance unavailable" args={{ value: 'Balance unavailable' }} />

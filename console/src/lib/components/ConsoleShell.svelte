@@ -4,6 +4,7 @@
 	import Alert from './Alert.svelte';
 	import SideNav from './SideNav.svelte';
 	import TopBar from './TopBar.svelte';
+	import { outOfCreditsNotice } from '#lib/credits';
 	import { formatNumber } from '#lib/format';
 	import type { Account, Credits } from '#lib/types';
 
@@ -11,11 +12,13 @@
 		account: Account;
 		/** The prepaid balance. null when billing could not report it: no banner is shown then. */
 		credits: Credits | null;
+		/** The current time, for the renewal date. Defaults to now; stories pin it. */
+		now?: Date;
 		apiVersion: string;
 		children: Snippet;
 	};
 
-	let { account, credits, apiVersion, children }: Props = $props();
+	let { account, credits, now = new Date(), apiVersion, children }: Props = $props();
 
 	let drawerOpen = $state(false);
 	afterNavigate(() => {
@@ -80,12 +83,8 @@
 			<Alert tone="warn" role="alert">
 				<span>
 					<strong>Out of credits.</strong>
-					Your balance is {formatNumber(credits.balance)} credits, so new jobs are refused until the account
-					tops up. Free credits renew each calendar month (UTC).
+					Your balance is {formatNumber(credits.balance)} credits. {outOfCreditsNotice(now)}
 				</span>
-				<div class="actions">
-					<a class="btn btn-primary btn-sm" href="/pricing">See pricing</a>
-				</div>
 			</Alert>
 		{/if}
 

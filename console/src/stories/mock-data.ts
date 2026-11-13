@@ -42,5 +42,5 @@ export const creditsLeft: number = FREE_CREDITS_PER_MONTH - creditsUsed;
 /** A balance with plenty left, so the shell shows no banner. */
 export const roomyCredits: Credits = { balance: creditsLeft };
 
-/** Nothing left: new jobs are refused until the account tops up (0052). */
+/** Nothing left: new jobs are refused until the next monthly Free credits (0052). */
 export const emptyCredits: Credits = { balance: 0 };
