@@ -4,25 +4,31 @@
 	import Alert from './Alert.svelte';
 	import SideNav from './SideNav.svelte';
 	import TopBar from './TopBar.svelte';
-	import type { Account, UsageSummary } from '#lib/types';
+	import { outOfCreditsNotice } from '#lib/credits';
+	import { formatNumber } from '#lib/format';
+	import type { Account, Credits } from '#lib/types';
 
 	type Props = {
 		account: Account;
-		usage: UsageSummary;
+		/** The prepaid balance. null when billing could not report it: no banner is shown then. */
+		credits: Credits | null;
+		/** The current time, for the renewal date. Defaults to now; stories pin it. */
+		now?: Date;
 		apiVersion: string;
 		children: Snippet;
 	};
 
-	let { account, usage, apiVersion, children }: Props = $props();
+	let { account, credits, now = new Date(), apiVersion, children }: Props = $props();
 
 	let drawerOpen = $state(false);
 	afterNavigate(() => {
 		drawerOpen = false;
 	});
 
-	const usedShare = $derived(usage.jobLimit > 0 ? (usage.jobsUsed / usage.jobLimit) * 100 : 0);
-	const atLimit = $derived(usage.jobsUsed >= usage.jobLimit);
-	const nearLimit = $derived(usedShare >= 80);
+	// Decision 0052: a job is refused when the balance does not cover its minimum, and a long job
+	// can take the balance below zero. No "running low" threshold has been decided, so the only
+	// state the console warns about is a balance with nothing left.
+	const outOfCredits = $derived(credits !== null && credits.balance <= 0);
 </script>
 
 <svelte:window
@@ -73,15 +79,12 @@
 			</Alert>
 		{/if}
 
-		{#if nearLimit}
-			<Alert tone={atLimit ? 'warn' : 'info'} role={atLimit ? 'alert' : 'status'}>
+		{#if credits !== null && outOfCredits}
+			<Alert tone="warn" role="alert">
 				<span>
-					<strong>{atLimit ? 'Quota reached.' : 'Running low.'}</strong>
-					You've used {usage.jobsUsed} of your {usage.jobLimit} jobs this period.
+					<strong>Out of credits.</strong>
+					Your balance is {formatNumber(credits.balance)} credits. {outOfCreditsNotice(now)}
 				</span>
-				<div class="actions">
-					<a class="btn btn-primary btn-sm" href="/pricing">See pricing</a>
-				</div>
 			</Alert>
 		{/if}
 

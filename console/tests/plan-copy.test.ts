@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createApiClient } from '../src/lib/api-client';
+import { FREE_CREDITS_PER_MONTH } from '../src/lib/credits';
 import { plans as mockPlans } from '../src/lib/fixtures';
 
 /**
@@ -143,5 +144,25 @@ describe('plan cards: mock and service agree', () => {
 
 		expect(service.priceMonthly).toBeNull();
 		expect(mock.priceMonthly).toBeNull();
+	});
+
+	// AudioKit 0052: Free is 100 credits a month. Neither card may state a job or stem quota for it.
+	it('the Free card states the monthly credits, not a job or stem quota, on both paths', async () => {
+		const service = (await servicePlans()).find((plan) => plan.id === 'free')!;
+		const mock = mockPlans.find((plan) => plan.id === 'free')!;
+
+		for (const [source, features] of [
+			['service', service.features],
+			['mock', mock.features]
+		] as const) {
+			expect(features, source).toContain(`${FREE_CREDITS_PER_MONTH} credits / month`);
+			expect(features.join(' | '), source).not.toMatch(/\bjobs?\b|stem separations/i);
+		}
+	});
+
+	it('no card states a job allowance: only Free has a credit number in the decisions', async () => {
+		for (const plan of [...(await servicePlans()), ...mockPlans]) {
+			expect(plan.features.join(' | '), plan.id).not.toMatch(/\bjobs? per month|unlimited jobs/i);
+		}
 	});
 });

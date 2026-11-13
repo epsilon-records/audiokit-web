@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import StatTile from '#lib/components/StatTile.svelte';
+	import { outOfCreditsNotice } from '#lib/credits';
 	import Meter from '#lib/components/Meter.svelte';
 	import { FREE_CREDITS_PER_MONTH, creditsLeft, creditsUsed } from './mock-data';
 
@@ -9,15 +10,27 @@
 		component: StatTile,
 		tags: ['autodocs'],
 		args: {
-			label: 'Credits left',
+			label: 'Credit balance',
 			value: String(creditsLeft),
-			hint: 'Free credits reset on 1 December (UTC)'
+			hint: 'Free credits renew each calendar month (UTC)'
 		}
 	});
 </script>
 
 <Story name="Default" />
-<Story name="Warning" args={{ tone: 'warn', value: '3', hint: 'Buy a pack to keep going' }} />
+<Story
+	name="Out of credits"
+	args={{
+		tone: 'warn',
+		value: '0',
+		hint: `Out of credits. ${outOfCreditsNotice(new Date('2026-11-14T12:00:00.000Z'))}`
+	}}
+/>
+<Story name="Balance unavailable" args={{ value: 'Balance unavailable' }} />
+<Story
+	name="Jobs this month"
+	args={{ label: 'Jobs this month', value: '84', hint: 'Submitted this period · Free plan' }}
+/>
 <Story name="With meter">
 	{#snippet template(args)}
 		<StatTile {...args}>

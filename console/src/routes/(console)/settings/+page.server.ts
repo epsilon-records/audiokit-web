@@ -24,8 +24,12 @@ export const actions: Actions = {
 
 	savePreferences: async ({ request, locals }) => {
 		const form = await request.formData();
-		const preferences = await apiFor(locals.sessionToken).updateNotificationPreferences({
-			quotaWarnings: form.get('quotaWarnings') === 'on',
+		const client = apiFor(locals.sessionToken);
+		// Quota emails are gone (AudioKit 0066), so the form no longer has a toggle for them. Billing
+		// still stores the field; send back what it holds so saving here never changes it (EPSILON-169).
+		const { quotaWarnings } = await client.getNotificationPreferences();
+		const preferences = await client.updateNotificationPreferences({
+			quotaWarnings,
 			paymentReceipts: form.get('paymentReceipts') === 'on',
 			productUpdates: form.get('productUpdates') === 'on'
 		});

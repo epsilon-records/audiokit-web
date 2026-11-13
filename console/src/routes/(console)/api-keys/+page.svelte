@@ -60,7 +60,7 @@
 <PageHeader
 	title="API keys"
 	kicker="Access"
-	description="Keep keys secret. They authorise jobs and are billed to your plan."
+	description="Keep keys secret. They authorise jobs, which spend your credits."
 >
 	{#snippet actions()}
 		<button type="button" class="btn btn-primary" onclick={() => (createOpen = true)}>

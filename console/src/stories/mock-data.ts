@@ -2,13 +2,15 @@
  * Mocked data for the stories, read through the console's own mock adapter and fixtures.
  * Nothing here touches the network: `createMockAdapter` returns fixtures and in-memory copies.
  *
- * Plans are credits now (AudioKit decision 0052): Free is 100 credits a month. The fixtures
- * still carry the retired job-based plan copy that the console's tests pin, so the story copy
- * lives here and the fixtures stay as they are.
+ * Plans are credits now (AudioKit decision 0052): Free is 100 credits a month. The fixtures'
+ * Free plan states the same, and this one adds the lapse and expiry lines for the plan card story.
  */
 
 import { createMockAdapter } from '#lib/mock-adapter';
-import type { Account, Plan, UsageSummary } from '#lib/types';
+import { FREE_CREDITS_PER_MONTH } from '#lib/credits';
+import type { Account, Credits, Plan, UsageSummary } from '#lib/types';
+
+export { FREE_CREDITS_PER_MONTH };
 
 const api = createMockAdapter({ now: () => new Date('2026-11-14T12:00:00.000Z') });
 
@@ -18,10 +20,7 @@ export const recentJobs = await api.getRecentJobs(5);
 export const apiKeys = await api.getApiKeys();
 export const apiVersion = '0.1';
 
-/** Free: 100 credits each calendar month (UTC), per 0052. */
-export const FREE_CREDITS_PER_MONTH = 100;
-
-/** The Free plan as the plan card shows it, in credits. `jobLimit` is the field the card reads. */
+/** The Free plan as the plan card shows it, in credits. */
 export const freePlan: Plan = {
 	id: 'free',
 	name: 'Free',
@@ -31,7 +30,7 @@ export const freePlan: Plan = {
 	features: [
 		'100 credits every calendar month',
 		'Unspent Free credits lapse at the end of the month',
-		'Buy a credit pack when you need more',
+		'Credit packs are not on sale yet',
 		'Bought credits expire 12 months after purchase'
 	]
 };
@@ -40,9 +39,8 @@ export const freePlan: Plan = {
 export const creditsUsed: number = usage.jobsUsed;
 export const creditsLeft: number = FREE_CREDITS_PER_MONTH - creditsUsed;
 
-/** A usage summary with plenty of room left, so the shell shows no low-balance banner. */
-export const roomyUsage: UsageSummary = {
-	...usage,
-	jobsUsed: 12,
-	jobLimit: FREE_CREDITS_PER_MONTH
-};
+/** A balance with plenty left, so the shell shows no banner. */
+export const roomyCredits: Credits = { balance: creditsLeft };
+
+/** Nothing left: new jobs are refused until the next monthly Free credits (0052). */
+export const emptyCredits: Credits = { balance: 0 };

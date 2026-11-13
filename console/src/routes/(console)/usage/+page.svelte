@@ -1,17 +1,14 @@
 <script lang="ts">
 	import EmptyState from '#lib/components/EmptyState.svelte';
-	import Meter from '#lib/components/Meter.svelte';
 	import OperationBreakdown from '#lib/components/OperationBreakdown.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
-	import StatusBadge from '#lib/components/StatusBadge.svelte';
 	import UsageChart from '#lib/components/UsageChart.svelte';
-	import { formatDate, formatNumber, formatPercent, percent } from '#lib/format';
+	import { formatDate, formatNumber } from '#lib/format';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
 	const usage = $derived(data.usage);
-	const usedShare = $derived(percent(usage.jobsUsed, usage.jobLimit));
 	const hasActivity = $derived(usage.jobsUsed > 0 || usage.daily.some((day) => day.jobs > 0));
 </script>
 
@@ -22,7 +19,7 @@
 <PageHeader
 	title="Usage"
 	kicker="Metering"
-	description="Every submitted operation counts as one job. The current period runs {formatDate(
+	description="Jobs you have submitted. Each one spends credits by operation; your balance is on the dashboard. The current period runs {formatDate(
 		usage.periodStart
 	)} – {formatDate(usage.periodEnd)} (UTC)."
 />
@@ -39,29 +36,15 @@
 	<section class="panel" aria-labelledby="period-usage">
 		<div class="panel-bar">
 			<span id="period-usage">This billing period</span>
-			<span>{formatNumber(usage.jobsUsed)} / {formatNumber(usage.jobLimit)} jobs</span>
+			<span>{formatNumber(usage.jobsUsed)} jobs</span>
 		</div>
 		<div class="panel-body">
-			<Meter used={usage.jobsUsed} limit={usage.jobLimit} label="Jobs used this billing period" />
 			<p class="faint">
-				{formatPercent(usedShare)} of the {formatNumber(usage.jobLimit)}-job limit used · resets
-				{formatDate(usage.periodEnd)}
+				{formatNumber(usage.jobsUsed)} jobs this period · ends {formatDate(usage.periodEnd)}
+				{#if usage.stemsUsed > 0}
+					· {formatNumber(usage.stemsUsed)} of them stem separations
+				{/if}
 			</p>
-			{#if usage.stemLimit !== null}
-				<Meter
-					used={usage.stemsUsed}
-					limit={usage.stemLimit}
-					label="Stem separations used this billing period"
-				/>
-				<p class="faint">
-					{formatNumber(usage.stemsUsed)} of {formatNumber(usage.stemLimit)} stem separations · a stem
-					uses a slot in both allowances but is billed at the stem rate only
-					{#if usage.stemsOverage > 0}
-						, and {formatNumber(usage.stemsOverage)} are over the allowance this period
-					{/if}
-					.
-				</p>
-			{/if}
 			<UsageChart daily={usage.daily} />
 		</div>
 	</section>
@@ -76,13 +59,11 @@
 		<h2 id="history">History — last 12 periods</h2>
 		<div class="table-box">
 			<table class="stack">
-				<caption>Job counts and limits for the last 12 billing periods (UTC).</caption>
+				<caption>Job counts for the last 12 billing periods (UTC).</caption>
 				<thead>
 					<tr>
 						<th scope="col">Period</th>
 						<th scope="col" class="numeric">Jobs</th>
-						<th scope="col" class="numeric">Limit</th>
-						<th scope="col">Status</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -90,8 +71,6 @@
 						<tr>
 							<td data-label="Period">{period.period}</td>
 							<td class="numeric" data-label="Jobs">{formatNumber(period.jobs)}</td>
-							<td class="numeric" data-label="Limit">{formatNumber(period.limit)}</td>
-							<td data-label="Status"><StatusBadge status={period.status} /></td>
 						</tr>
 					{/each}
 				</tbody>

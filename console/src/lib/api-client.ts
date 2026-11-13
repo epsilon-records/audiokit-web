@@ -24,6 +24,7 @@ import type {
 	BillingSummary,
 	CheckoutResult,
 	CreatedApiKey,
+	Credits,
 	Job,
 	MagicLinkExchange,
 	MagicLinkRequest,
@@ -50,6 +51,11 @@ export type ConsoleApi = {
 	getPlans(): Promise<Plan[]>;
 	getRecentJobs(limit?: number): Promise<Job[]>;
 	getUsage(): Promise<UsageSummary>;
+	/**
+	 * The prepaid credit balance (billing #59, `GET /v1/credits`). `signal` cancels the request;
+	 * the mock has nothing in flight and ignores it.
+	 */
+	getCredits(signal?: AbortSignal): Promise<Credits>;
 	getApiKeys(): Promise<ApiKey[]>;
 	getBilling(): Promise<BillingSummary>;
 	getNotificationPreferences(): Promise<NotificationPreferences>;

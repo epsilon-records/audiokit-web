@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 	import Alert from '#lib/components/Alert.svelte';
+	import { outOfCreditsNotice } from '#lib/credits';
 
 	const { Story } = defineMeta({
 		title: 'Console/Alert',
@@ -17,14 +18,17 @@
 
 <Story name="Success">
 	{#snippet template()}
-		<Alert tone="ok"><span>Your 1,000-credit pack is on your account.</span></Alert>
+		<Alert tone="ok"><span>Your email address is confirmed.</span></Alert>
 	{/snippet}
 </Story>
 
 <Story name="Warning">
 	{#snippet template()}
 		<Alert tone="warn" role="alert">
-			<span><strong>Out of credits.</strong> Buy a credit pack to keep submitting jobs.</span>
+			<span
+				><strong>Out of credits.</strong>
+				{outOfCreditsNotice(new Date('2026-11-14T12:00:00.000Z'))}</span
+			>
 		</Alert>
 	{/snippet}
 </Story>

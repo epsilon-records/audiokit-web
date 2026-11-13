@@ -17,6 +17,10 @@ describe('mock client: reads', () => {
 		expect(usage.jobLimit).toBe(100);
 	});
 
+	it('reports the credit balance', async () => {
+		expect(await newClient().getCredits()).toEqual({ balance: 16 });
+	});
+
 	it('limits recent jobs', async () => {
 		const client = newClient();
 		expect(await client.getRecentJobs()).toHaveLength(5);
@@ -146,7 +150,9 @@ describe('mock client: settings and checkout', () => {
 		await expect(client.startCheckout('enterprise')).rejects.toMatchObject({
 			code: 'enterprise-contact'
 		});
-		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({ status: 'cancelled' });
+		await expect(client.getCheckoutResult('canceled')).resolves.toMatchObject({
+			status: 'cancelled'
+		});
 		await expect(client.createBillingPortal()).rejects.toMatchObject({ code: 'not-supported' });
 	});
 });

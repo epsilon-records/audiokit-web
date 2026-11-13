@@ -409,8 +409,9 @@ describe('http adapter: plans', () => {
 	it('keeps Free free of overage copy', async () => {
 		const [free] = await plansClient([freeRow, proRow]).getPlans();
 
-		expect(free.features).toContain('10 stem separations included');
-		expect(free.features.join(' ')).not.toMatch(/overage/i);
+		// Free is credits (0052): no stem or job allowance line, whatever quota the row still carries.
+		expect(free.features).toContain('100 credits / month');
+		expect(free.features.join(' ')).not.toMatch(/overage|stem separations|\bjobs?\b/i);
 	});
 
 	it('keeps Enterprise volume rates out of the card', async () => {
@@ -648,5 +649,66 @@ describe('http adapter: sign out (EPSILON-114)', () => {
 		const anonymous = createApiClient({ baseUrl: 'https://billing.test', fetch: fetchImpl });
 		await expect(anonymous.signOut()).resolves.toBeUndefined();
 		expect(fetchImpl.calls).toHaveLength(0);
+	});
+});
+
+describe('http adapter: credits', () => {
+	const clientFor = (body: unknown, status = 200) => {
+		const fetchImpl = fetchMock(() => jsonResponse(body, status));
+		const client = createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session',
+			fetch: fetchImpl,
+			now: fixedNow
+		});
+		return { client, fetchImpl };
+	};
+
+	it('reads the balance from the named shape, ignoring lots', async () => {
+		const { client, fetchImpl } = clientFor({
+			credits: { balance: 87, lots: [{ source: 'free', remaining: 87 }], entries: [], packs: [] }
+		});
+		expect(await client.getCredits()).toEqual({ balance: 87 });
+		expect(fetchImpl.calls[0].url).toBe('https://billing.test/v1/credits');
+		expect(header(fetchImpl.calls[0].init, 'authorization')).toBe('Bearer session');
+	});
+
+	it('passes the abort signal to fetch', async () => {
+		const { client, fetchImpl } = clientFor({ credits: { balance: 1 } });
+		const controller = new AbortController();
+		await client.getCredits(controller.signal);
+		expect(fetchImpl.calls[0].init.signal).toBe(controller.signal);
+	});
+
+	it('maps an aborted read to a network error', async () => {
+		const controller = new AbortController();
+		const fetchImpl = ((_url: string, init: RequestInit) =>
+			new Promise((_resolve, reject) => {
+				init.signal?.addEventListener('abort', () => reject(new DOMException('', 'AbortError')));
+			})) as unknown as typeof fetch;
+		const client = createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session',
+			fetch: fetchImpl
+		});
+		const read = client.getCredits(controller.signal);
+		controller.abort();
+		await expect(read).rejects.toMatchObject({ code: 'network' });
+	});
+
+	it('reads the balance from a bare body, and keeps a negative one', async () => {
+		expect(await clientFor({ balance: -12, lots: [] }).client.getCredits()).toEqual({
+			balance: -12
+		});
+	});
+
+	it('rejects a body with no balance instead of showing zero', async () => {
+		await expect(clientFor({ credits: { lots: [] } }).client.getCredits()).rejects.toMatchObject({
+			code: 'server-error'
+		});
+	});
+
+	it('surfaces a missing route as not-found', async () => {
+		await expect(clientFor({}, 404).client.getCredits()).rejects.toBeInstanceOf(HttpApiError);
 	});
 });
