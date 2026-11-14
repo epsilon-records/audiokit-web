@@ -82,7 +82,13 @@ export function parseStemsOutputs(raw) {
     const v = parsed[name];
     const target = typeof v === "string" ? { url: v } : v;
     if (!target || typeof target.url !== "string" || !/^https:\/\/[^\s]+$/.test(target.url)) return null;
-    outputs[name] = target.headers ? { url: target.url, headers: target.headers } : { url: target.url };
+    if (Object.keys(target).some((k) => k !== "url" && k !== "headers")) return null;
+    // The API takes `headers` as an object of strings; anything else is a 422 after the single-use token is spent.
+    const h = target.headers;
+    if (h !== undefined) {
+      if (!h || typeof h !== "object" || Array.isArray(h) || Object.values(h).some((x) => typeof x !== "string")) return null;
+    }
+    outputs[name] = h ? { url: target.url, headers: h } : { url: target.url };
   }
   if (Object.keys(parsed).some((k) => !STEM_OUTPUTS.includes(k))) return null;
   return outputs;

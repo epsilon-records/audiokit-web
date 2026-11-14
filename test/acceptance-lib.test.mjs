@@ -94,6 +94,16 @@ test("stems jobs need an upload target for each of the four outputs, and the val
   assert.equal(validateConfig(readConfig({ ...ok, AUDIOKIT_ACCEPT_MAGIC_TOKEN: "x", AUDIOKIT_ACCEPT_AUDIO_URL: "https://a/b.wav" })).length, 0);
 });
 
+test("stems upload target headers must be an object of strings, as the API requires", () => {
+  const withHeaders = (headers) => JSON.stringify({ ...JSON.parse(stemsOutputs), vocals: { url: "https://u/v", headers } });
+  assert.equal(parseStemsOutputs(withHeaders([])), null, "an array");
+  assert.equal(parseStemsOutputs(withHeaders("x-upsert: true")), null, "not an object");
+  assert.equal(parseStemsOutputs(withHeaders(null)), null, "null");
+  assert.equal(parseStemsOutputs(withHeaders({ "x-upsert": true })), null, "a non-string value");
+  assert.deepEqual(parseStemsOutputs(withHeaders({ "x-upsert": "true" })).vocals.headers, { "x-upsert": "true" });
+  assert.equal(parseStemsOutputs(JSON.stringify({ ...JSON.parse(stemsOutputs), vocals: { url: "https://u/v", extra: 1 } })), null, "unknown target keys");
+});
+
 test("the API's answers to a submit are told apart: accepted, replay, refused, retry", () => {
   assert.equal(classifySubmit({ status: 202, body: { status: "awaiting_credit" } }).kind, "accepted");
   assert.equal(classifySubmit({ status: 200, body: {} }).kind, "replay");
