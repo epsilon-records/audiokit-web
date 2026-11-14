@@ -5,14 +5,18 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import {
+  JOB_FINAL,
   LiveModeError,
   assertCheckoutIsTestMode,
   assertNotLive,
   assertPortalIsTestMode,
   call,
+  classifySubmit,
   makeEvidence,
+  parseStemsOutputs,
   readConfig,
   redactEmail,
+  sha256OfUrl,
   shorten,
   sleep,
   validateConfig,
@@ -146,33 +150,78 @@ step("account starts on Free with the documented allowance", async () => {
   assert.ok(!JSON.stringify(keys.body).includes(s.apiKey), "the full key is never listed again");
 });
 
+// Jobs are submitted to, read from and canceled on the AudioKit API, with the account's first API key.
+// Billing's POST /v1/jobs is gone (epsilon-billing#74), and its job rows are only the jobs that went
+// through it before then: a job submitted to the API is not found there. Billing is still read for
+// credits and usage, which is where a job's hold shows.
+async function getJob(providerJobId) {
+  const r = await api(`/v1/jobs/${providerJobId}`, { headers: bearer(s.apiKey) });
+  assert.equal(r.status, 200, `job status answered ${r.status}: ${r.text.slice(0, 200)}`);
+  return r.body.job ?? r.body;
+}
+
+/** Polls until the job reaches a final state (succeeded, failed, canceled or refused) or time runs out. */
 async function pollJob(providerJobId, { timeoutMs }) {
   const until = Date.now() + timeoutMs;
   for (;;) {
-    const r = await billing(`/v1/jobs/${providerJobId}`, { headers: bearer(s.apiKey) });
-    assert.equal(r.status, 200, `job status answered ${r.status}`);
-    const job = r.body.job ?? r.body;
-    if (["succeeded", "failed", "canceled"].includes(job.status)) return job;
+    const job = await getJob(providerJobId);
+    if (JOB_FINAL.has(job.status)) return job;
     if (Date.now() > until) return job;
     await sleep(3000);
   }
 }
 
-async function submit(jobId, operation, params) {
-  return billing("/v1/jobs", {
-    method: "POST",
-    headers: bearer(s.apiKey),
-    body: { job_id: jobId, operation, input: { url: cfg.audioUrl }, ...(params ? { params } : {}) },
-  });
+/**
+ * A job answers `awaiting_credit` while billing has not yet held its credits: it then becomes
+ * `queued` (held) or `refused`. Waits for that, and fails on `refused` with the reason the API gave.
+ */
+async function settleCredit(job, { timeoutMs = 120_000 } = {}) {
+  const until = Date.now() + timeoutMs;
+  let cur = job;
+  while (cur.status === "awaiting_credit" && Date.now() < until) {
+    await sleep(2000);
+    cur = await getJob(job.provider_job_id);
+  }
+  assert.notEqual(cur.status, "awaiting_credit", "billing did not answer for the job's credits in time (still awaiting_credit)");
+  assert.notEqual(cur.status, "refused", `the job was refused after it was accepted: ${cur.error?.code ?? "no code"} (${cur.error?.message ?? ""})`);
+  return cur;
+}
+
+let audioSha256 = null;
+
+/**
+ * POST /v1/jobs on the AudioKit API. Retries what the API says to retry: 401 (billing syncs a new key
+ * to the API shortly after signup), 429 and 503 (`Retry-After`). Returns the last answer.
+ */
+async function submit(jobId, operation, { params, outputs } = {}) {
+  audioSha256 ??= await sha256OfUrl(cfg.audioUrl);
+  const body = { job_id: jobId, operation, input: { url: cfg.audioUrl, sha256: audioSha256 }, ...(params ? { params } : {}), ...(outputs ? { outputs } : {}) };
+  let r;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    r = await api("/v1/jobs", { method: "POST", headers: bearer(s.apiKey), body });
+    const verdict = classifySubmit(r);
+    if (verdict.kind !== "retry" || attempt === 6) return r;
+    evidence({ step: "submit-retry", operation, status: r.status, code: verdict.code, wait_s: verdict.wait_s, attempt });
+    await sleep(verdict.wait_s * 1000);
+  }
+  return r;
+}
+
+/** Asserts a submit was accepted (202), naming a refusal (402) or any other answer in the failure. */
+function assertAccepted(r, what) {
+  const verdict = classifySubmit(r);
+  if (verdict.kind === "refused") {
+    assert.fail(`${what} was refused with 402 ${verdict.code}: nothing was queued. A new Free account holds 100 credits, so check the credit hold and the account's plan (message: ${r.body?.error?.message ?? ""})`);
+  }
+  assert.equal(r.status, 202, `${what}: submit answered ${r.status}: ${r.text.slice(0, 200)}`);
+  const job = r.body.job ?? r.body;
+  assert.ok(["queued", "awaiting_credit"].includes(job.status), `${what}: a new job should be queued or awaiting_credit, got ${job.status}`);
+  return job;
 }
 
 step("first analysis job: accepted, counted once, finishes, replay is not recounted", async () => {
   const jobId = `acceptance-analyze-${Date.now()}`;
-  const r = await submit(jobId, "analyze");
-  assert.equal(r.status, 202, `submit answered ${r.status}: ${r.text.slice(0, 200)}`);
-  const job = r.body.job ?? r.body;
-  s.jobIds.push(job.provider_job_id);
-  // Jobs counted and credits held, read from routes that answer under quota and credits billing.
+  // Jobs counted and credits held, read from billing (the console's views).
   const counted = async () => {
     const usage = await billing("/v1/usage/current", { headers: bearer(s.session) });
     assert.equal(usage.status, 200, `usage answered ${usage.status}`);
@@ -180,33 +229,48 @@ step("first analysis job: accepted, counted once, finishes, replay is not recoun
     assert.equal(credits.status, 200, `credits answered ${credits.status}`);
     return { jobs: (usage.body.usage ?? usage.body).jobCount, balance: (credits.body.credits ?? credits.body).balance };
   };
+  const before = await counted();
+  const r = await submit(jobId, "analyze");
+  const accepted = assertAccepted(r, "the analysis job");
+  s.jobIds.push(accepted.provider_job_id);
+  // `awaiting_credit` means billing has not held the credits yet; wait for the hold before counting.
+  const job = await settleCredit(accepted);
   const after1 = await counted();
   assert.ok(after1.jobs >= 1, "the accepted job is counted");
-  const used1 = after1.jobs;
+  assert.ok(after1.balance < before.balance, `the hold should take credits: balance ${before.balance} before, ${after1.balance} after`);
   const replay = await submit(jobId, "analyze");
-  assert.equal(replay.status, 200, "an idempotent replay answers 200");
+  assert.equal(replay.status, 200, `an idempotent replay answers 200, got ${replay.status}`);
   assert.equal((replay.body.job ?? replay.body).provider_job_id, job.provider_job_id);
   const after2 = await counted();
   assert.equal(after2.jobs, after1.jobs, "a replay must not be counted again");
   assert.equal(after2.balance, after1.balance, "a replay must not be charged again");
   const done = await pollJob(job.provider_job_id, { timeoutMs: 180_000 });
   const credits = await billing("/v1/credits", { headers: bearer(s.session) });
-  evidence({ step: "analysis-job-credits", status: credits.status, balance_after: (credits.body?.credits ?? credits.body)?.balance, note: "0052: analyze costs 3 credits once the debit ships" });
-  evidence({ step: "analysis-job", submit: r.status, replay: replay.status, provider_job_id: shorten(job.provider_job_id, cfg), used_after_submit: used1, final_status: done.status });
-  assert.equal(done.status, "succeeded", `the analysis job ended ${done.status}`);
+  evidence({ step: "analysis-job-credits", status: credits.status, balance_before: before.balance, balance_after_hold: after1.balance, balance_after: (credits.body?.credits ?? credits.body)?.balance, note: "0052: analyze costs 3 credits" });
+  evidence({
+    step: "analysis-job",
+    submit: r.status,
+    first_status: accepted.status,
+    replay: replay.status,
+    provider_job_id: shorten(job.provider_job_id, cfg),
+    used_after_submit: after1.jobs,
+    final_status: done.status,
+    error_code: done.error?.code,
+  });
+  assert.equal(done.status, "succeeded", `the analysis job ended ${done.status}${done.error?.code ? ` (${done.error.code})` : ""}`);
 });
 
 step("one stems job (opt-in): checked against the plan, finishes, cost logged if visible", async (t) => {
-  if (!cfg.stems) return t.skip("set AUDIOKIT_ACCEPT_STEMS=1 to run the single paid-compute stems job");
+  if (!cfg.stems) return t.skip("set AUDIOKIT_ACCEPT_STEMS=1 (and AUDIOKIT_ACCEPT_STEMS_OUTPUTS) to run the single paid-compute stems job");
   const jobId = `acceptance-stems-${Date.now()}`;
-  const r = await submit(jobId, "stems");
-  assert.equal(r.status, 202, `submit answered ${r.status}: ${r.text.slice(0, 200)}`);
-  const job = r.body.job ?? r.body;
-  s.jobIds.push(job.provider_job_id);
+  const r = await submit(jobId, "stems", { outputs: parseStemsOutputs(cfg.stemsOutputs) });
+  const accepted = assertAccepted(r, "the stems job");
+  s.jobIds.push(accepted.provider_job_id);
+  const job = await settleCredit(accepted);
   const done = await pollJob(job.provider_job_id, { timeoutMs: 600_000 });
   const cost = Object.fromEntries(Object.entries(done).filter(([k]) => /cost|gpu|seconds|duration/i.test(k)));
-  evidence({ step: "stems-job", submit: r.status, provider_job_id: shorten(job.provider_job_id, cfg), final_status: done.status, visible_cost_fields: cost });
-  assert.equal(done.status, "succeeded", `the stems job ended ${done.status}`);
+  evidence({ step: "stems-job", submit: r.status, first_status: accepted.status, provider_job_id: shorten(job.provider_job_id, cfg), final_status: done.status, error_code: done.error?.code, visible_cost_fields: cost });
+  assert.equal(done.status, "succeeded", `the stems job ended ${done.status}${done.error?.code ? ` (${done.error.code})` : ""}`);
 });
 
 step("credits: a Free account holds the monthly 100 credits (decision 0052)", async () => {

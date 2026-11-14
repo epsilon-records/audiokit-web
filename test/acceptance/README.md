@@ -22,8 +22,8 @@ It is not part of `npm test` and no workflow runs it on push. Start it by hand.
 | Services answer | yes | |
 | Signup by magic link, first API key shown once | yes (needs the link token) | |
 | Free plan, limits and the 100 monthly credits | yes | |
-| First analysis job, idempotent replay not recounted | yes | |
-| One stems job | yes, opt-in | |
+| First analysis job, submitted to the AudioKit API: credits held, idempotent replay not recounted | yes | |
+| One stems job | yes, opt-in (needs upload targets) | |
 | Free credits hard stop | no: it spends the whole allowance | [checklist.md](checklist.md) section 2 |
 | Credit pack Checkout session is test mode | yes (stops the run if not) | paying it: checklist section 3 |
 | Legacy Pro Checkout is refused | yes | |
@@ -66,12 +66,38 @@ works as `AUDIOKIT_ACCEPT_AUDIO_URL`.
 | `AUDIOKIT_ACCEPT_MAGIC_TOKEN` | for step 2 | The `token` parameter from the sign-in link. Single use, short lived. |
 | `AUDIOKIT_ACCEPT_AUDIO_URL` | for step 2 | https URL of a clip of 30 s or less. Never use audio with personal data. |
 | `AUDIOKIT_ACCEPT_STEMS` | no | `1` runs the single stems job. Stems cost compute money. Default: skipped. |
+| `AUDIOKIT_ACCEPT_STEMS_OUTPUTS` | with `STEMS=1` | JSON object of upload targets for the four stems the API requires: `{"vocals":"https://…","drums":"https://…","bass":"https://…","other":"https://…"}`. Each value is a signed https PUT URL you control (an object `{"url":…,"headers":{…}}` is also accepted). Treat it as a secret: the suite never logs it. In the GitHub workflow it is read from the repository secret of the same name. |
 | `AUDIOKIT_ACCEPT_BILLING_URL` | no | Default `https://billing.audiokit.ai`. |
 | `AUDIOKIT_ACCEPT_API_URL` | no | Default `https://api.audiokit.ai`. |
 | `AUDIOKIT_ACCEPT_EVIDENCE` | no | Evidence file. Default `acceptance-evidence.jsonl` (git-ignored). |
 | `AUDIOKIT_ACCEPT_FULL_IDS` | no | `1` logs full ids. Default logs the first characters only. |
 
-No credential is read or needed: the suite signs in as the throwaway account it creates.
+No API key or other credential is read or needed: the suite signs in as the throwaway account it
+creates and uses the first API key that account is shown at signup. Nothing is stored.
+
+## How jobs are submitted
+
+Jobs go straight to the AudioKit API (`AUDIOKIT_ACCEPT_API_URL`), as a customer's do:
+`POST /v1/jobs` with `Authorization: Bearer <the account's first API key>`. Billing's own
+`POST /v1/jobs` was removed (epsilon-billing#74) and answers 404. The suite then reads the job with
+the API's `GET /v1/jobs/{provider_job_id}`. It does not read it from billing: billing's job rows are
+only the jobs that went through its old submit route, so a job submitted to the API is not there.
+Billing is still where the suite reads credits and usage (`/v1/credits`, `/v1/usage/current`), which
+is where a job's hold shows, and billing's `GET /v1/jobs?limit=1` is used after account deletion.
+
+How the suite treats the API's answers:
+
+| Answer | Treated as |
+| --- | --- |
+| `202`, job `queued` | Accepted: billing held the credits. |
+| `202`, job `awaiting_credit` | Accepted, billing has not answered yet. The suite polls the job until it leaves `awaiting_credit`. It fails if the job becomes `refused` (the `error.code` is in the failure), or is still waiting after 2 minutes. |
+| `200` on a repeated `job_id` | An idempotent replay: the same job, credits not held again. |
+| `402 insufficient_credits` or `no_active_plan` | A failure, with the code in the message. Nothing was queued. A new Free account holds 100 credits, so this is a real finding. |
+| `401`, `429`, `503` (for example `entitlement_unavailable`) | Retried up to 6 times, waiting `Retry-After` (at most 30 s). A `401` just after signup can be the new key not having reached the API yet. |
+| Job ends `succeeded` | Pass. `failed`, `canceled` and `refused` fail the step. |
+
+The input's `sha256`, which the API requires, is computed by downloading `AUDIOKIT_ACCEPT_AUDIO_URL`
+(50 MiB at most) before the first submit.
 
 ## Safety rules the suite enforces
 
@@ -81,7 +107,8 @@ No credential is read or needed: the suite signs in as the throwaway account it 
   response stops the run immediately with exit code 3 and touches nothing more, not even
   cleanup. Stripe's mode is not otherwise visible to the suite, and signup creates a Stripe
   customer best effort, so confirm the Stripe dashboard is in test mode before step 1.
-- It submits at most two analysis jobs and, only on request, one stems job.
+- It submits one analysis job (and one replay of it, which is not a new job) and, only on request,
+  one stems job.
 - It deletes the account it created in the last step, and again in a cleanup hook if an
   earlier step failed.
 - It never lists or touches any other account.

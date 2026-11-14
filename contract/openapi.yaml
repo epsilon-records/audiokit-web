@@ -124,18 +124,26 @@ paths:
         job. The limit is a guard against a client looping on submissions, not an allowance:
         what a plan allows is settled by the billing service.
 
-        Every job is checked with billing before it is queued, and holds the job's
-        prepaid credits; without enough credits the answer is `402 insufficient_credits`.
-        A client with no plan behind it (an instance's own clients, flagged plan-less) is
-        not checked and spends no credits. A per-minute operation (`stems`, `transcode`,
-        `preview`, `normalize`) is priced when it finishes on the audio's length: the
-        result's `duration_seconds`; when the result has none, the input file's length,
-        which AudioKit measures; when neither is known, the operation's minimum.
-        With no active plan the answer is `402 no_active_plan`, and when the plan can't be
-        checked it is `503 entitlement_unavailable`. Either way nothing was queued and nothing
-        ran.
-        Resubmitting a `job_id` that was already accepted returns that job without checking
-        again.
+        Every job is stored first, then billing holds its prepaid credits: the job's flat
+        cost, or the minimum of a per-minute operation (`stems`, `transcode`, `preview`,
+        `normalize`). Held, the job is `queued` and the answer is `202`. Refused, the job is
+        stored as `refused` and the answer is `402`: `insufficient_credits` without enough
+        credits, `no_active_plan` with no active plan behind the key. When billing doesn't
+        answer in time the job is `awaiting_credit` and the answer is still `202`: AudioKit
+        asks billing again until it answers, and the job then becomes `queued` or `refused`
+        (with a `job.refused` webhook), or, if billing never answers, `failed` with
+        `entitlement_unavailable`. A client with no plan behind it (an instance's own
+        clients, flagged plan-less) is queued at once and spends no credits.
+
+        A per-minute operation is held again for its full cost once the worker has measured
+        the input, before the work starts; if the credits don't cover it the job fails with
+        `insufficient_credits` and nothing is charged. It is charged when it finishes on the
+        audio's length, never more than it held: the result's `duration_seconds`, or else the
+        input's measured length. A job that fails, is canceled or times out is not charged.
+
+        Resubmitting a `job_id` returns that job as it stands without asking billing again;
+        a refused one is answered with the same `402`, so after topping up submit the job
+        with a new `job_id`.
       requestBody:
         required: true
         content:
@@ -213,7 +221,10 @@ paths:
                   webhook: { url: https://example.com/audiokit/webhook }
       responses:
         "202":
-          description: A new job was queued.
+          description: |
+            A new job was stored: `queued` once billing holds its credits, or `awaiting_credit`
+            while billing hasn't answered yet (it is asked again until it does). In the rare case
+            billing rejects the call for good, it is `failed` with `entitlement_unavailable`.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Job" }
@@ -225,7 +236,8 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "402":
           description: |
-            A job the client's plan doesn't allow. Nothing was queued.
+            Billing refused the job's credits. The job is stored as `refused` and never runs;
+            resubmitting this `job_id` gets the same answer, so submit again with a new one.
             `insufficient_credits`: the account's prepaid credits don't cover the job's
             admission cost (its flat cost, or the minimum of a per-minute operation). Wait
             for next month's free credits.
@@ -249,13 +261,10 @@ paths:
         "429": { $ref: "#/components/responses/RateLimited" }
         "503":
           description: |
-            `unavailable`: storage is unavailable, or another submission of this `job_id` is
-            still being decided or no database connection came free in time (with
-            `Retry-After`); retry.
-            `entitlement_unavailable`: the plan's allowance couldn't be checked, so the job
-            was refused rather than run unchecked: billing didn't answer, or it refused this
-            attempt as stale (with `Retry-After`; the retry is checked as a new attempt).
-            Nothing was queued; send the same request again later.
+            `unavailable`: storage is unavailable; retry.
+            `entitlement_unavailable`: this instance has no billing service to hold the job's
+            credits, so the job wasn't stored. Send the same request again later. (When billing
+            is only slow to answer, the job is accepted as `awaiting_credit` instead.)
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
@@ -278,8 +287,8 @@ paths:
         `AUDIOKIT_CLIENTS` still bootstrap the store; a client written here overrides that entry.
 
         `plan_less` marks a client with no plan behind it (an internal or first-party key):
-        its job submissions are never rate limited and its `stems` jobs skip the billing
-        check. It does the same for a client created at runtime as listing the id in
+        its job submissions are never rate limited and its jobs are queued without asking
+        billing to hold credits. It does the same for a client created at runtime as listing the id in
         `AUDIOKIT_RATE_LIMIT_EXEMPT_CLIENTS` does for one known ahead of time, and the two
         work together. It takes effect on the client's next request, with no redeploy.
 
@@ -338,8 +347,8 @@ paths:
 
         What happens to work already accepted:
 
-        - **Queued jobs are canceled and running jobs are stopped.** A queued job becomes
-          `canceled` at once and never runs. A running job is asked to stop and its worker ends
+        - **Waiting jobs are canceled and running jobs are stopped.** A queued or
+          awaiting-credit job becomes `canceled` at once and never runs. A running job is asked to stop and its worker ends
           it as `canceled` at its next check, which comes every 20 seconds or sooner; it does the same as
           `POST /v1/jobs/{id}/cancel`, so no more compute is spent on results that cannot be
           delivered. Their records stay (until the usual retention), but nothing can read them
@@ -439,7 +448,9 @@ paths:
       summary: Cancel a job
       responses:
         "200":
-          description: Canceled, or it had already finished; the job is in its final state.
+          description: |
+            Canceled (it was queued or awaiting credit), or it had already finished or been
+            refused; the job is in its final state.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Job" }
@@ -458,7 +469,9 @@ webhooks:
     post:
       summary: A job finished
       description: |
-        Sent to the job's `webhook.url` when it succeeds, fails or is canceled. Any 2xx response
+        Sent to the job's `webhook.url` when it succeeds, fails or is canceled, and when billing
+        refuses a job that was accepted as `awaiting_credit` (`job.refused`; a job refused at
+        submission was answered `402` and gets no webhook). Any 2xx response
         counts as delivered. Otherwise AudioKit retries after 10 s, 1 min, 5 min, 30 min, 2 h and
         6 h, then gives up; `GET /v1/jobs/{provider_job_id}` always has the final state.
         `event_id` is unique per event: drop ones you've seen.
@@ -661,8 +674,8 @@ components:
           default: false
           description: |
             The client has no plan behind it: its job submissions are never rate limited and its
-            `stems` jobs skip the billing check. Replaced on every write, so leaving it out
-            stores `false`.
+            jobs are queued without asking billing to hold credits. Replaced on every write, so
+            leaving it out stores `false`.
 
     JobErrorCode:
       description: |
@@ -682,7 +695,14 @@ components:
         - `output_upload_failed`: the upload failed or returned a non-2xx status
         - `stems_unavailable`: the GPU stem service couldn't be reached
         - `stems_failed`: the GPU stem service reported a failure or an unusable result
-        - `timeout`: encoding ran over 30 minutes
+        - `timeout`: encoding, or the GPU stem service, ran over 30 minutes
+        - `insufficient_credits`: the account's credits don't cover a per-minute job's full
+          cost, measured from the input before the work started (nothing is charged), or, on a
+          `refused` job, its minimum
+        - `no_active_plan`: no active plan is behind the API key (on a `refused` job, or a
+          per-minute job whose key was revoked before its full cost was held)
+        - `entitlement_unavailable`: billing never answered about the job's credits, so it
+          didn't run; submit it again with a new `job_id`
         - `canceled`: the job was canceled while encoding
         - `internal`: AudioKit's fault; safe to resubmit with a new `job_id`
       anyOf:
@@ -702,6 +722,9 @@ components:
             - stems_unavailable
             - stems_failed
             - timeout
+            - insufficient_credits
+            - no_active_plan
+            - entitlement_unavailable
             - canceled
             - internal
         - type: string
@@ -979,7 +1002,11 @@ components:
 
     JobStatus:
       type: string
-      enum: [queued, running, succeeded, failed, canceled]
+      description: |
+        `awaiting_credit`: stored, waiting for billing to hold its credits; it becomes `queued`
+        or `refused`. `refused`: billing refused its credits, it never ran, and `error` says why.
+        `succeeded`, `failed`, `canceled` and `refused` are final. New states may be added.
+      enum: [awaiting_credit, queued, running, succeeded, failed, canceled, refused]
 
     Job:
       type: object
@@ -987,7 +1014,7 @@ components:
       required: [provider_job_id, job_id, operation, status, created_at]
       description: |
         `result` and `provenance` are present when `status` is `succeeded`; `error` when it's
-        `failed`.
+        `failed` or `refused`.
       properties:
         provider_job_id: { type: string, format: uuid }
         job_id: { type: string }
@@ -1005,7 +1032,10 @@ components:
           else: { not: { anyOf: [{ required: [result] }, { required: [provenance] }] } }
         - if: { properties: { status: { const: failed } }, required: [status] }
           then: { required: [error, finished_at] }
-          else: { not: { required: [error] } }
+          else:
+            if: { properties: { status: { const: refused } }, required: [status] }
+            then: { required: [error, finished_at] }
+            else: { not: { required: [error] } }
         - if: { properties: { operation: { const: probe } } }
           then: { properties: { result: { $ref: "#/components/schemas/ProbeResult" } } }
         - if: { properties: { operation: { const: loudness } } }
@@ -1047,7 +1077,7 @@ components:
       required: [event_id, type, created_at, data]
       properties:
         event_id: { type: string, format: uuid, description: Unique per event. }
-        type: { type: string, enum: [job.succeeded, job.failed, job.canceled] }
+        type: { type: string, enum: [job.succeeded, job.failed, job.canceled, job.refused] }
         created_at: { type: string, format: date-time }
         data: { $ref: "#/components/schemas/Job" }
 

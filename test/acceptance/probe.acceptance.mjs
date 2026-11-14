@@ -108,7 +108,9 @@ step("billing refuses anonymous account, credits, key and admin calls", async ()
     account_deletion: (await billing("/v1/account/deletion", { method: "POST", body: { confirm_email: "nobody@example.com" } })).status,
     jobs_bogus_key: (await billing("/v1/jobs?limit=1", { headers: BOGUS })).status,
     admin_label_clients: (await billing("/v1/admin/label-clients")).status,
-    internal: (await billing("/v1/internal/job-entitlements", { method: "POST", body: {} })).status,
+    // Service-to-service routes of the AudioKit API (credits protocol, audiokit decision 0072); a bearer service token only.
+    internal_authorize: (await billing("/v1/internal/credits/authorize", { method: "POST", body: {} })).status,
+    internal_finalize: (await billing("/v1/internal/credits/finalize", { method: "POST", body: {} })).status,
   };
   for (const [n, s] of Object.entries(out)) assert.ok(refused(s), `${n} answered ${s}`);
   return out;
