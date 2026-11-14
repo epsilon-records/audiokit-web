@@ -18,7 +18,7 @@ on:
         description: "https URL of an audio clip of 30 seconds or less (needed with a token)"
         required: false
       stems:
-        description: "Run the single stems job (uses paid compute)"
+        description: "Run the single stems job (uses paid compute; needs the AUDIOKIT_ACCEPT_STEMS_OUTPUTS repository secret)"
         type: boolean
         default: false
 
@@ -38,6 +38,8 @@ jobs:
           AUDIOKIT_ACCEPT_MAGIC_TOKEN: ${{ inputs.magic_token }}
           AUDIOKIT_ACCEPT_AUDIO_URL: ${{ inputs.audio_url }}
           AUDIOKIT_ACCEPT_STEMS: ${{ inputs.stems && '1' || '0' }}
+          # Signed upload targets for the four stems (JSON); a secret, so it is not a dispatch input.
+          AUDIOKIT_ACCEPT_STEMS_OUTPUTS: ${{ secrets.AUDIOKIT_ACCEPT_STEMS_OUTPUTS }}
         run: npm run test:acceptance
       - uses: actions/upload-artifact@v4
         if: always()

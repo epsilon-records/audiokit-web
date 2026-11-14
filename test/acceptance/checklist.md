@@ -26,12 +26,12 @@ Free is 100 credits a calendar month (UTC), AudioKit decision 0052. Reaching zer
 analyze jobs (3 credits each) or 100 single analyses. Check it once, by one of these, and record
 which:
 
-- [ ] Submit `probe` jobs (1 credit) on a throwaway Free account until the balance is spent, or
+- [ ] Submit `probe` jobs (1 credit) to the AudioKit API (`POST /v1/jobs` with the account's API key; billing no longer takes jobs) on a throwaway Free account until the balance is spent, or
 - [ ] ask the service owner to set one throwaway account's balance near zero for this check.
 
-Expect: the next job is refused with an insufficient-credits error before any work starts, no
+Expect: the next submit answers `402 insufficient_credits` and the job is stored as `refused` (it never runs; submit a new `job_id` after topping up), no
 negative balance is created by a per-track job, and a replay of an accepted `job_id` still
-answers `200` and is not charged again. A stems job needs at least 10 credits to be admitted.
+answers `200` and is not charged again. A job answered `202` with status `awaiting_credit` is only waiting for billing to hold its credits: it becomes `queued` or `refused`. A stems job needs at least 10 credits to be admitted.
 
 Note: jobs spend credits at the entitlement check (epsilon-billing#59), so the stop above is the
 insufficient-credits refusal; the old 100-jobs quota and its 10-stem cap are gone. Free credits

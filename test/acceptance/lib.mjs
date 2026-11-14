@@ -2,6 +2,7 @@
 // (config parsing, the test-mode guard, redaction) are covered by test/acceptance-lib.test.mjs.
 
 import { appendFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 export const CONFIRM_PHRASE = "production-test-mode";
 
@@ -16,6 +17,7 @@ export function readConfig(env = process.env) {
     magicToken: trim(env.AUDIOKIT_ACCEPT_MAGIC_TOKEN),
     audioUrl: trim(env.AUDIOKIT_ACCEPT_AUDIO_URL),
     stems: trim(env.AUDIOKIT_ACCEPT_STEMS) === "1",
+    stemsOutputs: trim(env.AUDIOKIT_ACCEPT_STEMS_OUTPUTS),
     billingUrl: trim(env.AUDIOKIT_ACCEPT_BILLING_URL) || "https://billing.audiokit.ai",
     apiUrl: trim(env.AUDIOKIT_ACCEPT_API_URL) || "https://api.audiokit.ai",
     evidencePath: trim(env.AUDIOKIT_ACCEPT_EVIDENCE) || "acceptance-evidence.jsonl",
@@ -47,7 +49,79 @@ export function validateConfig(cfg) {
   if (cfg.audioUrl && !/^https:\/\//.test(cfg.audioUrl)) {
     problems.push("AUDIOKIT_ACCEPT_AUDIO_URL must be https.");
   }
+  if (cfg.stems && cfg.magicToken) {
+    // Never echo the value: the upload targets are signed URLs.
+    const outputs = parseStemsOutputs(cfg.stemsOutputs);
+    if (!outputs) {
+      problems.push(
+        `AUDIOKIT_ACCEPT_STEMS=1 needs AUDIOKIT_ACCEPT_STEMS_OUTPUTS: a JSON object with an https upload target for each of ${STEM_OUTPUTS.join(", ")}, e.g. {"vocals":"https://...","drums":"https://...","bass":"https://...","other":"https://..."}.`,
+      );
+    }
+  }
   return problems;
+}
+
+/** The four outputs the API requires on a `stems` job. */
+export const STEM_OUTPUTS = ["vocals", "drums", "bass", "other"];
+
+/**
+ * Parses AUDIOKIT_ACCEPT_STEMS_OUTPUTS into the API's `outputs` object, or returns null when it is
+ * missing or malformed. Each value is an https URL (the signed upload target); an object with a
+ * `url` (and optional `headers`) is also accepted.
+ */
+export function parseStemsOutputs(raw) {
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+  const outputs = {};
+  for (const name of STEM_OUTPUTS) {
+    const v = parsed[name];
+    const target = typeof v === "string" ? { url: v } : v;
+    if (!target || typeof target.url !== "string" || !/^https:\/\/[^\s]+$/.test(target.url)) return null;
+    outputs[name] = target.headers ? { url: target.url, headers: target.headers } : { url: target.url };
+  }
+  if (Object.keys(parsed).some((k) => !STEM_OUTPUTS.includes(k))) return null;
+  return outputs;
+}
+
+/** Job states that never change again (the API contract: succeeded, failed, canceled, refused). */
+export const JOB_FINAL = new Set(["succeeded", "failed", "canceled", "refused"]);
+
+/**
+ * Reads the AudioKit API's answer to POST /v1/jobs.
+ *  - accepted: 202, a new job, `queued` or `awaiting_credit` (billing has not answered yet).
+ *  - replay: 200, the same job_id and request again.
+ *  - refused: 402 `insufficient_credits` or `no_active_plan`; nothing was queued or run.
+ *  - retry: 401 (the key may not be synced to the API yet), 429 and 503; `wait_s` is the advice.
+ *  - error: anything else.
+ */
+export function classifySubmit(r) {
+  const err = r.body?.error ?? {};
+  const code = typeof err.code === "string" ? err.code : null;
+  if (r.status === 202) return { kind: "accepted" };
+  if (r.status === 200) return { kind: "replay" };
+  if (r.status === 402) return { kind: "refused", code };
+  if (r.status === 401) return { kind: "retry", code, wait_s: 5 };
+  if (r.status === 429 || r.status === 503) return { kind: "retry", code, wait_s: Math.min(Math.max(r.retryAfter ?? 5, 1), 30) };
+  return { kind: "error", code };
+}
+
+/** sha256 (hex) of the file at an https URL. The API requires it on every input; capped at 50 MiB. */
+export async function sha256OfUrl(url, { maxBytes = 50 * 1024 * 1024, timeoutMs = 60_000 } = {}) {
+  const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error(`the audio URL answered ${res.status}`);
+  const hash = createHash("sha256");
+  let size = 0;
+  for await (const chunk of res.body) {
+    size += chunk.length;
+    if (size > maxBytes) throw new Error("the audio file is larger than 50 MiB");
+    hash.update(chunk);
+  }
+  return hash.digest("hex");
 }
 
 const LIVE_ID = /\b(?:cs|pk|sk|rk|cus|sub|in|pi|ch|re|evt|price|prod|si)_live_[A-Za-z0-9]+/;
@@ -143,7 +217,8 @@ export async function call(base, path, { method = "GET", headers = {}, body, tim
   } catch {
     /* not JSON */
   }
-  return { status: res.status, body: json, text, ms: Date.now() - started };
+  const retryAfter = Number.parseInt(res.headers.get("retry-after") ?? "", 10);
+  return { status: res.status, body: json, text, ms: Date.now() - started, retryAfter: Number.isFinite(retryAfter) ? retryAfter : null };
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
