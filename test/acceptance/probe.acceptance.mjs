@@ -24,6 +24,7 @@ const evidence = makeEvidence(cfg.evidencePath);
 const api = (p, o) => call(cfg.apiUrl, p, o);
 const billing = (p, o) => call(cfg.billingUrl, p, o);
 const BOGUS = { authorization: "Bearer ak_acceptance_probe_not_a_real_key" };
+const BOGUS_SERVICE = { authorization: "Bearer acceptance_probe_not_a_service_token" };
 const results = [];
 
 function step(name, fn) {
@@ -114,6 +115,31 @@ step("billing refuses anonymous account, credits, key and admin calls", async ()
   };
   for (const [n, s] of Object.entries(out)) assert.ok(refused(s), `${n} answered ${s}`);
   return out;
+});
+
+step("store-first credits surface: contract states, service-token guard, old routes gone (0072, 0073)", async () => {
+  // The served contract names the store-first job states and the refusal (decision 0072, step 5).
+  const contract = await page(cfg.apiUrl, "/v1/openapi.yaml");
+  assert.equal(contract.status, 200);
+  const terms = Object.fromEntries(["awaiting_credit", "refused", "insufficient_credits"].map((t) => [t, contract.text.includes(t)]));
+  for (const [t, present] of Object.entries(terms)) assert.ok(present, `the API contract does not mention ${t}`);
+
+  // The API's two credit calls take billing's service token only; a made-up bearer is refused.
+  const authorize = await billing("/v1/internal/credits/authorize", { method: "POST", headers: BOGUS_SERVICE, body: {} });
+  const finalize = await billing("/v1/internal/credits/finalize", { method: "POST", headers: BOGUS_SERVICE, body: {} });
+  assert.ok(refused(authorize.status), `authorize with a bogus service token answered ${authorize.status}`);
+  assert.ok(refused(finalize.status), `finalize with a bogus service token answered ${finalize.status}`);
+
+  // Removed with the attempt protocol and Pro: each answers 404 to anyone (0073 step 4, 0052).
+  // None of these calls carries a credential, so none can change anything.
+  const gone = {
+    billing_post_jobs: (await billing("/v1/jobs", { method: "POST", body: {} })).status,
+    job_settlements: (await billing("/v1/internal/job-settlements", { method: "POST", body: {} })).status,
+    usage_quota: (await billing("/v1/usage/quota")).status,
+    pro_checkout: (await billing("/v1/subscriptions/checkout", { method: "POST", body: {} })).status,
+  };
+  for (const [n, s] of Object.entries(gone)) assert.equal(s, 404, `${n} answered ${s}, not 404`);
+  return { contract_terms: terms, authorize_bogus_token: authorize.status, finalize_bogus_token: finalize.status, gone };
 });
 
 step("billing refuses a bogus magic-link token without sending anything", async () => {
