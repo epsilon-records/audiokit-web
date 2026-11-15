@@ -1,5 +1,6 @@
 import adapter from '@sveltejs/adapter-netlify';
 import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig({
@@ -12,6 +13,8 @@ export default defineConfig({
 		)
 	},
 	plugins: [
+		// Tailwind v4 for the shared components (shared 0046); src/tailwind.css is its entry.
+		tailwindcss(),
 		sveltekit({
 			compilerOptions: {
 				// Force runes mode for the app (Svelte 5), except for node_modules.
@@ -25,9 +28,9 @@ export default defineConfig({
 			adapter: adapter({ publish: 'build' }),
 
 			// Content-Security-Policy (EPSILON-118). SvelteKit adds a per-request nonce to its
-			// own scripts. The browser only talks to this origin (billing is called from the
-			// server) and Google Fonts. Stripe's checkout and portal are top-level navigations,
-			// which CSP does not restrict.
+			// own scripts. The browser only talks to this origin: billing is called from the
+			// server, and the fonts are self-hosted (shared 0039, audit F-08). Stripe's checkout
+			// and portal are top-level navigations, which CSP does not restrict.
 			csp: {
 				mode: 'auto',
 				directives: {
@@ -35,8 +38,8 @@ export default defineConfig({
 					'script-src': ['self'],
 					// Inline style attributes are used for layout; with 'unsafe-inline' present
 					// SvelteKit skips style nonces so the browser honours it.
-					'style-src': ['self', 'unsafe-inline', 'https://fonts.googleapis.com'],
-					'font-src': ['self', 'https://fonts.gstatic.com'],
+					'style-src': ['self', 'unsafe-inline'],
+					'font-src': ['self'],
 					'img-src': ['self', 'data:'],
 					'connect-src': ['self'],
 					'form-action': ['self'],

@@ -6,7 +6,7 @@ it('publishes shared strict golden fixtures', () => {
 	for (const value of fixtures.rejected) expect(parseSample(value)).toBeNull();
 });
 it('maps only literal home framework route identity', () => {
-	expect(routeCode('/(console)/dashboard')).toBe('dashboard');
+	expect(routeCode('/(app)/dashboard')).toBe('dashboard');
 	for (const id of [
 		null,
 		undefined,

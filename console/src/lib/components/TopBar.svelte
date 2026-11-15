@@ -17,6 +17,7 @@
 	<div class="console-top-inner">
 		<div class="actions">
 			<button
+				id="console-menu-button"
 				type="button"
 				class="menu-btn"
 				aria-expanded={drawerOpen}
