@@ -6,6 +6,10 @@ throwaway account only, never a real card, and never switch the service to live 
 
 Run the [smoke suite](README.md) first. Use the account from a separate run of its step 2, or
 create a second throwaway the same way, and delete every account you create (section 10).
+Until a test-mode pack price is set in production (AudioKit 0066), the smoke suite's
+`credits-balance` step (it expects the three packs on sale) and its credits Checkout step (it
+expects `200` from `POST /v1/credits/checkout`) fail. Record those two failures as expected;
+they don't block this checklist.
 For each step write down the time, what you saw, and the test-mode ids (`cs_test_`, `cus_`,
 `sub_`, `in_`, `evt_`). Mark a step failed when the result differs from "Expect".
 
