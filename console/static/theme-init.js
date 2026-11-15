@@ -9,9 +9,8 @@
 	var root = document.documentElement;
 	root.setAttribute('data-js', '');
 
-	// The visitor's pick, stored as `ak-theme` (src/lib/theme.ts writes it). Pending knowledge#131
-	// Q7: if the theme must follow the system only, delete this function's body (return null) and
-	// the storage calls in src/lib/theme.ts; nothing else reads the key.
+	// The visitor's pick, stored as `ak-theme` only when they choose Light or Dark (src/lib/theme.ts
+	// writes it; AudioKit decision 0079). Nothing is stored before that, and nothing else reads the key.
 	function stored() {
 		try {
 			var value = localStorage.getItem('ak-theme');

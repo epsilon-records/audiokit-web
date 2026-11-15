@@ -2,10 +2,10 @@
  * The theme toggle's state (D3a, EPSILON-169): System, Light or Dark. static/theme-init.js
  * applies the same choice before first paint; this module changes it afterwards.
  *
- * The pick is kept in this browser's localStorage as `ak-theme`. That storage is pending
- * knowledge#131 Q7. If the theme must follow the system only, make `readStored` return
- * 'system' and `store` do nothing, and empty `stored()` in static/theme-init.js: the toggle then
- * lasts for the page only (or remove ThemeToggle.svelte). Nothing else reads or writes the key.
+ * The pick is kept in this browser's localStorage as `ak-theme`, written only when the visitor
+ * chooses Light or Dark and removed when they choose System (AudioKit decision 0079). Before a
+ * choice nothing is stored and the theme follows `prefers-color-scheme`. The privacy notice says
+ * so (src/pages/privacy.html), and nothing else reads or writes the key.
  */
 
 export type ThemeChoice = 'system' | 'light' | 'dark';
