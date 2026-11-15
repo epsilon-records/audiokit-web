@@ -1,3 +1,7 @@
+<script lang="ts" module>
+	export type NavId = 'start' | 'reference' | 'sdks' | 'mcp' | 'pricing';
+</script>
+
 <script lang="ts">
 	// The public pages' header (EPSILON-169, PR 1). Under 760 px the links fold behind a Menu
 	// disclosure (audit F-16): the button carries aria-expanded, Esc closes it and puts focus back
@@ -6,7 +10,6 @@
 	import { afterNavigate } from '$app/navigation';
 	import { Button } from '#lib/components/ui/button/index.js';
 
-	type NavId = 'start' | 'reference' | 'sdks' | 'mcp' | 'pricing';
 	type Props = { current?: NavId };
 
 	let { current }: Props = $props();

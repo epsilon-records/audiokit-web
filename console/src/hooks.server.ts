@@ -1,5 +1,7 @@
 import type { Handle } from '@sveltejs/kit/hooks';
+import { building } from '$app/env';
 import { api } from '#lib/api-client';
+import { decoratePublicPage } from '#lib/server/site/public-head';
 import { SESSION_COOKIE } from '#lib/session';
 
 /**
@@ -28,7 +30,18 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.sessionToken = token;
 	event.locals.session = api.parseSessionToken(token);
 
-	const response = await resolve(event);
+	// The public pages are prerendered (EPSILON-169 PR 2): their scripts and their wider
+	// Content-Security-Policy go into the built HTML only, never into a server-rendered page.
+	const publicPage = building && (event.route.id?.startsWith('/(site)') ?? false);
+	const response = await resolve(
+		event,
+		publicPage
+			? {
+					transformPageChunk: ({ html }) =>
+						html.includes('</head>') ? decoratePublicPage(html) : html
+				}
+			: undefined
+	);
 
 	// The Content-Security-Policy comes from SvelteKit (vite.config.ts).
 	response.headers.set('strict-transport-security', 'max-age=31536000; includeSubDomains');

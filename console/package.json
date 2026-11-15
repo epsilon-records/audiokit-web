@@ -14,6 +14,7 @@
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
 		"test": "vitest run",
+		"test:build": "vite build && vitest run --config vitest.build.config.ts",
 		"test:storybook": "vitest run --config vitest.storybook.config.ts",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build"
@@ -38,7 +39,8 @@
 		"tailwindcss": "^4.3.5",
 		"typescript": "^6.0.3",
 		"vite": "^8.3.6",
-		"vitest": "^5.1.0"
+		"vitest": "^5.1.0",
+		"yaml": "^2.9.1"
 	},
 	"engines": {
 		"node": ">=22"

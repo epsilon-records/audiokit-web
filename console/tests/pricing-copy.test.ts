@@ -1,16 +1,18 @@
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import pricingPage from '../src/routes/(app)/pricing/+page.svelte?raw';
 import consoleShell from '../src/lib/components/ConsoleShell.svelte?raw';
 import dashboardPage from '../src/routes/(app)/dashboard/+page.svelte?raw';
 import billingPage from '../src/routes/(app)/settings/billing/+page.svelte?raw';
-import pricingServer from '../src/routes/(app)/pricing/+page.server.ts?raw';
 import welcome from '../src/lib/components/Welcome.svelte?raw';
 import signupPage from '../src/routes/signup/+page.svelte?raw';
 import loginPage from '../src/routes/login/+page.svelte?raw';
 
 /**
- * The console's plan page states prepaid credits, the same way audiokit.ai/pricing does
- * (`test/pricing-copy.test.mjs` at the repo root checks that page).
+ * The console states prepaid credits, the same way audiokit.ai/pricing/ does. The console's own
+ * plan page (/pricing) went in EPSILON-169 PR 2: the public pricing page is now part of this app
+ * (src/lib/site/pages/pricing.html, checked by tests/site/pricing-copy.test.ts), and /credits
+ * replaces the plan page in PR 3.
  *
  * AudioKit 0052: credits replace the Pro and Enterprise subscriptions. 0057: packs are
  * non-refundable. 0058: billing's subscription Checkout is removed, so nothing here may post to
@@ -25,51 +27,14 @@ const textOf = (svelte: string) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
-const page: string = pricingPage;
-const markup = page.replace(/<script[\s\S]*?<\/script>/g, ' ');
-const text = textOf(page);
-
-describe('console plan page: prepaid credits only', () => {
-	it('offers no subscription plan, price or SLA', () => {
-		expect(text).not.toMatch(/\bPro\b|\bEnterprise\b/);
-		expect(text).not.toMatch(/\bSLA\b|uptime/i);
-		expect(text).not.toMatch(/\$99\b|\$990|\$499|\$0\.15|overage|priority/i);
+const routes = new URL('../src/routes/', import.meta.url).pathname;
+function walk(dir: string): string[] {
+	return readdirSync(dir).flatMap((name) => {
+		const path = join(dir, name);
+		return statSync(path).isDirectory() ? walk(path) : [path];
 	});
-
-	it('states the credit price, the Free allowance, every pack and every rate (0052)', () => {
-		expect(page).toContain('One credit is $0.01');
-		expect(text).toContain('100 credits each calendar month (UTC)');
-		for (const pack of [
-			'$10 for 1,000 credits',
-			'$50 for 5,500 credits',
-			'$200 for 24,000 credits'
-		]) {
-			expect(text).toContain(pack);
-		}
-		expect(text).toContain('valid for 12 months after purchase');
-		expect(text).toMatch(
-			/probe , loudness , waveform , tempo , key , fingerprint , tags 1 per track/
-		);
-		expect(text).toContain('analyze bundle 3 per track');
-		expect(text).toContain('stems 3 per audio minute, metered per second, at least 10 per job');
-		expect(text).toMatch(/transcode , preview , normalize 1 per audio minute/);
-	});
-
-	it('says packs are non-refundable (0057)', () => {
-		expect(text).toContain('Credit packs are non-refundable');
-	});
-
-	it('keeps the beta note from the pricing page', () => {
-		expect(text).toContain('Credit packs open soon.');
-		// Once epsilon-billing#59 deploys, jobs spend credits: no job or stem quota may be stated.
-		expect(text).not.toMatch(/\bjobs? (a|per|\/) ?month|stem separations/i);
-	});
-
-	it('has nothing to buy: no form, button or checkout (0058, shared 0040)', () => {
-		expect(markup).not.toMatch(/<form\b|<button\b|use:enhance/);
-		expect(markup).not.toMatch(/checkout|upgrade/i);
-	});
-});
+}
+const serverFiles = walk(routes).filter((f) => /\+(page|layout)\.server\.ts$/.test(f));
 
 describe('upsell links elsewhere in the console', () => {
 	for (const [name, source] of [
@@ -88,7 +53,10 @@ describe('upsell links elsewhere in the console', () => {
 // GET /v1/usage/quota answer 404, and Free has no job or stem quota.
 describe('Free copy under prepaid credits', () => {
 	it('no console route starts a subscription Checkout', () => {
-		expect(pricingServer).not.toMatch(/startCheckout|upgrade/);
+		expect(serverFiles.length).toBeGreaterThan(0);
+		for (const file of serverFiles) {
+			expect(readFileSync(file, 'utf8'), file).not.toMatch(/startCheckout|upgrade/);
+		}
 	});
 
 	for (const [name, source] of [

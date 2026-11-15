@@ -9,9 +9,13 @@
 	"include": [
 		"src",
 		"tests",
+		"tests-build",
+		"vitest.build.config.ts",
 		"vite.config.ts",
 		"vitest.config.ts",
 		"vitest.storybook.config.ts",
 		".storybook"
-	]
+	],
+	// Copied from the static site as they are (EPSILON-169 PR 2): typed by the .d.ts beside them.
+	"exclude": ["src/lib/site/*.js", "src/lib/public/*.js"]
 }

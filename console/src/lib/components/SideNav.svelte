@@ -10,7 +10,9 @@
 		{ href: '/dashboard', label: 'Dashboard' },
 		{ href: '/usage', label: 'Usage' },
 		{ href: '/api-keys', label: 'API keys' },
-		{ href: '/pricing', label: 'Plan' },
+		// The console's plan page went with EPSILON-169 PR 2; the public pricing page states the
+		// credits until /credits arrives in PR 3.
+		{ href: '/pricing/', label: 'Plan' },
 		{ href: '/settings', label: 'Settings' }
 	];
 
@@ -29,6 +31,7 @@
 					class="side-link"
 					href={item.href}
 					aria-current={isActive(item.href) ? 'page' : undefined}
+					data-sveltekit-reload={item.href === '/pricing/' ? '' : undefined}
 				>
 					{item.label}
 				</a>

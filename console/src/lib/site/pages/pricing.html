@@ -1,0 +1,117 @@
+<!-- {"title": "Pricing", "description": "AudioKit API pricing: prepaid credits at $0.01 each, with 100 free credits every month.", "layout": "site", "nav": "pricing"} -->
+<section class="wrap hero">
+  <div class="hero-copy">
+    <p class="kicker">API v{{API_VERSION}}</p>
+    <h1>Prepaid credits, no subscription</h1>
+    <p class="lede">AudioKit is priced in credits. One credit is $0.01. Every account gets 100 free credits a month, and credit packs top you up when you need more.</p>
+  </div>
+</section>
+
+<section class="wrap section">
+  <div class="callout callout-soon" role="note">
+    <h2>Credit packs open soon</h2>
+    <p>AudioKit is in beta, and packs can't be bought yet. The prices below are what they will cost when they open. Credits are switched on: a Free account gets 100 credits each calendar month (UTC), and jobs are charged in credits at the rates below.</p>
+  </div>
+
+  <div class="pricing-grid">
+    <article class="pricing-card">
+      <div class="pricing-header">
+        <h2>Free</h2>
+        <p class="pricing-description">For trying AudioKit and small projects</p>
+      </div>
+      <div class="pricing-price">
+        <span class="price-amount">$0</span>
+        <span class="price-period">/month</span>
+      </div>
+      <ul class="pricing-features">
+        <li>100 credits each calendar month (UTC)</li>
+        <li>Unspent free credits lapse at the end of the month</li>
+        <li>All analysis and processing operations</li>
+        <li>HMAC-signed webhook delivery</li>
+        <li>No card needed</li>
+      </ul>
+      <a class="btn btn-ghost btn-lg" href="{{CONSOLE_SIGNUP}}">Start free</a>
+    </article>
+
+    <article class="pricing-card pricing-card-featured">
+      <div class="pricing-badge">Opens soon</div>
+      <div class="pricing-header">
+        <h2>Credit packs</h2>
+        <p class="pricing-description">One-time purchases, no subscription</p>
+      </div>
+      <ul class="pricing-features">
+        <li>$10 for 1,000 credits</li>
+        <li>$50 for 5,500 credits</li>
+        <li>$200 for 24,000 credits</li>
+        <li>Bought credits stay valid for 12 months after purchase</li>
+        <li>Credit packs are non-refundable</li>
+      </ul>
+      <p class="pricing-note">Packs open soon. Nothing can be bought during the beta.</p>
+    </article>
+  </div>
+</section>
+
+<section class="band section">
+  <div class="wrap">
+    <h2>What each operation costs</h2>
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr><th scope="col">Operation</th><th scope="col">Credits</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Analysis: <code>probe</code>, <code>loudness</code>, <code>waveform</code>, <code>tempo</code>, <code>key</code>, <code>fingerprint</code>, <code>tags</code></td><td>1 per track</td></tr>
+          <tr><td>The <code>analyze</code> bundle</td><td>3 per track</td></tr>
+          <tr><td><code>stems</code></td><td>3 per audio minute, metered per second, at least 10 per job</td></tr>
+          <tr><td><code>transcode</code>, <code>preview</code>, <code>normalize</code></td><td>1 per audio minute</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section">
+  <h2>Frequently asked questions</h2>
+  <dl class="faq">
+    <div class="faq-item">
+      <dt>How much is a credit?</dt>
+      <dd>One credit is $0.01. A three-minute stem separation, for example, costs 9 credits, but the 10-credit minimum per job applies, so it is charged 10.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>When can I buy a credit pack?</dt>
+      <dd>Not yet. AudioKit is in beta and packs are not on sale yet. You can sign up for the Free plan today.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>Do credits expire?</dt>
+      <dd>Free credits lapse at the end of each calendar month (UTC). Credits from a pack stay valid for 12 months after you buy it.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>Which credits are spent first?</dt>
+      <dd>Your monthly Free credits, then credits from packs, then any credits granted to you. A pack can expire unused while your Free credits are spent first.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>How are per-minute jobs charged?</dt>
+      <dd>A job is accepted when your balance covers the operation's minimum. When it finishes, it is charged for the audio's real length. One long job can take your balance below zero; new jobs are then refused until you top up. A negative balance is repaid from the next credits you get, including your monthly Free credits.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>Can I get a refund on a credit pack?</dt>
+      <dd>No. Credit packs are non-refundable.</dd>
+    </div>
+    <div class="faq-item">
+      <dt>Is there a subscription or contract?</dt>
+      <dd>No. There are no subscriptions, setup fees or long-term contracts. You pay for credit packs when you need them.</dd>
+    </div>
+  </dl>
+</section>
+
+<section class="band section">
+  <div class="wrap access">
+    <h2>Ready to get started?</h2>
+    <p>Create a Free account and get your first API key.</p>
+    <div class="actions">
+      <a class="btn btn-primary btn-lg" href="{{CONSOLE_SIGNUP}}">Start free</a>
+      <a class="btn btn-ghost btn-lg" href="{{CONSOLE_LOGIN}}">Sign in to the console</a>
+      <a class="btn btn-ghost btn-lg" href="/docs/">Read the docs</a>
+    </div>
+  </div>
+</section>

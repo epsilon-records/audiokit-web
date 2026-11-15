@@ -50,6 +50,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The public pages in build/ (EPSILON-169 PR 2): every URL of the static site and its sitemap
+      # is produced, the prerendered pages fit their Content-Security-Policy, and the public
+      # scripts are only where they belong.
+      - name: Build output
+        run: npx vitest run --config vitest.build.config.ts
+
       # A story that no longer compiles, or that imports something that has moved, fails here
       # (knowledge decision 0064). The Storybook site is built by Netlify from storybook-site/.
       - name: Build Storybook

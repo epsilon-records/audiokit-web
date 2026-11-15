@@ -26,3 +26,9 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# The contract the API reference is generated from (EPSILON-169 PR 2), as the static site serves it.
+[[headers]]
+  for = "/docs/openapi.yaml"
+  [headers.values]
+    Content-Type = "application/yaml; charset=utf-8"
