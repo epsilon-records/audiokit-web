@@ -1,8 +1,8 @@
 <script lang="ts">
 	// System / Light / Dark (D3a, EPSILON-169). static/theme-init.js applies the pick before first
-	// paint; this control changes it afterwards. Storage lives in #lib/theme (pending Q7).
+	// paint; this control changes it afterwards. Storage lives in #lib/theme (AudioKit 0079).
 	import { onMount } from 'svelte';
-	import { readStored, resolve, store, type ThemeChoice } from '#lib/theme';
+	import { browserStorage, readStored, resolve, store, type ThemeChoice } from '#lib/theme';
 
 	const options: { value: ThemeChoice; label: string }[] = [
 		{ value: 'system', label: 'System' },
@@ -12,12 +12,21 @@
 	let choice = $state<ThemeChoice>('system');
 
 	onMount(() => {
-		choice = readStored(localStorage);
+		// The page's own record comes first: it holds a pick that couldn't be stored, for example
+		// when client-side navigation remounts this toggle.
+		const recorded = document.documentElement.dataset.themeChoice;
+		choice =
+			recorded === 'system' || recorded === 'light' || recorded === 'dark'
+				? recorded
+				: readStored(browserStorage());
 	});
 
 	function pick(next: ThemeChoice) {
 		choice = next;
-		store(localStorage, next);
+		store(browserStorage(), next);
+		// The page's own record of the pick, read by theme-init.js when the system theme changes,
+		// so a pick that couldn't be stored still holds for this page.
+		document.documentElement.dataset.themeChoice = next;
 		const light = window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false;
 		document.documentElement.dataset.theme = resolve(next, light);
 	}

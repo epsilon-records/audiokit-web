@@ -6,7 +6,8 @@
 	import { cn, type WithElementRef } from '#lib/utils.js';
 	import type { HTMLInputAttributes, HTMLInputTypeAttribute } from 'svelte/elements';
 
-	type InputType = Exclude<HTMLInputTypeAttribute, 'file'>;
+	// 'checkbox' is left out: bind:value can't bind a checkbox. Use the Checkbox component.
+	type InputType = Exclude<HTMLInputTypeAttribute, 'file' | 'checkbox'>;
 
 	type Props = WithElementRef<
 		Omit<HTMLInputAttributes, 'type'> &

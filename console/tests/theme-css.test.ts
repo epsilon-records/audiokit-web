@@ -96,3 +96,13 @@ it('the theme script runs from <head> before the stylesheet and body', () => {
 	expect(head.indexOf('theme-init.js')).toBeLessThan(head.indexOf('fonts.css'));
 	expect(html).not.toMatch(/<script>(?!<\/script>)/);
 });
+
+describe('dark islands', () => {
+	// An alias such as --surface: var(--panel) resolves on the element that declares it, so an
+	// island that only restates --panel would still inherit the light --surface.
+	it.each(['surface', 'surface-2', 'soft', 'on-accent'])('restate --%s', (name) => {
+		const start = css.indexOf('.dark-island {');
+		const body = css.slice(start, css.indexOf('}', start));
+		expect(body).toMatch(new RegExp(`--${name}:\\s*var\\(`));
+	});
+});

@@ -14,6 +14,18 @@ export const THEME_STORAGE_KEY = 'ak-theme';
 
 type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
+/**
+ * This browser's localStorage, or undefined. Reading `window.localStorage` itself throws a
+ * SecurityError when the browser blocks storage, so it is read here inside a try.
+ */
+export function browserStorage(): Storage | undefined {
+	try {
+		return window.localStorage;
+	} catch {
+		return undefined;
+	}
+}
+
 /** The stored pick, or 'system' when there is none or storage is blocked. */
 export function readStored(storage: Storage | undefined): ThemeChoice {
 	try {
