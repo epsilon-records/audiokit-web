@@ -29,14 +29,11 @@ function walk(dir: string): string[] {
  */
 const PRIVACY_CHANGES: [string, string][] = [
 	[
-		'<p>Pages on audiokit.ai and in the console load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page.</p>',
+		'<p>Pages on audiokit.ai load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page. The console loads its typefaces from our own site.</p>',
 		'<p>Pages on audiokit.ai and in the console load their typefaces from our own site, not from a font provider. Opening a page sends nothing to another company for fonts.</p>'
 	],
 	["with the console's theme switch,", 'with the theme switch on audiokit.ai or in the console,'],
-	[
-		'    <tr><td>Google Fonts</td><td>Typefaces for the site and console</td><td>United States</td></tr>\n',
-		''
-	],
+	['    <tr><td>Google Fonts</td><td>Typefaces for the site</td><td>United States</td></tr>\n', ''],
 	[
 		`    <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google's privacy policy</a> for how Google handles international transfers.</li>\n`,
 		''
