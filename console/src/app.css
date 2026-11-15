@@ -135,6 +135,12 @@ pre,
 	--ok: #7fd69a;
 	--warn: #ff8a7a;
 	--danger: #ff8a80;
+	/* Restated here: an alias declared on :root resolves there, so the island would inherit the
+	   light values. */
+	--surface: var(--panel);
+	--surface-2: var(--panel-deep);
+	--soft: var(--text-soft);
+	--on-accent: var(--accent-ink);
 	color-scheme: dark;
 }
 * {

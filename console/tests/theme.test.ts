@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
-import { readStored, resolve, store, THEME_STORAGE_KEY } from '../src/lib/theme';
+import { browserStorage, readStored, resolve, store, THEME_STORAGE_KEY } from '../src/lib/theme';
 
 // EPSILON-169 (D3a): the pre-paint script and the toggle agree on one key and one rule.
 
@@ -37,7 +37,12 @@ function runInit({ stored, systemLight }: { stored?: string; systemLight: boolea
 	};
 	const storage = memoryStorage(stored === undefined ? {} : { 'ak-theme': stored });
 	runInNewContext(readFileSync(new URL('../static/theme-init.js', import.meta.url), 'utf8'), {
-		document: { documentElement: { setAttribute: (k: string, v: string) => attributes.set(k, v) } },
+		document: {
+			documentElement: {
+				setAttribute: (k: string, v: string) => attributes.set(k, v),
+				getAttribute: (k: string) => attributes.get(k) ?? null
+			}
+		},
 		window: { matchMedia: () => media },
 		localStorage: storage
 	});
@@ -76,6 +81,23 @@ describe('static/theme-init.js', () => {
 		expect(run.attributes.get('data-theme')).toBe('light');
 	});
 
+	it("keeps the page's pick when the system changes, even if it couldn't be stored", () => {
+		const run = runInit({ systemLight: false });
+		// The toggle picked Dark but storage refused it: only the page records the pick.
+		run.attributes.set('data-theme-choice', 'dark');
+		run.media.matches = true;
+		run.listeners.forEach((fn) => fn());
+		expect(run.attributes.get('data-theme')).toBe('dark');
+	});
+
+	it('follows the system again once the page picks System', () => {
+		const run = runInit({ stored: 'dark', systemLight: false });
+		run.attributes.set('data-theme-choice', 'system');
+		run.media.matches = true;
+		run.listeners.forEach((fn) => fn());
+		expect(run.attributes.get('data-theme')).toBe('light');
+	});
+
 	it('reads the key the toggle writes', () => {
 		const script = readFileSync(new URL('../static/theme-init.js', import.meta.url), 'utf8');
 		expect(script).toContain(`'${THEME_STORAGE_KEY}'`);
@@ -104,5 +126,25 @@ describe('#lib/theme', () => {
 		expect(resolve('system', true)).toBe('light');
 		expect(resolve('system', false)).toBe('dark');
 		expect(resolve('dark', true)).toBe('dark');
+	});
+
+	it('returns undefined when reading localStorage itself throws', () => {
+		const original = Object.getOwnPropertyDescriptor(globalThis, 'window');
+		Object.defineProperty(globalThis, 'window', {
+			configurable: true,
+			value: Object.defineProperty({}, 'localStorage', {
+				get() {
+					throw new Error('SecurityError');
+				}
+			})
+		});
+		try {
+			expect(browserStorage()).toBeUndefined();
+			expect(readStored(browserStorage())).toBe('system');
+			expect(() => store(browserStorage(), 'dark')).not.toThrow();
+		} finally {
+			if (original) Object.defineProperty(globalThis, 'window', original);
+			else delete (globalThis as { window?: unknown }).window;
+		}
 	});
 });

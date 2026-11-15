@@ -21,8 +21,16 @@
 	}
 
 	var light = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+	// The toggle records the pick on <html> as data-theme-choice, so a pick that couldn't be
+	// stored still wins over a later change of the system theme.
+	function choice() {
+		var picked = root.getAttribute('data-theme-choice');
+		if (picked === 'light' || picked === 'dark') return picked;
+		if (picked === 'system') return null;
+		return stored();
+	}
 	function apply() {
-		root.setAttribute('data-theme', stored() || (light && light.matches ? 'light' : 'dark'));
+		root.setAttribute('data-theme', choice() || (light && light.matches ? 'light' : 'dark'));
 	}
 	apply();
 	if (light && light.addEventListener) light.addEventListener('change', apply);

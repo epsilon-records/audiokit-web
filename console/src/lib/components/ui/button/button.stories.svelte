@@ -1,9 +1,12 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
+	import { expect, fn } from 'storybook/test';
 	import { Button } from './index.js';
 
 	// No `component` here: each story renders its own <Button>, so states are written out as markup.
 	const { Story } = defineMeta({ title: 'UI/Button' });
+
+	const onDisabledLinkClick = fn();
 </script>
 
 <Story name="Default">
@@ -46,4 +49,17 @@
 	<div style="max-width: 320px">
 		<Button variant="primary">Create a key for the production server and copy it now</Button>
 	</div>
+</Story>
+
+<Story
+	name="Disabled link"
+	play={async ({ canvas, userEvent }) => {
+		const link = canvas.getByRole('link', { name: 'New key' });
+		await expect(link).toHaveAttribute('aria-disabled', 'true');
+		await expect(link).not.toHaveAttribute('href');
+		await userEvent.click(link);
+		await expect(onDisabledLinkClick).not.toHaveBeenCalled();
+	}}
+>
+	<Button href="/api-keys" variant="primary" disabled onclick={onDisabledLinkClick}>New key</Button>
 </Story>
