@@ -19,7 +19,7 @@
 			},
 			size: {
 				default: 'min-h-11 px-[18px] text-[15px]',
-				small: 'min-h-[38px] px-3.5 text-[14px]'
+				small: 'min-h-11 px-3.5 text-[14px]'
 			}
 		},
 		compoundVariants: [{ variant: 'link', class: 'min-h-0 px-0 text-[length:inherit]' }],
