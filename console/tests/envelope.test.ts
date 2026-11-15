@@ -68,16 +68,20 @@ describe('http adapter: envelope transition (decision 0031)', () => {
 	});
 
 	it('reads the portal URL bare or under `portal`', async () => {
-		expect(await clientFor(() => jsonResponse({ url: 'https://portal.test/x' })).createBillingPortal()).toBe(
-			'https://portal.test/x'
-		);
 		expect(
-			await clientFor(() => jsonResponse({ portal: { url: 'https://portal.test/y' } })).createBillingPortal()
+			await clientFor(() => jsonResponse({ url: 'https://portal.test/x' })).createBillingPortal()
+		).toBe('https://portal.test/x');
+		expect(
+			await clientFor(() =>
+				jsonResponse({ portal: { url: 'https://portal.test/y' } })
+			).createBillingPortal()
 		).toBe('https://portal.test/y');
 	});
 
 	it('rejects a portal response with no URL instead of returning undefined', async () => {
-		await expect(clientFor(() => jsonResponse({ portal: {} })).createBillingPortal()).rejects.toThrow();
+		await expect(
+			clientFor(() => jsonResponse({ portal: {} })).createBillingPortal()
+		).rejects.toThrow();
 	});
 
 	// The discriminator case: the pre-0031 body is a bare object that ALREADY has an `api_key`
@@ -94,11 +98,11 @@ describe('http adapter: envelope transition (decision 0031)', () => {
 		};
 
 		const legacy = await clientFor((url) =>
-			url.endsWith('/v1/api-keys') && !url.includes('?') ? jsonResponse(resource) : jsonResponse({ api_keys: [] })
+			url.endsWith('/v1/api-keys') && !url.includes('?')
+				? jsonResponse(resource)
+				: jsonResponse({ api_keys: [] })
 		).createApiKey('CI');
-		const named = await clientFor(() =>
-			jsonResponse({ api_key: resource })
-		).createApiKey('CI');
+		const named = await clientFor(() => jsonResponse({ api_key: resource })).createApiKey('CI');
 
 		expect(legacy).toEqual(named);
 		expect(named.secret).toBe(secret);
@@ -108,7 +112,9 @@ describe('http adapter: envelope transition (decision 0031)', () => {
 
 	it('tolerates a 204 with no body where `{ success: true }` used to be', async () => {
 		const client = clientFor((url) =>
-			url.includes('/v1/api-keys/k1') ? jsonResponse(undefined, 204) : jsonResponse({ api_keys: [] })
+			url.includes('/v1/api-keys/k1')
+				? jsonResponse(undefined, 204)
+				: jsonResponse({ api_keys: [] })
 		);
 
 		// The key is gone from the list, so the console reports it as missing rather than crashing
