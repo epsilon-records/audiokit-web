@@ -1,0 +1,15 @@
+/*
+ * The signed-in app and the sign-in screens (EPSILON-169 PR 3): Tailwind's Preflight, now that
+ * no console page uses the old hand-written page CSS. Imported by ConsoleShell.svelte and
+ * AuthCard.svelte only, so the public pages (site.css, written against browser defaults) never
+ * load it. Layered as `base`, below the utilities (tailwind.css states the order).
+ */
+@import 'tailwindcss/preflight.css' layer(base);
+
+@layer base {
+	/* Preflight leaves buttons with the default arrow; the console's controls are all clickable. */
+	button:not(:disabled),
+	[role='button']:not(:disabled) {
+		cursor: pointer;
+	}
+}

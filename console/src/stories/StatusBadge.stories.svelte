@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import StatusBadge, { type BadgeStatus } from '#lib/components/StatusBadge.svelte';
+	import StatusBadge, { type BadgeStatus } from '#lib/components/console/StatusBadge.svelte';
 
 	const { Story } = defineMeta({
 		title: 'Console/StatusBadge',

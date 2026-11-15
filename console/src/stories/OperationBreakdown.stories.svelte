@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import OperationBreakdown from '#lib/components/OperationBreakdown.svelte';
+	import OperationBreakdown from '#lib/components/console/OperationBreakdown.svelte';
 	import { usage } from './mock-data';
 
 	const { Story } = defineMeta({

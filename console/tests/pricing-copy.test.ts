@@ -1,10 +1,10 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import consoleShell from '../src/lib/components/ConsoleShell.svelte?raw';
+import consoleShell from '../src/lib/components/console/ConsoleShell.svelte?raw';
 import dashboardPage from '../src/routes/(app)/dashboard/+page.svelte?raw';
 import billingPage from '../src/routes/(app)/settings/billing/+page.svelte?raw';
-import welcome from '../src/lib/components/Welcome.svelte?raw';
+import welcome from '../src/lib/components/console/Welcome.svelte?raw';
 import signupPage from '../src/routes/signup/+page.svelte?raw';
 import loginPage from '../src/routes/login/+page.svelte?raw';
 

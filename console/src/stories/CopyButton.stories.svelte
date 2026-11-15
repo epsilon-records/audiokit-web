@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import CopyButton from '#lib/components/CopyButton.svelte';
+	import CopyButton from '#lib/components/console/CopyButton.svelte';
 
 	const { Story } = defineMeta({
 		title: 'Console/CopyButton',

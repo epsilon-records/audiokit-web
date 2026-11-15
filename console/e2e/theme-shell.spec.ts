@@ -82,11 +82,11 @@ test('the console toggle switches the theme, code panels stay dark, and the pick
 	// The page is paper; the code panel stays dark.
 	const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
 	expect(bodyBg).toBe('rgb(244, 244, 242)');
-	const code = page.locator('pre.code').first();
+	const code = page.locator('main pre').first();
 	const codeColor = await code.evaluate((el) => getComputedStyle(el).color);
 	expect(codeColor).toBe('rgb(213, 218, 224)');
 	const panelBg = await code.evaluate(
-		(el) => getComputedStyle(el.closest('.panel') as Element).backgroundColor
+		(el) => getComputedStyle(el.closest('.dark-island') as Element).backgroundColor
 	);
 	expect(panelBg).toBe('rgb(20, 23, 28)');
 

@@ -35,21 +35,28 @@
 	);
 </script>
 
-<figure class="chart">
+<figure class="rounded-card border border-border bg-surface-2 p-4 max-stack:p-3">
 	<svg
+		class="block h-auto w-full"
 		viewBox="0 0 {width} {height + 26}"
 		role="img"
 		aria-label="Jobs per day this period. {summary}"
 	>
 		{#each [0, 0.5, 1] as ratio (ratio)}
-			<line class="chart-grid" x1="0" x2={width} y1={plotHeight * ratio} y2={plotHeight * ratio} />
+			<line
+				class="stroke-border"
+				x1="0"
+				x2={width}
+				y1={plotHeight * ratio}
+				y2={plotHeight * ratio}
+			/>
 		{/each}
 
 		{#each daily as point, index (point.date)}
 			{@const barHeight = max === 0 ? 0 : (point.jobs / max) * (plotHeight - 4)}
 			{@const x = index * (barWidth + gap)}
 			<rect
-				class="chart-bar"
+				class="fill-accent hover:fill-accent-hover"
 				{x}
 				y={plotHeight - barHeight}
 				width={barWidth}
@@ -63,12 +70,14 @@
 		{/each}
 
 		{#if first && last}
-			<text class="chart-axis" x="0" y={height + 22}>{firstLabel}</text>
-			<text class="chart-axis" x={width} y={height + 22} text-anchor="end">{lastLabel}</text>
+			<text class="fill-faint font-mono text-[10px]" x="0" y={height + 22}>{firstLabel}</text>
+			<text class="fill-faint font-mono text-[10px]" x={width} y={height + 22} text-anchor="end"
+				>{lastLabel}</text
+			>
 		{/if}
-		<text class="chart-axis" x="0" y="10">{formatNumber(max)} max</text>
+		<text class="fill-faint font-mono text-[10px]" x="0" y="10">{formatNumber(max)} max</text>
 	</svg>
-	<figcaption class="chart-caption">
+	<figcaption class="mt-2 text-[12px] text-faint">
 		Jobs per day · {summary} The table below is the text equivalent.
 	</figcaption>
 </figure>

@@ -1,9 +1,17 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import ConsoleShell from '#lib/components/ConsoleShell.svelte';
-	import PageHeader from '#lib/components/PageHeader.svelte';
-	import StatTile from '#lib/components/StatTile.svelte';
-	import { account, apiVersion, creditsLeft, emptyCredits, roomyCredits } from './mock-data';
+	import ConsoleShell from '#lib/components/console/ConsoleShell.svelte';
+	import PageHeader from '#lib/components/console/PageHeader.svelte';
+	import StatTile from '#lib/components/console/StatTile.svelte';
+	import {
+		account,
+		apiVersion,
+		creditsLeft,
+		emptyCredits,
+		emptyCreditsWithState,
+		lowCredits,
+		roomyCredits
+	} from './mock-data';
 
 	const { Story } = defineMeta({
 		title: 'Console/ConsoleShell',
@@ -62,6 +70,30 @@
 <Story name="Balance unavailable" args={{ credits: null }}>
 	{#snippet template(args)}
 		<ConsoleShell account={args.account} credits={args.credits} apiVersion={args.apiVersion}>
+			<PageHeader title="Dashboard" />
+		</ConsoleShell>
+	{/snippet}
+</Story>
+
+<Story name="Running low" args={{ credits: lowCredits }}>
+	{#snippet template(args)}
+		<ConsoleShell account={args.account} credits={args.credits} apiVersion={args.apiVersion}>
+			<PageHeader title="Dashboard" />
+		</ConsoleShell>
+	{/snippet}
+</Story>
+
+<Story
+	name="Empty, with billing's low-balance state"
+	args={{ credits: emptyCreditsWithState, now: new Date('2026-11-14T12:00:00.000Z') }}
+>
+	{#snippet template(args)}
+		<ConsoleShell
+			account={args.account}
+			credits={args.credits}
+			now={args.now}
+			apiVersion={args.apiVersion}
+		>
 			<PageHeader title="Dashboard" />
 		</ConsoleShell>
 	{/snippet}
