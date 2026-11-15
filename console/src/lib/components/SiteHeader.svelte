@@ -145,10 +145,29 @@
 		display: none;
 	}
 
-	@media (max-width: 759.98px) {
+	/* Between 760 px and about 900 px the links stay inline, tighter, on one row. */
+	@media (max-width: 959.98px) {
 		.site-nav {
 			padding: 12px 16px;
+			gap: 12px 16px;
 		}
+		.site-nav-links,
+		.site-nav-links ul {
+			column-gap: 16px;
+		}
+		.site-nav-actions {
+			gap: 8px;
+		}
+	}
+	@media (max-width: 879.98px) {
+		.site-nav-links,
+		.site-nav-links ul {
+			column-gap: 12px;
+			font-size: 14px;
+		}
+	}
+
+	@media (max-width: 759.98px) {
 		:global(html[data-js]) .site-nav :global(.site-menu-button) {
 			display: inline-flex;
 		}
