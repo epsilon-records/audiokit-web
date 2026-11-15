@@ -12,7 +12,13 @@
 	let choice = $state<ThemeChoice>('system');
 
 	onMount(() => {
-		choice = readStored(browserStorage());
+		// The page's own record comes first: it holds a pick that couldn't be stored, for example
+		// when client-side navigation remounts this toggle.
+		const recorded = document.documentElement.dataset.themeChoice;
+		choice =
+			recorded === 'system' || recorded === 'light' || recorded === 'dark'
+				? recorded
+				: readStored(browserStorage());
 	});
 
 	function pick(next: ThemeChoice) {
