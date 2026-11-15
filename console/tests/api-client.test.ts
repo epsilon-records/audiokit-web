@@ -18,7 +18,11 @@ describe('mock client: reads', () => {
 	});
 
 	it('reports the credit balance', async () => {
-		expect(await newClient().getCredits()).toEqual({ balance: 16 });
+		const credits = await newClient().getCredits();
+		expect(credits.balance).toBe(16);
+		// As epsilon-billing#81 answers: 16 is below the 20-credit threshold (0077).
+		expect(credits.lowBalance?.state).toBe('low');
+		expect(credits.packs).toEqual([]);
 	});
 
 	it('limits recent jobs', async () => {

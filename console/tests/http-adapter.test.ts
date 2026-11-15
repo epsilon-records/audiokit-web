@@ -622,11 +622,11 @@ describe('http adapter: credits', () => {
 		return { client, fetchImpl };
 	};
 
-	it('reads the balance from the named shape, ignoring lots', async () => {
+	it('reads the balance from the named shape, dropping a lot it cannot read', async () => {
 		const { client, fetchImpl } = clientFor({
 			credits: { balance: 87, lots: [{ source: 'free', remaining: 87 }], entries: [], packs: [] }
 		});
-		expect(await client.getCredits()).toEqual({ balance: 87 });
+		expect(await client.getCredits()).toEqual({ balance: 87, lots: [], entries: [], packs: [] });
 		expect(fetchImpl.calls[0].url).toBe('https://billing.test/v1/credits');
 		expect(header(fetchImpl.calls[0].init, 'authorization')).toBe('Bearer session');
 	});
@@ -656,8 +656,110 @@ describe('http adapter: credits', () => {
 
 	it('reads the balance from a bare body, and keeps a negative one', async () => {
 		expect(await clientFor({ balance: -12, lots: [] }).client.getCredits()).toEqual({
-			balance: -12
+			balance: -12,
+			lots: [],
+			entries: [],
+			packs: []
 		});
+	});
+
+	// The shape billing's GET /v1/credits answers on main (9b591c0): lots, entries and packs.
+	const live = {
+		balance: 1016,
+		lots: [
+			{
+				source: 'free_monthly',
+				credits: 100,
+				remaining: 16,
+				expires_at: '2026-12-01T00:00:00.000Z',
+				pack: null,
+				created_at: '2026-11-01T00:00:00.000Z'
+			},
+			{
+				source: 'purchase',
+				credits: 1000,
+				remaining: 1000,
+				expires_at: '2027-11-14T09:00:00.000Z',
+				pack: 'credits_1000',
+				created_at: '2026-11-14T09:00:00.000Z'
+			}
+		],
+		entries: [
+			{ kind: 'debit', credits: -2, ref: 'job-1', created_at: '2026-11-14T10:00:00.000Z' },
+			{ kind: 'credit', credits: 1000, ref: 'cs_1', created_at: '2026-11-14T09:00:00.000Z' },
+			{ kind: 'mystery', credits: 3, ref: null, created_at: '2026-11-14T08:00:00.000Z' }
+		],
+		packs: [{ pack: 'credits_1000', credits: 1000, price_cents: 1000, currency: 'usd' }]
+	};
+
+	it("reads lots, movements and packs from billing's live shape", async () => {
+		const credits = await clientFor({ credits: live }).client.getCredits();
+		expect(credits.lots).toEqual([
+			{
+				source: 'free_monthly',
+				credits: 100,
+				remaining: 16,
+				expiresAt: '2026-12-01T00:00:00.000Z',
+				pack: null,
+				createdAt: '2026-11-01T00:00:00.000Z'
+			},
+			{
+				source: 'purchase',
+				credits: 1000,
+				remaining: 1000,
+				expiresAt: '2027-11-14T09:00:00.000Z',
+				pack: 'credits_1000',
+				createdAt: '2026-11-14T09:00:00.000Z'
+			}
+		]);
+		// A kind the console doesn't know is dropped, not shown as something else.
+		expect(credits.entries).toEqual([
+			{ kind: 'debit', credits: -2, ref: 'job-1', createdAt: '2026-11-14T10:00:00.000Z' },
+			{ kind: 'credit', credits: 1000, ref: 'cs_1', createdAt: '2026-11-14T09:00:00.000Z' }
+		]);
+		expect(credits.packs).toEqual([
+			{ pack: 'credits_1000', credits: 1000, priceCents: 1000, currency: 'usd' }
+		]);
+		// Billing on main has no low-balance state yet: the field stays absent.
+		expect(credits).not.toHaveProperty('lowBalance');
+	});
+
+	it('reads a purchased lot with no expiry as never expiring (epsilon-billing#79)', async () => {
+		const lots = [{ ...live.lots[1], expires_at: null }];
+		const credits = await clientFor({ credits: { ...live, lots } }).client.getCredits();
+		expect(credits.lots?.[0].expiresAt).toBeNull();
+	});
+
+	it('reads the low-balance state when billing sends it (epsilon-billing#81)', async () => {
+		const low_balance = {
+			state: 'low',
+			threshold: 20,
+			since: '2026-11-15T08:00:00.000Z',
+			emails_enabled: false,
+			emails_opted_in: true
+		};
+		const credits = await clientFor({
+			credits: { ...live, balance: 12, low_balance }
+		}).client.getCredits();
+		expect(credits.lowBalance).toEqual({
+			state: 'low',
+			threshold: 20,
+			since: '2026-11-15T08:00:00.000Z',
+			emailsEnabled: false,
+			emailsOptedIn: true
+		});
+	});
+
+	it('ignores a low-balance state it cannot read', async () => {
+		for (const low_balance of [
+			null,
+			'low',
+			{ state: 'running-low', threshold: 20 },
+			{ state: 'low' }
+		]) {
+			const credits = await clientFor({ credits: { ...live, low_balance } }).client.getCredits();
+			expect(credits).not.toHaveProperty('lowBalance');
+		}
 	});
 
 	it('rejects a body with no balance instead of showing zero', async () => {
@@ -668,5 +770,53 @@ describe('http adapter: credits', () => {
 
 	it('surfaces a missing route as not-found', async () => {
 		await expect(clientFor({}, 404).client.getCredits()).rejects.toBeInstanceOf(HttpApiError);
+	});
+});
+
+describe('http adapter: notification preferences (EPSILON-257)', () => {
+	const clientWith = (body: unknown) => {
+		const fetchImpl = fetchMock(() => jsonResponse(body));
+		const client = createApiClient({
+			baseUrl: 'https://billing.test',
+			sessionToken: 'session',
+			fetch: fetchImpl
+		});
+		return { client, fetchImpl };
+	};
+	const before81 = { quota_warnings: true, payment_receipts: true, product_updates: false };
+
+	it('leaves the low-balance preference out while billing does not send it', async () => {
+		const prefs = await clientWith({ notifications: before81 }).client.getNotificationPreferences();
+		expect(prefs).not.toHaveProperty('lowBalanceAlerts');
+	});
+
+	it('reads low_balance_alerts when billing sends it (epsilon-billing#81)', async () => {
+		const prefs = await clientWith({
+			notifications: { ...before81, low_balance_alerts: false }
+		}).client.getNotificationPreferences();
+		expect(prefs.lowBalanceAlerts).toBe(false);
+	});
+
+	it('sends low_balance_alerts only when the preference is set', async () => {
+		const without = clientWith({ notifications: before81 });
+		await without.client.updateNotificationPreferences({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false
+		});
+		expect(JSON.parse(String(without.fetchImpl.calls[0].init.body))).toEqual(before81);
+
+		const withPref = clientWith({ notifications: { ...before81, low_balance_alerts: false } });
+		const saved = await withPref.client.updateNotificationPreferences({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false,
+			lowBalanceAlerts: false
+		});
+		expect(JSON.parse(String(withPref.fetchImpl.calls[0].init.body))).toEqual({
+			...before81,
+			low_balance_alerts: false
+		});
+		expect(saved.lowBalanceAlerts).toBe(false);
 	});
 });

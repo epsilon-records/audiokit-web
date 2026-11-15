@@ -18,14 +18,16 @@
  *     GET  /v1/auth/me                    Bearer session     (exists)
  *     PATCH /v1/auth/me                   { name }           ASSUMED
  *   Account
- *     GET  /v1/account/notifications      GET/PATCH          ASSUMED
+ *     GET  /v1/account/notifications      GET/PATCH          (exists; low_balance_alerts
+ *                                                             after billing#81)
  *   Jobs
  *     GET  /v1/jobs?limit=                Bearer session     (exists, API-key only today)
  *   Usage
  *     GET  /v1/usage/current              Bearer session     (exists)
  *     GET  /v1/usage/history?limit=       Bearer session     (exists)
  *   Credits (billing #59, decision 0052)
- *     GET  /v1/credits                    Bearer session     (exists; the console reads `balance`)
+ *     GET  /v1/credits                    Bearer session     (exists: balance, lots, entries,
+ *                                                             packs; low_balance after billing#81)
  *   API keys
  *     GET/POST /v1/api-keys, DELETE /v1/api-keys/:id         (exist)
  *   Subscriptions
@@ -47,9 +49,14 @@ import type {
 	ApiKey,
 	BillingSummary,
 	CreatedApiKey,
+	CreditEntry,
+	CreditLot,
+	CreditLotSource,
+	CreditPackOnSale,
 	Credits,
 	Job,
 	JobStatus,
+	LowBalance,
 	MagicLinkExchange,
 	MagicLinkRequest,
 	NotificationPreferences,
@@ -137,7 +144,11 @@ type WireUsageCurrent = {
 
 type WireCredits = {
 	balance: number;
-	/** Lots, entries and packs also come back; the console reads only the balance. */
+	lots?: unknown;
+	entries?: unknown;
+	packs?: unknown;
+	/** epsilon-billing#81 (EPSILON-233): optional and additive. */
+	low_balance?: unknown;
 };
 
 type WireUsageHistory = {
@@ -184,6 +195,8 @@ type WireNotificationPreferences = {
 	quota_warnings: boolean;
 	payment_receipts: boolean;
 	product_updates: boolean;
+	/** epsilon-billing#81 (EPSILON-233). Absent from a billing service that predates it. */
+	low_balance_alerts?: boolean;
 };
 
 type WirePortal = { url: string };
@@ -303,10 +316,109 @@ function toApiKey(wire: WireApiKey): ApiKey {
 }
 
 function toNotificationPreferences(wire: WireNotificationPreferences): NotificationPreferences {
-	return {
+	const preferences: NotificationPreferences = {
 		quotaWarnings: Boolean(wire.quota_warnings),
 		paymentReceipts: Boolean(wire.payment_receipts),
 		productUpdates: Boolean(wire.product_updates)
+	};
+	// Only when billing sends it: a missing field hides the switch (EPSILON-257).
+	if (typeof wire.low_balance_alerts === 'boolean') {
+		preferences.lowBalanceAlerts = wire.low_balance_alerts;
+	}
+	return preferences;
+}
+
+/* Credits: billing's shapes are read defensively. A row the console can't read is dropped rather
+   than failing the page; the balance is the only field the page can't do without. */
+
+function record(value: unknown): Record<string, unknown> | null {
+	return value && typeof value === 'object' && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: null;
+}
+
+function finite(value: unknown): number | null {
+	return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function isoOrNull(value: unknown): string | null {
+	return typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
+}
+
+function toLots(wire: unknown): CreditLot[] {
+	if (!Array.isArray(wire)) return [];
+	return wire.flatMap((item): CreditLot[] => {
+		const lot = record(item);
+		const credits = finite(lot?.credits);
+		const remaining = finite(lot?.remaining);
+		if (!lot || credits === null || remaining === null) return [];
+		const source: CreditLotSource =
+			lot.source === 'free_monthly' || lot.source === 'purchase' ? lot.source : 'grant';
+		return [
+			{
+				source,
+				credits,
+				remaining,
+				// null is a lot that never expires (0074); before epsilon-billing#79 every lot has a date.
+				expiresAt: isoOrNull(lot.expires_at),
+				pack: typeof lot.pack === 'string' ? lot.pack : null,
+				createdAt: isoOrNull(lot.created_at) ?? ''
+			}
+		];
+	});
+}
+
+const ENTRY_KINDS = new Set<CreditEntry['kind']>(['credit', 'debit', 'expiry', 'release', 'repay']);
+
+function toEntries(wire: unknown): CreditEntry[] {
+	if (!Array.isArray(wire)) return [];
+	return wire.flatMap((item): CreditEntry[] => {
+		const entry = record(item);
+		const credits = finite(entry?.credits);
+		const createdAt = isoOrNull(entry?.created_at);
+		if (!entry || credits === null || createdAt === null) return [];
+		if (!ENTRY_KINDS.has(entry.kind as CreditEntry['kind'])) return [];
+		return [
+			{
+				kind: entry.kind as CreditEntry['kind'],
+				credits,
+				ref: typeof entry.ref === 'string' ? entry.ref : null,
+				createdAt
+			}
+		];
+	});
+}
+
+function toPacks(wire: unknown): CreditPackOnSale[] {
+	if (!Array.isArray(wire)) return [];
+	return wire.flatMap((item): CreditPackOnSale[] => {
+		const pack = record(item);
+		const credits = finite(pack?.credits);
+		const priceCents = finite(pack?.price_cents);
+		if (!pack || typeof pack.pack !== 'string' || credits === null || priceCents === null)
+			return [];
+		return [
+			{
+				pack: pack.pack,
+				credits,
+				priceCents,
+				currency: typeof pack.currency === 'string' ? pack.currency : 'usd'
+			}
+		];
+	});
+}
+
+function toLowBalance(wire: unknown): LowBalance | undefined {
+	const low = record(wire);
+	const threshold = finite(low?.threshold);
+	if (!low || threshold === null) return undefined;
+	if (low.state !== 'ok' && low.state !== 'low' && low.state !== 'empty') return undefined;
+	return {
+		state: low.state,
+		threshold,
+		since: isoOrNull(low.since),
+		emailsEnabled: low.emails_enabled === true,
+		emailsOptedIn: low.emails_opted_in === true
 	};
 }
 
@@ -595,7 +707,15 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			if (typeof wire?.balance !== 'number' || !Number.isFinite(wire.balance)) {
 				throw new HttpApiError('server-error', 'The billing service returned no credit balance.');
 			}
-			return { balance: wire.balance };
+			const credits: Credits = {
+				balance: wire.balance,
+				lots: toLots(wire.lots),
+				entries: toEntries(wire.entries),
+				packs: toPacks(wire.packs)
+			};
+			const lowBalance = toLowBalance(wire.low_balance);
+			if (lowBalance) credits.lowBalance = lowBalance;
+			return credits;
 		},
 
 		async getUsage() {
@@ -720,7 +840,12 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 				...json({
 					quota_warnings: next.quotaWarnings,
 					payment_receipts: next.paymentReceipts,
-					product_updates: next.productUpdates
+					product_updates: next.productUpdates,
+					// Never sent unless billing reported the field (EPSILON-257): an older billing
+					// would reject or ignore it.
+					...(next.lowBalanceAlerts !== undefined
+						? { low_balance_alerts: next.lowBalanceAlerts }
+						: {})
 				})
 			});
 			return toNotificationPreferences(
