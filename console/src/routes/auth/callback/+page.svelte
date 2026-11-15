@@ -1,6 +1,8 @@
 <script lang="ts">
-	import AuthCard from '#lib/components/AuthCard.svelte';
-	import Welcome from '#lib/components/Welcome.svelte';
+	import AuthCard from '#lib/components/console/AuthCard.svelte';
+	import { link, muted } from '#lib/components/console/classes';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import Welcome from '#lib/components/console/Welcome.svelte';
 	import type { PageProps } from './$types';
 	let { data }: PageProps = $props();
 </script>
@@ -20,10 +22,10 @@
 		title="That link did not work"
 		subtitle="Links are single use and expire after 15 minutes."
 	>
-		<p class="muted" role="alert">{data.error}</p>
-		<a class="btn btn-primary" href="/login">Request a new link</a>
-		<p class="auth-sub">
-			Already verified your email? <a class="link" href="/onboarding">Resume setup</a>.
+		<p class={muted} role="alert">{data.error}</p>
+		<Button variant="primary" href="/login">Request a new link</Button>
+		<p class={muted}>
+			Already verified your email? <a class={link} href="/onboarding">Resume setup</a>.
 		</p>
 	</AuthCard>
 {/if}
