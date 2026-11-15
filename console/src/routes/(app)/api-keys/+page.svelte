@@ -1,10 +1,26 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import CopyButton from '#lib/components/CopyButton.svelte';
-	import Dialog from '#lib/components/Dialog.svelte';
-	import EmptyState from '#lib/components/EmptyState.svelte';
-	import PageHeader from '#lib/components/PageHeader.svelte';
-	import StatusBadge from '#lib/components/StatusBadge.svelte';
+	import Alert from '#lib/components/console/Alert.svelte';
+	import CodeBlock from '#lib/components/console/CodeBlock.svelte';
+	import CopyButton from '#lib/components/console/CopyButton.svelte';
+	import EmptyState from '#lib/components/console/EmptyState.svelte';
+	import PageHeader from '#lib/components/console/PageHeader.svelte';
+	import Panel from '#lib/components/console/Panel.svelte';
+	import StatusBadge from '#lib/components/console/StatusBadge.svelte';
+	import {
+		actions as actionRow,
+		faint,
+		link,
+		linkTarget,
+		muted
+	} from '#lib/components/console/classes';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { toast } from '#lib/components/ui/sonner/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
 	import { formatDate, relativeTime } from '#lib/format';
 	import type { ApiKey } from '#lib/types';
 	import type { PageProps } from './$types';
@@ -44,11 +60,15 @@
 		}
 	});
 
-	// Close the revoke dialog after a successful revoke.
+	// Close the revoke dialog after a successful revoke, and say so in a toast. The same words stay
+	// on the page for anyone without JavaScript (the <noscript> notice below).
+	let toasted: unknown = null;
 	$effect(() => {
-		if (revokedLabel) {
+		if (revokedLabel && form !== toasted) {
+			toasted = form;
 			revokeOpen = false;
 			revokeTarget = null;
+			toast.success(`Revoked ${revokedLabel}. Any client using it will fail immediately.`);
 		}
 	});
 </script>
@@ -63,170 +83,175 @@
 	description="Keep keys secret. They authorise jobs, which spend your credits."
 >
 	{#snippet actions()}
-		<button type="button" class="btn btn-primary" onclick={() => (createOpen = true)}>
-			Create key
-		</button>
+		<Button variant="primary" onclick={() => (createOpen = true)}>Create key</Button>
 	{/snippet}
 </PageHeader>
 
 {#if revokedLabel}
-	<div class="notice notice-ok" role="status">
-		Revoked <strong>{revokedLabel}</strong>. Any client using it will fail immediately.
-	</div>
+	<noscript>
+		<Alert tone="ok" class="mb-5">
+			<span
+				>Revoked <strong>{revokedLabel}</strong>. Any client using it will fail immediately.</span
+			>
+		</Alert>
+	</noscript>
 {/if}
 
 {#if data.keys.length === 0}
 	<EmptyState title="No API keys yet">
 		Create a key, then submit your first job.
-		<div class="actions">
-			<button type="button" class="btn btn-primary" onclick={() => (createOpen = true)}>
-				Create API key
-			</button>
-			<a class="link" href="https://audiokit.ai/docs/">Read the guide ↗</a>
+		<div class={actionRow}>
+			<Button variant="primary" onclick={() => (createOpen = true)}>Create API key</Button>
+			<a class={linkTarget} href="https://audiokit.ai/docs/">Read the guide ↗</a>
 		</div>
 	</EmptyState>
 {:else}
-	<div class="table-box">
-		<table class="stack">
-			<caption>
-				{activeKeys.length} active {activeKeys.length === 1 ? 'key' : 'keys'}. Revoked rows are kept
-				for audit.
-			</caption>
-			<thead>
-				<tr>
-					<th scope="col">Label</th>
-					<th scope="col">Key</th>
-					<th scope="col">Created</th>
-					<th scope="col">Last used</th>
-					<th scope="col">State</th>
-					<th scope="col"><span class="sr-only">Actions</span></th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each data.keys as key (key.id)}
-					<tr>
-						<td data-label="Label">{key.label}</td>
-						<td class="mono" data-label="Key">{key.prefix}</td>
-						<td class="mono" data-label="Created">{formatDate(key.createdAt)}</td>
-						<td class="mono" data-label="Last used">{relativeTime(key.lastUsedAt)}</td>
-						<td data-label="State">
-							<StatusBadge status={key.revoked ? 'revoked' : 'active'} />
-						</td>
-						<td class="row-actions" data-label="Actions">
-							{#if !key.revoked}
-								<button
-									type="button"
-									class="btn btn-quiet btn-sm"
-									onclick={() => {
-										revokeTarget = key;
-										revokeOpen = true;
-									}}
-								>
-									Revoke
-								</button>
-							{/if}
-						</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</div>
+	<Table.Root stack>
+		<Table.Caption>
+			{activeKeys.length} active {activeKeys.length === 1 ? 'key' : 'keys'}. Revoked rows are kept
+			for audit.
+		</Table.Caption>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head>Label</Table.Head>
+				<Table.Head>Key</Table.Head>
+				<Table.Head>Created</Table.Head>
+				<Table.Head>Last used</Table.Head>
+				<Table.Head>State</Table.Head>
+				<Table.Head><span class="sr-only">Actions</span></Table.Head>
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each data.keys as key (key.id)}
+				<Table.Row>
+					<Table.Cell data-label="Label">{key.label}</Table.Cell>
+					<Table.Cell class={Table.cellMono} data-label="Key">{key.prefix}</Table.Cell>
+					<Table.Cell class={Table.cellMono} data-label="Created"
+						>{formatDate(key.createdAt)}</Table.Cell
+					>
+					<Table.Cell class={Table.cellMono} data-label="Last used"
+						>{relativeTime(key.lastUsedAt)}</Table.Cell
+					>
+					<Table.Cell data-label="State">
+						<StatusBadge status={key.revoked ? 'revoked' : 'active'} />
+					</Table.Cell>
+					<Table.Cell class="text-right" data-label="Actions">
+						{#if !key.revoked}
+							<Button
+								variant="ghost"
+								size="small"
+								onclick={() => {
+									revokeTarget = key;
+									revokeOpen = true;
+								}}
+							>
+								Revoke
+							</Button>
+						{/if}
+					</Table.Cell>
+				</Table.Row>
+			{/each}
+		</Table.Body>
+	</Table.Root>
 {/if}
 
-<p class="faint">
+<p class="{faint} mt-4">
 	Only the key prefix is shown after creation. The full key and its webhook secret are displayed
 	once, immediately after the key is made.
 </p>
 
 <!-- Create -->
-<Dialog bind:open={createOpen} title="Create API key">
-	<form method="POST" action="?/create" class="form-stack" use:enhance>
-		<div class="field">
-			<label for="key-label">Label (optional)</label>
-			<input
-				class="input"
-				id="key-label"
-				name="label"
-				type="text"
-				maxlength="40"
-				placeholder="staging"
-			/>
-			<p class="field-hint">A name only you see, so you can tell keys apart.</p>
-			{#if createError}
-				<p class="field-error" role="alert">{createError}</p>
-			{/if}
-		</div>
-		<div class="actions actions-end">
-			<button type="button" class="btn btn-ghost" onclick={() => (createOpen = false)}
-				>Cancel</button
-			>
-			<button type="submit" class="btn btn-primary">Create key</button>
-		</div>
-	</form>
-</Dialog>
+<Dialog.Root bind:open={createOpen}>
+	<Dialog.Content>
+		<Dialog.Header><Dialog.Title>Create API key</Dialog.Title></Dialog.Header>
+		<form method="POST" action="?/create" use:enhance>
+			<Dialog.Body>
+				<Field.Field data-invalid={createError ? 'true' : undefined}>
+					<Field.Label for="key-label">Label (optional)</Field.Label>
+					<Input
+						id="key-label"
+						name="label"
+						type="text"
+						maxlength={40}
+						placeholder="staging"
+						aria-describedby={createError ? 'key-label-hint key-label-error' : 'key-label-hint'}
+						aria-invalid={createError ? 'true' : undefined}
+					/>
+					<Field.Description id="key-label-hint"
+						>A name only you see, so you can tell keys apart.</Field.Description
+					>
+					{#if createError}
+						<Field.Error id="key-label-error">{createError}</Field.Error>
+					{/if}
+				</Field.Field>
+			</Dialog.Body>
+			<Dialog.Footer>
+				<Button onclick={() => (createOpen = false)}>Cancel</Button>
+				<Button type="submit" variant="primary">Create key</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
 
 <!-- Reveal once -->
-<Dialog bind:open={revealOpen} title="Key created — copy it now">
-	{#if reveal}
-		<p class="muted">This is the only time we'll show it. Store it somewhere safe.</p>
-		<div class="panel">
-			<div class="panel-bar">
-				<span>{reveal.label}</span>
-				<CopyButton value={reveal.secret} label="Copy key" />
-			</div>
-			<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
-			<pre class="code" tabindex="0">{reveal.secret}</pre>
-		</div>
-		{#if reveal.webhookSecret}
-			<p class="muted">
-				AudioKit signs this key's result webhooks with its webhook secret. Verify the
-				<code>X-Signature</code> header with it (<a
-					class="link"
-					href="https://audiokit.ai/docs/#webhooks">how</a
-				>). It is also shown only now.
-			</p>
-			<div class="panel">
-				<div class="panel-bar">
-					<span>Webhook secret</span>
-					<CopyButton value={reveal.webhookSecret} label="Copy webhook secret" />
-				</div>
-				<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
-				<pre class="code" tabindex="0">{reveal.webhookSecret}</pre>
-			</div>
+<Dialog.Root bind:open={revealOpen}>
+	<Dialog.Content>
+		<Dialog.Header><Dialog.Title>Key created — copy it now</Dialog.Title></Dialog.Header>
+		{#if reveal}
+			<Dialog.Body>
+				<p class={muted}>This is the only time we'll show it. Store it somewhere safe.</p>
+				<Panel code label={reveal.label}>
+					{#snippet bar()}<CopyButton value={reveal.secret} label="Copy key" />{/snippet}
+					<CodeBlock value={reveal.secret} />
+				</Panel>
+				{#if reveal.webhookSecret}
+					<p class={muted}>
+						AudioKit signs this key's result webhooks with its webhook secret. Verify the
+						<code>X-Signature</code> header with it (<a
+							class={link}
+							href="https://audiokit.ai/docs/#webhooks">how</a
+						>). It is also shown only now.
+					</p>
+					<Panel code label="Webhook secret">
+						{#snippet bar()}<CopyButton
+								value={reveal.webhookSecret ?? ''}
+								label="Copy webhook secret"
+							/>{/snippet}
+						<CodeBlock value={reveal.webhookSecret} />
+					</Panel>
+				{/if}
+			</Dialog.Body>
+			<Dialog.Footer>
+				<Button variant="primary" onclick={() => (revealOpen = false)}>Done</Button>
+			</Dialog.Footer>
 		{/if}
-		<div class="actions">
-			<button type="button" class="btn btn-primary" onclick={() => (revealOpen = false)}
-				>Done</button
-			>
-		</div>
-	{/if}
-</Dialog>
+	</Dialog.Content>
+</Dialog.Root>
 
-<!-- Revoke -->
-<Dialog bind:open={revokeOpen} title="Revoke API key">
-	{#if revokeTarget}
-		<p class="muted">
-			Revoke <strong>{revokeTarget.label}</strong> ({revokeTarget.prefix})? Any client using this
-			key will start failing immediately. This can't be undone.
-		</p>
-		{#if revokeError}
-			<p class="field-error" role="alert">{revokeError}</p>
+<!-- Revoke: an Alert Dialog, so it is answered with Keep key or Revoke key, not dismissed. -->
+<AlertDialog.Root bind:open={revokeOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header class="pr-5"
+			><AlertDialog.Title>Revoke API key</AlertDialog.Title></AlertDialog.Header
+		>
+		{#if revokeTarget}
+			<form method="POST" action="?/revoke" use:enhance>
+				<input type="hidden" name="id" value={revokeTarget.id} />
+				<AlertDialog.Body>
+					<AlertDialog.Description>
+						Revoke <strong class="text-foreground">{revokeTarget.label}</strong>
+						({revokeTarget.prefix})? Any client using this key will start failing immediately. This
+						can't be undone.
+					</AlertDialog.Description>
+					{#if revokeError}
+						<Field.Error>{revokeError}</Field.Error>
+					{/if}
+				</AlertDialog.Body>
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel onclick={() => (revokeTarget = null)}>Keep key</AlertDialog.Cancel>
+					<Button type="submit" variant="danger">Revoke key</Button>
+				</AlertDialog.Footer>
+			</form>
 		{/if}
-		<form method="POST" action="?/revoke" use:enhance>
-			<input type="hidden" name="id" value={revokeTarget.id} />
-			<div class="actions actions-end">
-				<button
-					type="button"
-					class="btn btn-ghost"
-					onclick={() => {
-						revokeOpen = false;
-						revokeTarget = null;
-					}}
-				>
-					Keep key
-				</button>
-				<button type="submit" class="btn btn-danger">Revoke key</button>
-			</div>
-		</form>
-	{/if}
-</Dialog>
+	</AlertDialog.Content>
+</AlertDialog.Root>
