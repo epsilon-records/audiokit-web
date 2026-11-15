@@ -4,10 +4,27 @@
 -->
 <script lang="ts">
 	import { cn, type WithElementRef } from '#lib/utils.js';
-	import type { HTMLInputAttributes, HTMLInputTypeAttribute } from 'svelte/elements';
+	import type { HTMLInputAttributes } from 'svelte/elements';
 
-	// 'checkbox' is left out: bind:value can't bind a checkbox. Use the Checkbox component.
-	type InputType = Exclude<HTMLInputTypeAttribute, 'file' | 'checkbox'>;
+	// A closed list: Svelte's HTMLInputTypeAttribute also allows any string, which would let
+	// 'checkbox' or 'radio' through to bind:value. Checkboxes use the Checkbox component, and
+	// files take the `type: 'file'` branch below.
+	type InputType =
+		| 'text'
+		| 'email'
+		| 'password'
+		| 'search'
+		| 'url'
+		| 'tel'
+		| 'number'
+		| 'date'
+		| 'datetime-local'
+		| 'time'
+		| 'month'
+		| 'week'
+		| 'color'
+		| 'range'
+		| 'hidden';
 
 	type Props = WithElementRef<
 		Omit<HTMLInputAttributes, 'type'> &
