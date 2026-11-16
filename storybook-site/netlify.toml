@@ -12,7 +12,9 @@
   # variable vanishes and git diff compares the working tree, which is empty, so the build would
   # be skipped (labelkit's rule has that gap). test/storybook-site.test.mjs runs this command
   # against a throwaway repo.
-  ignore = "[ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ../console/src/lib ../console/src/stories ../console/src/app.css ../console/src/tailwind.css ../console/static ../console/.storybook ../console/vite.config.ts ../console/tsconfig.json ../console/package.json ../console/package-lock.json ."
+  # Deploy previews are off (Oracle, knowledge#134: Netlify credits until 14 Dec): a
+  # deploy-preview build is skipped unless its branch name ends in -preview.
+  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ../console/src/lib ../console/src/stories ../console/src/app.css ../console/src/tailwind.css ../console/static ../console/.storybook ../console/vite.config.ts ../console/tsconfig.json ../console/package.json ../console/package-lock.json .; }"
 
 [build.environment]
   NODE_VERSION = "22"
