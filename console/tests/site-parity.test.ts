@@ -23,20 +23,70 @@ function walk(dir: string): string[] {
 }
 
 /**
- * The only text changes, all in the privacy notice, each for Nate's approval (shared 0012):
- * the fonts are self-hosted now (PR 1, plan "Fonts"), and the theme switch is on the public
- * pages too (AudioKit 0079).
+ * The only text changes, all in the privacy notice, following Nate's rule on knowledge#135 (shared
+ * 0012): the fonts are self-hosted (PR 1), the notice takes effect at the cut-over (23 Nov
+ * 2026), and nothing refers to the console, which goes away with the cut-over. The cookie keeps
+ * its real name, ak_console_session.
  */
 const PRIVACY_CHANGES: [string, string][] = [
 	[
-		'<p>Pages on audiokit.ai load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page. The console loads its typefaces from our own site.</p>',
-		'<p>Pages on audiokit.ai and in the console load their typefaces from our own site, not from a font provider. Opening a page sends nothing to another company for fonts.</p>'
+		'"description": "What AudioKit collects on audiokit.ai, in the console and through the API,',
+		'"description": "What AudioKit collects on audiokit.ai and through the API,'
 	],
-	["with the console's theme switch,", 'with the theme switch on audiokit.ai or in the console,'],
+	[
+		'when you visit audiokit.ai, use the console at {{CONSOLE_URL}} or call the API,',
+		'when you visit audiokit.ai, sign in to your account there or call the API,'
+	],
+	[
+		'<p class="note">Effective from 12 November 2026.</p>',
+		'<p class="note">Effective from 23 November 2026.</p>'
+	],
+	[
+		'<li>The public site sets no cookies. The console sets one sign-in cookie.</li>',
+		'<li>Public pages set no cookies. Signing in sets one cookie.</li>'
+	],
+	[
+		'<p>Pages on audiokit.ai load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page.</p>',
+		'<p>Pages on audiokit.ai load their typefaces from our own site, not from a font provider. Opening a page sends nothing to another company for fonts.</p>'
+	],
+	[
+		'It is not used in the console, the API or the billing service,',
+		'It is not used on signed-in pages, the API or the billing service,'
+	],
+	['<h2 id="account">Your account and the console</h2>', '<h2 id="account">Your account</h2>'],
+	[
+		'<p>Once you are signed in, the console sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. The console needs it to work. The console runs no analytics script.</p>',
+		'<p>Once you are signed in, audiokit.ai sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. Signed-in pages need it to work, and they run no analytics script.</p>'
+	],
+	[
+		'If you arrive at the console directly, the host name',
+		'If you go straight to the sign-up page, the host name'
+	],
+	[
+		'a different list from the email preferences in the console.',
+		'a different list from the email preferences in your account settings.'
+	],
+	[
+		'which you can withdraw in the console at any time</td>',
+		'which you can withdraw in your account settings at any time</td>'
+	],
+	[
+		'<tr><td>Netlify</td><td>Hosts audiokit.ai and the console</td>',
+		'<tr><td>Netlify</td><td>Hosts audiokit.ai</td>'
+	],
 	['    <tr><td>Google Fonts</td><td>Typefaces for the site</td><td>United States</td></tr>\n', ''],
 	[
-		`    <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google's privacy policy</a> for how Google handles international transfers.</li>\n`,
+		'    <li><strong>Google Fonts:</strong> your browser contacts Google directly, not through us. See <a href="https://policies.google.com/privacy">Google\'s privacy policy</a> for how Google handles international transfers.</li>\n',
 		''
+	],
+	['<li><strong>Console sign-in cookie:</strong>', '<li><strong>Sign-in cookie:</strong>'],
+	[
+		'You can delete your account yourself in the console, or email',
+		'You can delete your account yourself in your account settings, or email'
+	],
+	[
+		"(you can change your name in the console's settings)",
+		'(you can change your name in your account settings)'
 	]
 ];
 
