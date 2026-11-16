@@ -59,8 +59,9 @@ describe('one origin (AudioKit 0053)', () => {
 		expect(byPath.get('/docs/')!.body).toContain('href="/login"');
 	});
 
-	it('still names the console host in the privacy notice until the cut-over (plan, C)', () => {
-		expect(byPath.get('/privacy/')!.body).toContain('https://console.audiokit.ai');
+	it("names no console in the privacy notice, only the cookie's real name (Nate, knowledge#135)", () => {
+		const body = byPath.get('/privacy/')!.body.replaceAll('ak_console_session', '');
+		expect(body).not.toMatch(/console/i);
 	});
 });
 

@@ -72,16 +72,13 @@ test('device storage it describes matches the code', () => {
 	// The signup source stores nothing on the device (decisions 0040 and 0041, EPSILON-98).
 	assert.match(text, /Nothing is stored on your device for this: no cookie and no browser storage/);
 	assert.doesNotMatch(text, /sessionStorage|localStorage|ak_first_touch/);
-	assert.match(text, /The public site sets no cookies/);
+	assert.match(text, /Public pages set no cookies/);
 });
 
 test('the theme choice it describes matches the code, on the public pages too (AudioKit 0079)', () => {
 	const key = /THEME_STORAGE_KEY = '([^']+)'/.exec(theme)![1];
 	assert.ok(text.includes(key), `notice names the ${key} storage key`);
-	assert.match(
-		text,
-		/If you pick Light or Dark with the theme switch on audiokit\.ai or in the console/
-	);
+	assert.match(text, /If you pick Light or Dark with the theme switch on audiokit\.ai,/);
 	assert.match(
 		text,
 		/saved only when you pick a theme, is used for nothing else, and is removed when you pick System again/

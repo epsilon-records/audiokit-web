@@ -1,9 +1,9 @@
-<!-- {"title": "Privacy notice", "description": "What AudioKit collects on audiokit.ai, in the console and through the API, why, where it is processed, how long it is kept and your rights.", "layout": "docs"} -->
+<!-- {"title": "Privacy notice", "description": "What AudioKit collects on audiokit.ai and through the API, why, where it is processed, how long it is kept and your rights.", "layout": "docs"} -->
 <section class="doc-intro">
   <p class="kicker">Legal</p>
   <h1>Privacy notice</h1>
-  <p class="lede">This notice explains what personal data AudioKit processes when you visit audiokit.ai, use the console at {{CONSOLE_URL}} or call the API, why we process it, who else handles it, and the rights you have.</p>
-  <p class="note">Effective from 12 November 2026.</p>
+  <p class="lede">This notice explains what personal data AudioKit processes when you visit audiokit.ai, sign in to your account there or call the API, why we process it, who else handles it, and the rights you have.</p>
+  <p class="note">Effective from 23 November 2026.</p>
 </section>
 
 <section>
@@ -15,7 +15,7 @@
 <section>
   <h2 id="summary">In short</h2>
   <ul>
-    <li>The public site sets no cookies. The console sets one sign-in cookie.</li>
+    <li>Public pages set no cookies. Signing in sets one cookie.</li>
     <li>We do not store your audio. AudioKit fetches each input from the URL you send and uploads results to the URLs you provide. Files exist on our side only while a job is being processed.</li>
     <li>Accounts, API keys, usage and billing are kept in a database in the EU (Amsterdam). Payments, error reports and some delivery services involve providers in the United States, listed <a href="#providers">below</a>.</li>
     <li>We do not sell personal data, and we do not use it for advertising.</li>
@@ -26,26 +26,26 @@
   <h2 id="site">Visiting audiokit.ai</h2>
   <h3 id="site-hosting" data-toc="Hosting and fonts">Hosting and fonts</h3>
   <p>The site is served by Netlify. As with any website, your browser sends its IP address and request details (such as the page requested, browser type and referring page) to the host, which keeps them in its server logs.</p>
-  <p>Pages on audiokit.ai and in the console load their typefaces from our own site, not from a font provider. Opening a page sends nothing to another company for fonts.</p>
+  <p>Pages on audiokit.ai load their typefaces from our own site, not from a font provider. Opening a page sends nothing to another company for fonts.</p>
   <h3 id="site-errors" data-toc="Error monitoring">Error monitoring</h3>
   <p>Public pages load Sentry's browser script, which reports errors that happen in your browser on our pages and timing data for a sample of page loads. A report can include the page address, browser and operating system, and the IP address it was sent from.</p>
   <h3 id="site-analytics" data-toc="Analytics">Analytics</h3>
-  <p>{{ANALYTICS_STATUS}} It uses no cookies and no browser storage, and is not used to follow you across other websites. It receives the page address, the referring address and browser performance measurements. It is not used in the console, the API or the billing service, and it skips pages whose address contains a query string or fragment.</p>
+  <p>{{ANALYTICS_STATUS}} It uses no cookies and no browser storage, and is not used to follow you across other websites. It receives the page address, the referring address and browser performance measurements. It is not used on signed-in pages, the API or the billing service, and it skips pages whose address contains a query string or fragment.</p>
   <h3 id="site-source" data-toc="Where you came from">Where you came from</h3>
   <p>To learn which channels bring people to AudioKit, the page you land on reads three things: the name of the website that linked you to us (the host name only, such as <code>news.example.com</code>, never the full address), any <code>utm_</code> campaign tags in the link, and the path of that page. It adds them to that page's links to sign up and sign in. Nothing is stored on your device for this: no cookie and no browser storage. If you move to another page on the site first, the values are not carried over.</p>
   <p>If you follow one of those links and create an account, the values are stored with your account (see <a href="#account">your account</a>). If you do not create an account, nothing is stored on our side.</p>
 </section>
 
 <section>
-  <h2 id="account">Your account and the console</h2>
+  <h2 id="account">Your account</h2>
   <h3 id="account-signin" data-toc="Signing in">Signing in</h3>
   <p>You sign up and sign in with your email address. We email you a single-use sign-in link that expires after 15 minutes. We keep only a cryptographic hash of each link, with when it was created, used and expires. There is no password.</p>
-  <p>Once you are signed in, the console sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. The console needs it to work. The console runs no analytics script.</p>
-  <p>If you pick Light or Dark with the theme switch on audiokit.ai or in the console, your browser keeps that choice in its local storage as <code>ak-theme</code>. It is saved only when you pick a theme, is used for nothing else, and is removed when you pick System again.</p>
+  <p>Once you are signed in, audiokit.ai sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. Signed-in pages need it to work, and they run no analytics script.</p>
+  <p>If you pick Light or Dark with the theme switch on audiokit.ai, your browser keeps that choice in its local storage as <code>ak-theme</code>. It is saved only when you pick a theme, is used for nothing else, and is removed when you pick System again.</p>
   <h3 id="account-data" data-toc="What we keep">What we keep about you</h3>
   <ul>
     <li><strong>Account:</strong> email address, name, and company if you give one; when the address was verified; account status; when the account was created and last signed in.</li>
-    <li><strong>Where you came from:</strong> if you arrived through the site, the referring host name, <code>utm_</code> tags and landing path described <a href="#site-source">above</a>, with the time of signup. These are set once, when the account is created, and never updated. If you arrive at the console directly, the host name of the page that linked to it (from your browser's <code>Referer</code> header) may be used instead. Internet addresses, email addresses and full URLs are discarded.</li>
+    <li><strong>Where you came from:</strong> if you arrived through the site, the referring host name, <code>utm_</code> tags and landing path described <a href="#site-source">above</a>, with the time of signup. These are set once, when the account is created, and never updated. If you go straight to the sign-up page, the host name of the page that linked to it (from your browser's <code>Referer</code> header) may be used instead. Internet addresses, email addresses and full URLs are discarded.</li>
     <li><strong>API keys:</strong> a hash of each key (never the key itself after it is shown to you once), its name, its first characters for display, and when it was created, last used and revoked.</li>
     <li><strong>Plan and usage:</strong> your plan, billing periods, and counts of jobs by operation per period.</li>
     <li><strong>Email preferences:</strong> whether you want payment receipts and product updates. Product updates are off unless you turn them on.</li>
@@ -68,7 +68,7 @@
 <!--kit-->
 <section>
   <h2 id="updates-list">Product updates signup</h2>
-  <p>You can subscribe to an occasional email about new AudioKit features and changes, using the form on the landing page whenever it is shown. Subscribing is separate from creating an account: it does not create one, and it is a different list from the email preferences in the console. Nothing is sent anywhere until you submit the form.</p>
+  <p>You can subscribe to an occasional email about new AudioKit features and changes, using the form on the landing page whenever it is shown. Subscribing is separate from creating an account: it does not create one, and it is a different list from the email preferences in your account settings. Nothing is sent anywhere until you submit the form.</p>
   <h3 id="updates-collected" data-toc="What is collected">What is collected, and how</h3>
   <p>Only the email address you enter. The form sends it from your browser to Kit (formerly ConvertKit), the service we use to run this list. Kit also receives your IP address and browser details, as any website does when it receives a request. Kit then emails you a confirmation message, and you are subscribed only after you click the link in it. Once you confirm, Kit sends you to a confirmation page on audiokit.ai. We use your address only to send you product updates.</p>
   <h3 id="updates-processor" data-toc="Kit as processor">Kit as processor</h3>
@@ -89,7 +89,7 @@
 <!--kit-->
     <tr><td>Product update emails to people who subscribe on audiokit.ai</td><td>Your consent (a), which you give by entering your address and confirming it, and can withdraw at any time by unsubscribing</td></tr>
 <!--/kit-->
-    <tr><td>Product update emails, if you turn them on</td><td>Your consent (a), which you can withdraw in the console at any time</td></tr>
+    <tr><td>Product update emails, if you turn them on</td><td>Your consent (a), which you can withdraw in your account settings at any time</td></tr>
   </tbody></table></div>
   <p>Where we rely on legitimate interests, you can object, as described <a href="#rights">below</a>.</p>
 </section>
@@ -101,7 +101,7 @@
     <tr><td>Railway</td><td>Runs the API, the billing service and their databases</td><td>EU (Amsterdam)</td></tr>
     <tr><td>GitHub</td><td>Stores encrypted backups of our databases. We hold the only decryption key, so GitHub holds the backups as ciphertext it cannot read</td><td>United States and its global network</td></tr>
     <tr><td>Modal</td><td>GPU processing for stem separation</td><td>EU</td></tr>
-    <tr><td>Netlify</td><td>Hosts audiokit.ai and the console</td><td>United States and its global network</td></tr>
+    <tr><td>Netlify</td><td>Hosts audiokit.ai</td><td>United States and its global network</td></tr>
     <tr><td>Stripe</td><td>Payments, subscriptions, invoices and tax</td><td>United States</td></tr>
     <tr><td>Sentry</td><td>Error monitoring for the site, API and billing service</td><td>United States</td></tr>
     <tr><td>Resend</td><td>Sending our email</td><td>United States</td></tr>
@@ -134,7 +134,7 @@
 <section>
   <h2 id="retention">How long we keep it</h2>
   <ul>
-    <li><strong>Console sign-in cookie:</strong> 8 hours, or until you sign out.</li>
+    <li><strong>Sign-in cookie:</strong> 8 hours, or until you sign out.</li>
     <li><strong>Sign-in links:</strong> usable for 15 minutes. The hash record stays with your account.</li>
     <li><strong>Account, API key records, preferences and signup source:</strong> for as long as your account exists.</li>
     <li><strong>Job records, webhook deliveries and payment events from Stripe:</strong> deleted after 90 days, or sooner if you delete your account.</li>
@@ -149,7 +149,7 @@
     <li><strong>Encrypted database backups at GitHub:</strong> 90 days, then GitHub deletes them. They are daily copies of the databases made for recovery, so a deletion you ask for reaches them within 90 days.</li>
     <li><strong>Hosting logs at Netlify and analytics at Cloudflare:</strong> we keep none ourselves; the providers keep them under their own retention practices. Cloudflare gives us aggregate reports only.</li>
   </ul>
-  <p>You can delete your account yourself in the console, or email <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and we will do it. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices.</p>
+  <p>You can delete your account yourself in your account settings, or email <a href="mailto:hello@epsilonrecords.com">hello@epsilonrecords.com</a> and we will do it. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices.</p>
 </section>
 
 <section>
@@ -157,7 +157,7 @@
   <p>Under the GDPR you have the right to:</p>
   <ul>
     <li>access the personal data we hold about you and get a copy;</li>
-    <li>have inaccurate data corrected (you can change your name in the console's settings);</li>
+    <li>have inaccurate data corrected (you can change your name in your account settings);</li>
     <li>have your data erased;</li>
     <li>restrict how we process it;</li>
     <li>receive the data you gave us in a portable format;</li>
