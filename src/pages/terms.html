@@ -1,0 +1,113 @@
+<!-- {"title": "Terms of service", "description": "The terms for using AudioKit: accounts, your audio, prepaid credits, refunds, acceptable use and what happens when things go wrong.", "layout": "docs"} -->
+<section class="doc-intro">
+  <p class="kicker">Legal</p>
+  <h1>Terms of service</h1>
+  <p class="lede">These terms are the agreement between you and AudioKit for using audiokit.ai, the console at {{CONSOLE_URL}} and the API. By creating an account or sending a request to the API, you accept them.</p>
+  <p class="note">Effective from <mark class="gap">[OPEN: effective date, set at publication]</mark></p>
+  <p class="note"><mark class="gap">[OPEN: Nate has not approved this text. Agent draft, not legal advice. Do not publish.]</mark></p>
+</section>
+
+<section>
+  <h2 id="who">Who we are</h2>
+  <p>AudioKit is run by Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam, the same organisation that is the controller in the <a href="/privacy/#controller">privacy notice</a>. In these terms, "AudioKit", "we" and "us" mean Epsilon Records, and "you" means the person or company that creates the account. <mark class="gap">[OPEN: the legal entity that signs these terms, with its legal form]</mark></p>
+  <p>AudioKit is a service for businesses and developers and is not meant for children under 16. <mark class="gap">[OPEN: business use only, or consumers too]</mark></p>
+</section>
+
+<section>
+  <h2 id="service">What AudioKit is</h2>
+  <p>AudioKit is an API for analysing and processing audio. It measures tracks (loudness, tempo, key, fingerprint, tags and similar), and it can transcode, preview and normalize audio and separate it into stems. The operations and how to call them are in the <a href="/docs/">docs</a> and the public API contract.</p>
+  <p>AudioKit is in beta. Features, prices and limits can change as it grows.</p>
+</section>
+
+<section>
+  <h2 id="account">Your account</h2>
+  <ul>
+    <li>You sign up and sign in with your email address, using a single-use link we email you. You need to be able to receive email at that address, and we verify it.</li>
+    <li>One Free account per verified email address. Do not create extra accounts to get more free credits.</li>
+    <li>Keep your API keys secret. You are responsible for everything done with your keys until you revoke them in the console.</li>
+    <li>Give us accurate information, and keep your email address up to date.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="audio">Your audio</h2>
+  <p>You keep all rights in your audio, and we claim none. <mark class="gap">[OPEN: confirm the wording on ownership and on the licence you give us to process a file]</mark></p>
+  <p>AudioKit fetches each input from the URL you send, processes it in a temporary working directory and uploads the results to the URLs you provide. We do not keep copies of your audio and we do not use it to train models. Stem separation runs on GPUs provided by Modal in the EU. The <a href="/privacy/#api">privacy notice</a> has the details, including how long job records are kept.</p>
+  <p>You confirm that you have the right to send us the files you submit and to have them processed. <mark class="gap">[OPEN: whether you must cover us against claims about files you submit]</mark></p>
+  <p>Results such as loudness, tempo, key, fingerprints and tags are computed automatically and can be wrong. <mark class="gap">[OPEN: wording of the disclaimer for automatic results]</mark></p>
+</section>
+
+<section>
+  <h2 id="credits">Credits and payment</h2>
+  <p>AudioKit is paid for with prepaid credits. The price of a credit, the packs on sale and what each operation costs are on the <a href="/pricing/">pricing page</a>, as shown when you buy or run a job. Prices are in US dollars and do not include VAT or similar taxes, which we add at checkout where they are required. Payments are processed by Stripe, and we never see your card number.</p>
+  <ul>
+    <li><strong>Free credits.</strong> Every account gets free credits each calendar month (UTC). Unspent free credits lapse at the end of the month.</li>
+    <li><strong>Purchased credits.</strong> Credits you buy do not expire.</li>
+    <li><strong>Order of spending.</strong> We spend your monthly free credits first, then purchased credits (oldest first), then any credits we have granted you.</li>
+    <li><strong>No negative balance.</strong> A job is accepted when your balance covers the minimum for its operation. Per-minute operations are charged for the real length of the audio. If your balance cannot cover the full cost once that length is known, the job fails and you are not charged for it.</li>
+    <li><strong>Jobs that fail on our side.</strong> A job that fails because of us, including a time-out, is not charged. <mark class="gap">[OPEN: confirm that time-outs stay free once packs are on sale]</mark></li>
+    <li><strong>Changes to prices.</strong> A price or rate change applies to purchases and jobs after we publish it. Credits you already hold keep their number. <mark class="gap">[OPEN: how much notice before a rate change]</mark></li>
+    <li><strong>Credits are not money.</strong> They cannot be transferred to another account or exchanged for cash, except as a refund under the next section. <mark class="gap">[OPEN: confirm]</mark></li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="refunds">Refunds</h2>
+  <p>Credit packs are non-refundable.</p>
+  <p>The one exception is a mistake on our side, such as charging you twice. We refund a charge made in error. <mark class="gap">[OPEN: what counts as an error, and how to ask for a refund while there is no published support address]</mark></p>
+  <p>When the charge for a credit pack is refunded, or you dispute it with your bank or card issuer, we remove that pack's unspent credits from your balance. Your balance never goes below zero, and credits you have already spent stay spent.</p>
+  <p><mark class="gap">[OPEN: consumers' legal right to cancel an online purchase within 14 days. Either sell to businesses only, or add the checkout consent that applies for digital content delivered at once]</mark></p>
+</section>
+
+<section>
+  <h2 id="use">Acceptable use</h2>
+  <p><mark class="gap">[OPEN: this list is an agent proposal and needs approval]</mark></p>
+  <p>Do not use AudioKit to:</p>
+  <ul>
+    <li>process audio you have no right to process, or to break the law;</li>
+    <li>get around limits, for example with more than one Free account per verified email address, by pooling free credits across keys, or by avoiding rate limits or credit checks;</li>
+    <li>overload, probe or interfere with the service, or reach another account's data;</li>
+    <li>resell raw access to the API. <mark class="gap">[OPEN: is reselling allowed?]</mark></li>
+  </ul>
+  <p>We apply rate limits per API key and per IP address. If you break these rules we may limit, suspend or end your access. When we revoke a key, its queued jobs are cancelled and its running jobs are stopped. <mark class="gap">[OPEN: notice before suspension, and what happens to your credits]</mark></p>
+</section>
+
+<section>
+  <h2 id="ip">What belongs to whom</h2>
+  <p>The AudioKit client libraries (the TypeScript and Python SDKs) are licensed under the MIT licence, which each package includes. The rest of AudioKit, meaning the service, the site and the docs, belongs to us. Open-source software we use stays under its own licences.</p>
+  <p>The API contract (<code>openapi.yaml</code>) is published for anyone to read. <mark class="gap">[OPEN: what you may do with the API contract, which is public but marked proprietary]</mark></p>
+</section>
+
+<section>
+  <h2 id="availability">Availability and changes</h2>
+  <p>AudioKit is provided as it is available. We do not promise a level of uptime, and there is no service-level agreement. We may change, add or remove features. <mark class="gap">[OPEN: notice before a breaking API change or before an operation is withdrawn]</mark></p>
+  <p><mark class="gap">[OPEN: support commitment, if any, and how to reach support]</mark></p>
+</section>
+
+<section>
+  <h2 id="liability">Liability</h2>
+  <p>Nothing in these terms limits liability that the law does not allow us to limit. <mark class="gap">[OPEN: warranty disclaimer, liability cap and exclusions]</mark></p>
+</section>
+
+<section>
+  <h2 id="ending">Ending your use</h2>
+  <p>You can stop using AudioKit at any time, and you can delete your account yourself in the console. Deleting it revokes your API keys and removes your account, jobs and usage data, except records we must keep by law, such as invoices (see the <a href="/privacy/#retention">privacy notice</a>). Unspent credits are not refunded when you delete an account. <mark class="gap">[OPEN: unspent purchased credits on deletion: forfeited, or refunded]</mark></p>
+  <p>We may suspend or end your access if you break these terms. <mark class="gap">[OPEN: grounds and notice]</mark></p>
+</section>
+
+<section>
+  <h2 id="changes">Changes to these terms</h2>
+  <p>When we change these terms, we update this page and the date at the top. If a change materially affects you, we will email the address on your account first. <mark class="gap">[OPEN: how many days before the change]</mark></p>
+</section>
+
+<section>
+  <h2 id="law">Governing law and disputes</h2>
+  <p><mark class="gap">[OPEN: governing law]</mark> <mark class="gap">[OPEN: courts or arbitration, and venue]</mark></p>
+  <p>If you are a consumer, the mandatory consumer-protection rules of the country where you live still apply.</p>
+</section>
+
+<section>
+  <h2 id="notices">Contact and notices</h2>
+  <p>For requests about your personal data, see <a href="/privacy/#controller">who is responsible</a> in the privacy notice. <mark class="gap">[OPEN: address for support and legal notices. None is published until one is shown to receive mail]</mark></p>
+  <p><mark class="gap">[OPEN: standard clauses: entire agreement, severability, assignment, language]</mark></p>
+</section>

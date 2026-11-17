@@ -4,7 +4,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { join, dirname } from "node:path";
@@ -98,7 +98,10 @@ test("every gap in the notice is a visible, marked placeholder", () => {
 });
 
 test("a production build refuses to publish while the notice has gaps", async () => {
-  const gaps = findGaps(notice);
+  // The gate covers every page, so a draft page with open gaps (terms.html) also holds production.
+  const names = (await readdir(join(root, "src/pages"))).filter((f) => f.endsWith(".html"));
+  const pages = await Promise.all(names.map((f) => read(`src/pages/${f}`)));
+  const gaps = pages.flatMap(findGaps);
   const run = promisify(execFile)(process.execPath, ["scripts/build.mjs"], {
     cwd: root,
     env: { ...process.env, CONTEXT: "production" },
