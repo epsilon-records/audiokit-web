@@ -1,7 +1,7 @@
 // The terms page (audiokit-web#78) is a DRAFT: Nate approves the text before it ships (shared 0012).
 // Every clause nobody has decided is a visible <mark class="gap">[OPEN: …]</mark>, and a production
 // build refuses to publish while any is left. Settled clauses follow AudioKit decisions 0052, 0057,
-// 0063, 0072, 0074, 0081 and 0082 and shared decision 0040. Run: npm test
+// 0063, 0072, 0074, 0081, 0082 and 0085 and shared decision 0040. Run: npm test
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -31,7 +31,7 @@ test("every undecided clause is a visible, marked [OPEN: …] placeholder", () =
   assert.ok(marked > 0, "a draft has open points");
   assert.equal(marked, findGaps(page).length, "each [OPEN: …] sits in a <mark class=\"gap\">");
   const gaps = findGaps(page).join(" | ").toLowerCase();
-  for (const topic of ["governing law", "liability cap", "acceptable-use|agent proposal", "legal entity", "effective date", "has not approved"]) {
+  for (const topic of ["effective date", "has not approved", "counsel", "api contract", "warranty disclaimer"]) {
     assert.match(gaps, new RegExp(topic), topic);
   }
 });
@@ -51,7 +51,7 @@ test("credits follow 0052, 0063, 0072 and 0074", () => {
   assert.match(text, /Unspent free credits lapse at the end of the month/);
   assert.match(text, /monthly free credits first, then purchased credits[^]*?then any credits we have granted/);
   assert.match(text, /No negative balance/);
-  assert.doesNotMatch(text, /12 months|below zero; new jobs|\brepaid/i, "no expiry or debt language that decisions 0072 and 0074 removed");
+  assert.doesNotMatch(text, /expire[^.]*12 months|below zero; new jobs|\brepaid/i, "no expiry or debt language that decisions 0072 and 0074 removed");
 });
 
 test("it copies no price or rate: the pricing page is the source", () => {
@@ -68,9 +68,20 @@ test("SDKs are MIT and the contract is not licensed away (0081)", () => {
   assert.match(text, /SDKs\) are licensed under the MIT licence/);
 });
 
-test("it names the controller and address from the privacy notice, with no legal form", () => {
-  assert.match(text, /Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam/);
-  assert.doesNotMatch(text, /Epsilon Records (B\.V\.|BV|V\.O\.F|VOF|LLC|Ltd|Inc)/i);
+test("it names the seller and the address from the privacy notice (0085 point 1)", () => {
+  assert.match(text, /run by Epsilon Records LLC, a company registered in Nevada/);
+  assert.match(text, /Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam/);
+});
+
+test("it states the decisions of 0085", () => {
+  assert.match(text, /governed by the law of Nevada[^]*?courts of Nevada[^]*?EU[^]*?mandatory protections/);
+  assert.match(text, /agree that the service starts at once[^]*?lose that right once you have used the credits/);
+  assert.match(text, /limited to the fees you paid us in the 12 months[^]*?does not apply to liability that the law does not allow/);
+  assert.match(text, /Unspent credits are forfeited[^]*?warns you before you confirm/);
+  assert.match(text, /30 days' notice before a breaking change[^]*?at least 30 days before it takes effect/);
+  assert.match(text, /no promise of support until we publish a support address/);
+  assert.match(text, /including a time-out, is not charged/);
+  for (const rule of ["unlawful or that you do not have the rights to", "get around limits", "probe the service for weaknesses", "resell access"]) assert.ok(text.includes(rule), rule);
 });
 
 test("it links the privacy notice, publishes no mailbox and names no client", () => {
