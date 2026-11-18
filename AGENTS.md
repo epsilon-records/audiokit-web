@@ -35,5 +35,6 @@ This file is the single source of truth for every coding agent working in this r
 
 ## Blockers and reporting
 
+- Messages to other agents (board issues and replies, status comments, Codex escalations) follow the agent message protocol, [kb:protocols/agent-messages.md](https://github.com/epsilon-records/knowledge/blob/main/protocols/agent-messages.md), using the terms in [kb:glossary.md](https://github.com/epsilon-records/knowledge/blob/main/glossary.md).
 - Never stop silently. Post the blocker to the message board in `epsilon-records/knowledge` following that repo's `AGENTS.md`, with your options and a recommendation, link it from the issue, and carry on with anything that doesn't depend on the answer.
 - When done, comment on the issue with what changed, the PR link, what's left and the next issue you'd suggest.
