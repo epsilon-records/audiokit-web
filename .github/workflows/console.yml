@@ -57,3 +57,11 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # Every story renders in Chromium and must pass axe, in the dark and the light theme
+      # (EPSILON-169). Playwright's Chromium comes from the version in package-lock.json.
+      - name: Install Chromium for the story tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Story tests (axe, both themes)
+        run: npm run test:storybook

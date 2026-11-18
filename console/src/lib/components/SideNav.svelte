@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import ThemeToggle from './ThemeToggle.svelte';
 
 	type Props = { apiVersion: string };
 
@@ -41,4 +42,5 @@
 	<a href="https://audiokit.ai/">Marketing site ↗</a>
 	<a href="https://audiokit.ai/privacy/">Privacy ↗</a>
 	<span class="side-caption">API v{apiVersion}</span>
+	<ThemeToggle />
 </div>

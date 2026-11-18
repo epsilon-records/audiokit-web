@@ -61,12 +61,18 @@
 				</div>
 				<div>
 					<dt>{data.account.cancelsAt ? 'Access ends' : 'Renews / resets'}</dt>
-					<dd>{data.account.cancelsAt ? `${planLabel} until ${formatDate(data.account.cancelsAt)}` : formatDate(data.account.renewsAt)}</dd>
+					<dd>
+						{data.account.cancelsAt
+							? `${planLabel} until ${formatDate(data.account.cancelsAt)}`
+							: formatDate(data.account.renewsAt)}
+					</dd>
 				</div>
 			</dl>
 			<div class="actions">
 				<a class="btn btn-primary" href="/pricing">See pricing</a>
-				<form method="POST" action="?/portal" use:enhance><button type="submit" class="btn btn-ghost">Manage billing ↗</button></form>
+				<form method="POST" action="?/portal" use:enhance>
+					<button type="submit" class="btn btn-ghost">Manage billing ↗</button>
+				</form>
 			</div>
 		</div>
 	</section>
@@ -82,7 +88,10 @@
 				{#if data.account.plan === 'free'}
 					<p class="muted">No payment method on file. The Free plan does not need one.</p>
 				{:else}
-					<p class="muted">Payment details are managed in Stripe. Select <strong>Manage billing</strong> above to view or update your payment method.</p>
+					<p class="muted">
+						Payment details are managed in Stripe. Select <strong>Manage billing</strong> above to view
+						or update your payment method.
+					</p>
 				{/if}
 			{/if}
 		</div>

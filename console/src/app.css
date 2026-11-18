@@ -1,39 +1,148 @@
 /*
- * AudioKit console — plain CSS on the site's design tokens.
+ * AudioKit console: plain CSS on the AudioKit design tokens.
  *
- * The `:root` block below is copied verbatim from `src/static/styles.css`
- * (direction A, "Console"). It is copied rather than imported because the console
- * is built and deployed as its own app; the site build must not be pulled into
- * this Vite build. Keep the two token blocks in step: the site file is the
- * source of truth (knowledge decision 0016).
+ * The token block below follows the `[data-product='audiokit']` block of the shared token set
+ * (knowledge shared/design/tokens.css). The console's own names (--panel, --text-soft, ...) stay,
+ * and the shared names (--surface, --soft, --on-accent, --line-control, ...) sit beside them, so
+ * the old page CSS and the new components (src/tailwind.css, src/lib/components/ui) read the same
+ * values. Tailwind's Preflight is off until no page uses this file's element rules.
  *
- * No Tailwind, no component library. Class names that already exist on the site
- * (.btn, .panel, .code, .copy, .kicker, table, …) keep their meaning.
+ * Light and dark (D3a): dark by default, light when the system asks for it, and either one when
+ * the visitor picks it (static/theme-init.js sets data-theme before first paint). Code panels
+ * stay dark in both themes: see "Dark islands" below. Text pairs are at least 4.9:1 and control
+ * borders (--line-control) at least 3:1 on every ground, in both themes.
  */
 
 :root {
+	color-scheme: dark;
 	--bg: #0c0e11;
 	--bg-band: #101318;
 	--panel: #14171c;
 	--panel-deep: #0f1215;
 	--line: #262b33;
 	--line-strong: #3a414b;
+	/* Input, select, textarea and secondary-button borders (shared 0054): at least 3:1 on every ground. */
+	--line-control: #646a73;
 	--text: #e6e8eb;
+	--text-strong: #ffffff;
 	--text-soft: #c3c9d1;
 	--muted: #b4bcc6;
 	--faint: #9aa3ae;
+	--placeholder: #7e8792;
 	--code: #d5dae0;
 	--accent: #ffb547;
+	--accent-hover: #ffc56f;
 	--accent-soft: rgba(255, 181, 71, 0.12);
 	--accent-ink: #14110a;
 	--ok: #7fd69a;
 	--warn: #ff8a7a;
+	--danger: #ff8a80;
 	--sans: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 	--radius: 10px;
 	--radius-sm: 6px;
+
+	/* The shared names, read by the components in src/lib/components/ui. */
+	--surface: var(--panel);
+	--surface-2: var(--panel-deep);
+	--soft: var(--text-soft);
+	--on-accent: var(--accent-ink);
+	--code-bg: #0f1215;
+	--code-fg: #d5dae0;
+	--font-body: var(--sans);
+	--font-mono: var(--mono);
 }
 
+/* Light (D3a): paper ground, the amber darkened until it reads at 4.9:1 on every ground. */
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme='dark']) {
+		color-scheme: light;
+		--bg: #f4f4f2;
+		--bg-band: #ededeb;
+		--panel: #fbfbfa;
+		--panel-deep: #f0f0ee;
+		--line: #d6d7d3;
+		--line-strong: #565b62;
+		--line-control: #7d8087;
+		--text: #17181a;
+		--text-strong: #000000;
+		--text-soft: #3c3e42;
+		--muted: #5c5f66;
+		--faint: #5f656c;
+		--placeholder: #6b6f76;
+		--code: #2a2d31;
+		--accent: #8a5200;
+		--accent-hover: #6f4100;
+		--accent-soft: rgba(138, 82, 0, 0.08);
+		--accent-ink: #ffffff;
+		--ok: #18703d;
+		--warn: #b3261e;
+		--danger: #b3261e;
+	}
+}
+:root[data-theme='light'] {
+	color-scheme: light;
+	--bg: #f4f4f2;
+	--bg-band: #ededeb;
+	--panel: #fbfbfa;
+	--panel-deep: #f0f0ee;
+	--line: #d6d7d3;
+	--line-strong: #565b62;
+	--line-control: #7d8087;
+	--text: #17181a;
+	--text-strong: #000000;
+	--text-soft: #3c3e42;
+	--muted: #5c5f66;
+	--faint: #5f656c;
+	--placeholder: #6b6f76;
+	--code: #2a2d31;
+	--accent: #8a5200;
+	--accent-hover: #6f4100;
+	--accent-soft: rgba(138, 82, 0, 0.08);
+	--accent-ink: #ffffff;
+	--ok: #18703d;
+	--warn: #b3261e;
+	--danger: #b3261e;
+}
+
+/*
+ * Dark islands: code panels (a .panel holding a .code block, or a bare pre/.code) keep the dark
+ * values in the light theme, the way a terminal reads dark on paper. They restate their own
+ * internals so nothing inside picks up a light value. Same values as the dark :root block.
+ */
+.panel:has(.code),
+pre,
+.code,
+.dark-island {
+	--bg: #0c0e11;
+	--bg-band: #101318;
+	--panel: #14171c;
+	--panel-deep: #0f1215;
+	--line: #262b33;
+	--line-strong: #3a414b;
+	--line-control: #646a73;
+	--text: #e6e8eb;
+	--text-strong: #ffffff;
+	--text-soft: #c3c9d1;
+	--muted: #b4bcc6;
+	--faint: #9aa3ae;
+	--placeholder: #7e8792;
+	--code: #d5dae0;
+	--accent: #ffb547;
+	--accent-hover: #ffc56f;
+	--accent-soft: rgba(255, 181, 71, 0.12);
+	--accent-ink: #14110a;
+	--ok: #7fd69a;
+	--warn: #ff8a7a;
+	--danger: #ff8a80;
+	/* Restated here: an alias declared on :root resolves there, so the island would inherit the
+	   light values. */
+	--surface: var(--panel);
+	--surface-2: var(--panel-deep);
+	--soft: var(--text-soft);
+	--on-accent: var(--accent-ink);
+	color-scheme: dark;
+}
 * {
 	box-sizing: border-box;
 }
@@ -50,11 +159,12 @@ body {
 	-webkit-font-smoothing: antialiased;
 }
 
-a {
+/* Links drawn as buttons (src/lib/components/ui/button) style themselves. */
+a:not([data-slot='button']) {
 	color: inherit;
 	text-decoration: none;
 }
-a:hover {
+a:not([data-slot='button']):hover {
 	color: var(--accent);
 }
 a:focus-visible,
@@ -62,6 +172,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 summary:focus-visible,
+pre:focus-visible,
 textarea:focus-visible {
 	outline: 2px solid var(--accent);
 	outline-offset: 3px;
@@ -147,11 +258,11 @@ code {
 	color: var(--accent-ink);
 }
 .btn-primary:hover {
-	background: #ffc56f;
+	background: var(--accent-hover);
 	color: var(--accent-ink);
 }
 .btn-ghost {
-	border-color: var(--line-strong);
+	border-color: var(--line-control);
 	color: var(--text);
 }
 .btn-ghost:hover {
@@ -163,7 +274,7 @@ code {
 	color: var(--warn);
 }
 .btn-danger:hover {
-	background: rgba(255, 138, 122, 0.12);
+	background: color-mix(in srgb, var(--warn) 12%, transparent);
 	color: var(--warn);
 }
 .btn-quiet {
@@ -187,7 +298,7 @@ code {
 }
 .link {
 	color: var(--accent);
-	border-bottom: 1px solid rgba(255, 181, 71, 0.4);
+	border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .link:hover {
 	border-bottom-color: var(--accent);
@@ -273,7 +384,7 @@ code {
 	color: var(--muted);
 	background: transparent;
 	cursor: pointer;
-	border: 1px solid var(--line-strong);
+	border: 1px solid var(--line-control);
 	border-radius: 4px;
 	padding: 4px 10px;
 	min-height: 28px;
@@ -390,15 +501,15 @@ td.numeric {
 	font: 500 12px var(--mono);
 	color: var(--accent);
 	background: var(--accent-soft);
-	border: 1px solid rgba(255, 181, 71, 0.35);
+	border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 	border-radius: 99px;
 	padding: 3px 10px;
 	white-space: nowrap;
 }
 .plan-badge-warn {
 	color: var(--warn);
-	background: rgba(255, 138, 122, 0.12);
-	border-color: rgba(255, 138, 122, 0.4);
+	background: color-mix(in srgb, var(--warn) 12%, transparent);
+	border-color: color-mix(in srgb, var(--warn) 40%, transparent);
 }
 
 /* Account menu is a native disclosure: keyboard support for free. */
@@ -480,7 +591,7 @@ td.numeric {
 	display: none;
 	min-height: 38px;
 	min-width: 38px;
-	border: 1px solid var(--line-strong);
+	border: 1px solid var(--line-control);
 	border-radius: var(--radius-sm);
 	background: transparent;
 	color: var(--text);
@@ -567,7 +678,7 @@ td.numeric {
 	gap: 8px 16px;
 	padding: 10px 16px;
 	margin-bottom: 20px;
-	border: 1px solid rgba(255, 181, 71, 0.35);
+	border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 	background: var(--accent-soft);
 	border-radius: var(--radius-sm);
 	color: var(--text-soft);
@@ -577,12 +688,12 @@ td.numeric {
 	color: var(--text);
 }
 .banner-warn {
-	border-color: rgba(255, 138, 122, 0.4);
-	background: rgba(255, 138, 122, 0.12);
+	border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+	background: color-mix(in srgb, var(--warn) 12%, transparent);
 }
 .banner-ok {
-	border-color: rgba(127, 214, 154, 0.4);
-	background: rgba(127, 214, 154, 0.1);
+	border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+	background: color-mix(in srgb, var(--ok) 10%, transparent);
 }
 .banner .actions {
 	margin-left: auto;
@@ -654,7 +765,7 @@ td.numeric {
 	color: var(--muted);
 }
 .stat-tile-warn {
-	border-color: rgba(255, 138, 122, 0.45);
+	border-color: color-mix(in srgb, var(--warn) 45%, transparent);
 }
 .stat-tile-warn .stat-value {
 	color: var(--warn);
@@ -756,14 +867,14 @@ td.numeric {
 	min-height: 44px;
 	padding: 10px 12px;
 	background: var(--bg);
-	border: 1px solid var(--line-strong);
+	border: 1px solid var(--line-control);
 	border-radius: var(--radius-sm);
 	color: var(--text);
 	font: inherit;
 	font-size: 15px;
 }
 .input::placeholder {
-	color: #7e8792;
+	color: var(--placeholder);
 }
 .input:hover {
 	border-color: var(--muted);
@@ -800,15 +911,15 @@ td.numeric {
 	align-items: center;
 }
 .notice-ok {
-	border-color: rgba(127, 214, 154, 0.4);
-	background: rgba(127, 214, 154, 0.08);
+	border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+	background: color-mix(in srgb, var(--ok) 8%, transparent);
 }
 .notice-warn {
-	border-color: rgba(255, 138, 122, 0.4);
-	background: rgba(255, 138, 122, 0.08);
+	border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+	background: color-mix(in srgb, var(--warn) 8%, transparent);
 }
 .notice-info {
-	border-color: rgba(255, 181, 71, 0.35);
+	border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 	background: var(--accent-soft);
 }
 .notice .actions {
@@ -989,7 +1100,7 @@ dialog::backdrop {
 }
 .dialog-close {
 	background: transparent;
-	border: 1px solid var(--line-strong);
+	border: 1px solid var(--line-control);
 	border-radius: 4px;
 	color: var(--muted);
 	font: inherit;
@@ -1049,7 +1160,7 @@ dialog::backdrop {
 }
 .chart-bar:hover,
 .chart-bar:focus {
-	fill: #ffc56f;
+	fill: var(--accent-hover);
 }
 .chart-axis {
 	fill: var(--faint);

@@ -174,7 +174,8 @@
 				<span>{reveal.label}</span>
 				<CopyButton value={reveal.secret} label="Copy key" />
 			</div>
-			<pre class="code">{reveal.secret}</pre>
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+			<pre class="code" tabindex="0">{reveal.secret}</pre>
 		</div>
 		{#if reveal.webhookSecret}
 			<p class="muted">
@@ -189,7 +190,8 @@
 					<span>Webhook secret</span>
 					<CopyButton value={reveal.webhookSecret} label="Copy webhook secret" />
 				</div>
-				<pre class="code">{reveal.webhookSecret}</pre>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+				<pre class="code" tabindex="0">{reveal.webhookSecret}</pre>
 			</div>
 		{/if}
 		<div class="actions">

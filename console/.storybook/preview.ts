@@ -1,18 +1,38 @@
 import type { Preview } from '@storybook/sveltekit';
 import '../src/app.css';
+import '../src/tailwind.css';
 
+// The theme toolbar sets data-theme on <html>, as static/theme-init.js does in the app.
 const preview: Preview = {
-	initialGlobals: {
-		backgrounds: { value: 'console' }
+	globalTypes: {
+		theme: {
+			description: 'Theme',
+			toolbar: {
+				title: 'Theme',
+				items: [
+					{ value: 'dark', title: 'Dark' },
+					{ value: 'light', title: 'Light' }
+				],
+				dynamicTitle: true
+			}
+		}
 	},
+	initialGlobals: {
+		theme: 'dark'
+	},
+	decorators: [
+		(story, context) => {
+			document.documentElement.dataset.theme = context.globals.theme === 'light' ? 'light' : 'dark';
+			document.documentElement.setAttribute('data-js', '');
+			return story();
+		}
+	],
 	parameters: {
 		layout: 'padded',
-		backgrounds: {
-			options: {
-				console: { name: 'Console', value: '#0c0e11' },
-				panel: { name: 'Panel', value: '#14171c' }
-			}
-		},
+		// The page ground comes from the theme's tokens (app.css), not from Storybook.
+		backgrounds: { disable: true },
+		// Fail the story test on accessibility violations, not just report them.
+		a11y: { test: 'error' },
 		// Components read the current route through `$app/state`; stories set the page here.
 		sveltekit_experimental: {
 			state: { page: { url: new URL('http://localhost/dashboard') } }

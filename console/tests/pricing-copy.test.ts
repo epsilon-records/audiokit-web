@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import pricingPage from '../src/routes/(console)/pricing/+page.svelte?raw';
+import pricingPage from '../src/routes/(app)/pricing/+page.svelte?raw';
 import consoleShell from '../src/lib/components/ConsoleShell.svelte?raw';
-import dashboardPage from '../src/routes/(console)/dashboard/+page.svelte?raw';
-import billingPage from '../src/routes/(console)/settings/billing/+page.svelte?raw';
-import pricingServer from '../src/routes/(console)/pricing/+page.server.ts?raw';
+import dashboardPage from '../src/routes/(app)/dashboard/+page.svelte?raw';
+import billingPage from '../src/routes/(app)/settings/billing/+page.svelte?raw';
+import pricingServer from '../src/routes/(app)/pricing/+page.server.ts?raw';
 import welcome from '../src/lib/components/Welcome.svelte?raw';
 import signupPage from '../src/routes/signup/+page.svelte?raw';
 import loginPage from '../src/routes/login/+page.svelte?raw';

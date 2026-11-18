@@ -12,7 +12,7 @@ vi.mock('#lib/api-client', async (importOriginal) => {
 	return { ...original, apiFor: () => client };
 });
 
-const { actions } = await import('../src/routes/(console)/settings/+page.server');
+const { actions } = await import('../src/routes/(app)/settings/+page.server');
 
 describe('settings: save preferences', () => {
 	it('keeps the stored quota-warnings value and takes the rest from the form', async () => {

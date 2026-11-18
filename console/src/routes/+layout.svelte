@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import '../tailwind.css';
 	import { browser } from '$app/env';
 	import AppPerformance from '#lib/components/AppPerformance.svelte';
 	import { createCollector, documentLifetime } from '#lib/app-metrics-client';

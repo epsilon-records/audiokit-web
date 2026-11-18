@@ -6,6 +6,14 @@
 [build]
   command = "npm run build"
   publish = "build"
+  # Each production deploy costs 15 Free-plan credits: only build when the app (this directory)
+  # or the API contract it reads changes, not for a change to the static site (EPSILON-169).
+  # An uncached build (refs equal, or either ref missing) always builds, as in
+  # storybook-site/netlify.toml. test/netlify-ignore.test.mjs runs this command against a
+  # throwaway repo.
+  # Deploy previews are off (Oracle, knowledge#134: Netlify credits until 14 Dec): a
+  # deploy-preview build is skipped unless its branch name ends in -preview.
+  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../contract; }"
 
 [build.environment]
   NODE_VERSION = "22"

@@ -122,7 +122,8 @@
 		</div>
 		<div class="panel-body">
 			<p class="muted">Base URL: <code>{data.apiBaseUrl}</code></p>
-			<pre class="code" aria-label="Example job request">{curl}</pre>
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+			<pre class="code" tabindex="0" aria-label="Example job request">{curl}</pre>
 			<a class="link" href="https://audiokit.ai/docs/">Get started guide ↗</a>
 		</div>
 	</div>

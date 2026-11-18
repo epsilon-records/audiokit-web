@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
-	"description": "AudioKit customer console \u2014 signed-in dashboard, usage, API keys, plan and settings.",
+	"description": "AudioKit customer console — signed-in dashboard, usage, API keys, plan and settings.",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
@@ -14,20 +14,28 @@
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
 		"test": "vitest run",
+		"test:storybook": "vitest run --config vitest.storybook.config.ts",
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build"
 	},
 	"devDependencies": {
+		"@storybook/addon-a11y": "^10.6.7",
 		"@storybook/addon-svelte-csf": "^5.1.6",
+		"@storybook/addon-vitest": "^10.6.7",
 		"@storybook/sveltekit": "^10.6.7",
 		"@sveltejs/adapter-netlify": "^7.0.1",
 		"@sveltejs/kit": "^3.1.1",
 		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@tailwindcss/vite": "^4.3.5",
+		"@types/node": "^26.6.6",
+		"@vitest/browser-playwright": "^5.1.0",
+		"playwright": "^1.65.1",
 		"prettier": "^3.9.10",
 		"prettier-plugin-svelte": "^4.1.1",
 		"storybook": "^10.6.7",
 		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.8",
+		"tailwindcss": "^4.3.5",
 		"typescript": "^6.0.3",
 		"vite": "^8.3.6",
 		"vitest": "^5.1.0"
@@ -37,5 +45,11 @@
 	},
 	"imports": {
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"bits-ui": "^2.21.0",
+		"clsx": "^2.1.1",
+		"tailwind-merge": "^3.7.0",
+		"tailwind-variants": "^4.0.2"
 	}
 }
