@@ -60,6 +60,10 @@ const PRIVACY_CHANGES: [string, string][] = [
 		'<p>Once you are signed in, audiokit.ai sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. Signed-in pages need it to work, and they run no analytics script.</p>'
 	],
 	[
+		'<p>If you pick Light or Dark with the theme switch on audiokit.ai, your browser keeps that choice in its local storage as <code>ak-theme</code>. It is saved only when you pick a theme, is used for nothing else, and is removed when you pick System again.</p>',
+		'<p>If you choose Light or Dark on audiokit.ai, your browser remembers that choice on this device. Choosing System clears the saved choice and follows your device’s appearance settings.</p>'
+	],
+	[
 		'If you arrive at the console directly, the host name',
 		'If you go straight to the sign-up page, the host name'
 	],

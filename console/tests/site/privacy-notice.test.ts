@@ -74,11 +74,11 @@ test('device storage it describes matches the code', () => {
 
 test('the theme choice it describes matches the code, on the public pages too (AudioKit 0079)', () => {
 	const key = /THEME_STORAGE_KEY = '([^']+)'/.exec(theme)![1];
-	assert.ok(text.includes(key), `notice names the ${key} storage key`);
-	assert.match(text, /If you pick Light or Dark with the theme switch on audiokit\.ai,/);
-	assert.match(
-		text,
-		/saved only when you pick a theme, is used for nothing else, and is removed when you pick System again/
+	assert.ok(!text.includes(key), 'notice omits the internal theme storage key');
+	assert.ok(
+		text.includes(
+			'If you choose Light or Dark on audiokit.ai, your browser remembers that choice on this device. Choosing System clears the saved choice and follows your device’s appearance settings.'
+		)
 	);
 	assert.match(theme, /if \(choice === 'system'\) storage\?\.removeItem\(THEME_STORAGE_KEY\)/);
 	// The switch the notice describes is in the public footer.
