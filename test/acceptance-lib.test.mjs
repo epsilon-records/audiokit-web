@@ -47,6 +47,10 @@ test("checkout and portal answers count as test mode only with test ids", () => 
   assert.throws(() => assertCheckoutIsTestMode({}), LiveModeError);
   assert.doesNotThrow(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/session/test_YWNjdF8x" }));
   assert.throws(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/session/live_abc" }), LiveModeError);
+  assert.doesNotThrow(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/session?secret=test_YWNjdF8x" }));
+  assert.throws(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/session?secret=live_abc" }), LiveModeError);
+  assert.throws(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/session" }), LiveModeError);
+  assert.throws(() => assertPortalIsTestMode({ url: "https://billing.stripe.com/p/other?secret=test_abc" }), LiveModeError);
 });
 
 test("logs shorten ids and redact the address", () => {

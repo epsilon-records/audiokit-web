@@ -95,7 +95,7 @@ Blocked until a test-mode pack price is set in production. Packs are not on sale
 ## 5. Customer portal
 
 - [ ] From the console open billing or invoices. If it opens the Stripe portal, the URL is
-      `billing.stripe.com/p/session/test_...` and the pack invoices are listed.
+      `billing.stripe.com/p/session/test_...` (or `/p/session?secret=test_...`) and the pack invoices are listed.
 - [ ] Expect: nothing in the console or portal still offers Pro, a subscription or a downgrade.
 
 ## 6. Expiry and the monthly Free lapse
