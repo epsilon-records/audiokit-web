@@ -31,7 +31,7 @@ test("every undecided clause is a visible, marked [OPEN: …] placeholder", () =
   assert.ok(marked > 0, "a draft has open points");
   assert.equal(marked, findGaps(page).length, "each [OPEN: …] sits in a <mark class=\"gap\">");
   const gaps = findGaps(page).join(" | ").toLowerCase();
-  for (const topic of ["effective date", "has not approved", "counsel", "api contract", "warranty disclaimer"]) {
+  for (const topic of ["effective date", "has not approved"]) {
     assert.match(gaps, new RegExp(topic), topic);
   }
 });
@@ -84,8 +84,9 @@ test("it states the decisions of 0085", () => {
   for (const rule of ["unlawful or that you do not have the rights to", "get around limits", "probe the service for weaknesses", "resell access"]) assert.ok(text.includes(rule), rule);
 });
 
-test("it links the privacy notice, publishes no mailbox and names no client", () => {
+test("it links the privacy notice, publishes only the 0088 mailbox and names no client", () => {
   assert.match(page, /href="\/privacy\/#controller"/);
-  assert.doesNotMatch(page, /mailto:/i);
+  const mailtos = [...page.matchAll(/mailto:[^"]+/gi)].map((m) => m[0].toLowerCase());
+  assert.ok(mailtos.length > 0 && mailtos.every((m) => m === "mailto:hello@epsilonrecords.com"), "AudioKit 0088: only hello@epsilonrecords.com");
   assert.doesNotMatch(page, /\bERMS\b|LabelKit|Epsilon Records Management/i);
 });

@@ -76,7 +76,7 @@ test("the Kit privacy disclosure follows kitDisclosure, not the form ID", async 
   assert.match(onHtml, /href="https:\/\/kit\.com\/gdpr"/);
   assert.match(onHtml, /<h2 id="updates-list"/);
   // Controller and contact are unchanged.
-  assert.match(on, /The controller for the personal data described here is Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam\./);
+  assert.match(on, /The controller for the personal data described here is Epsilon Records LLC, a company registered in Nevada, USA, with its address at Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam\./);
   assert.match(onHtml, /href="mailto:hello@epsilonrecords\.com"/);
 });
 

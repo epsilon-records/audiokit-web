@@ -73,10 +73,11 @@ test("no unpublished mailbox is advertised", () => {
   // is set up and shown to receive. Ask on the board before adding one back.
   // The one exception is the privacy contact Nate chose in shared decision 0013
   // (hello@epsilonrecords.com, the inbox epsilonrecords.com already publishes), and only on the
-  // privacy notice.
+  // privacy notice. AudioKit 0088 extends it to the terms page, for support, error-refund
+  // requests and legal notices. No other page may link it.
   const PRIVACY_CONTACT = "mailto:hello@epsilonrecords.com";
   pageFiles.forEach((file, i) => {
-    const html = file.endsWith("privacy.html") ? pages[i].replaceAll(`"${PRIVACY_CONTACT}"`, '""') : pages[i];
+    const html = file.endsWith("privacy.html") || file.endsWith("terms.html") ? pages[i].replaceAll(`"${PRIVACY_CONTACT}"`, '""') : pages[i];
     assert.doesNotMatch(html, /mailto:/i, `${file}: pages must not advertise an address that cannot receive`);
   });
   assert.doesNotMatch(allPages, /contact (us|sales)/i, "there is no contact channel to point at");
