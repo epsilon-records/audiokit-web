@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 // Every sign-in and sign-up CTA on the public pages points at this app's own /login and /signup
 // (AudioKit 0053: one app at audiokit.ai), and the early-access "Request access" form stays gone.
 // Ported from the static site's test/signin-cta.test.mjs (EPSILON-169 PR 2), where the links were
@@ -9,7 +10,7 @@ import { test } from 'vitest';
 import { SITE_PAGES } from '../../src/lib/site/routes';
 import { renderSitePage } from '../../src/lib/server/site/render';
 
-const app = new URL('../../', import.meta.url).pathname;
+const app = fileURLToPath(new URL('../../', import.meta.url));
 const read = (rel: string) => readFileSync(join(app, rel), 'utf8');
 
 function walk(dir: string): string[] {

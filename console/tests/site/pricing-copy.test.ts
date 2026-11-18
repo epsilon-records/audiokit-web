@@ -100,7 +100,10 @@ test('nothing can be bought yet, and Free sign-up still works (shared 0040)', ()
 		'no purchase link or button while credits are not spendable'
 	);
 	const start = rendered.indexOf('<h2>Credit packs</h2>');
-	const packCard = rendered.slice(start, rendered.indexOf('</article>', start));
+	assert.ok(start >= 0, 'the pricing page has a Credit packs card');
+	const end = rendered.indexOf('</article>', start);
+	assert.ok(end > start, 'the Credit packs card is closed');
+	const packCard = rendered.slice(start, end);
 	assert.doesNotMatch(
 		packCard,
 		/<a\b|<button\b|<form\b/,

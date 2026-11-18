@@ -38,7 +38,8 @@ async function load(): Promise<Contract> {
 		try {
 			const text = await fetchText(url);
 			const doc = YAML.parse(text);
-			if (!doc?.openapi || !doc?.paths) throw new Error('not an OpenAPI document');
+			if (!doc?.openapi || !doc?.info || !doc?.paths || !doc?.components?.schemas)
+				throw new Error('not an OpenAPI document the renderer can read');
 			console.log(`contract: ${url} (version ${doc.info?.version})`);
 			return { doc, text, source: url };
 		} catch (err) {

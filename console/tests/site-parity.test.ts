@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -11,8 +12,8 @@ import { siteConfig } from '../src/lib/site/config';
  * do. It goes with the static site's source in the cleanup (plan, X).
  */
 
-const repo = new URL('../../', import.meta.url).pathname;
-const app = new URL('../', import.meta.url).pathname;
+const repo = fileURLToPath(new URL('../../', import.meta.url));
+const app = fileURLToPath(new URL('../', import.meta.url));
 const read = (path: string) => readFileSync(path, 'utf8');
 
 function walk(dir: string): string[] {
