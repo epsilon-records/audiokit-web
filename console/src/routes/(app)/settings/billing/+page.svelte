@@ -69,7 +69,7 @@
 				</div>
 			</dl>
 			<div class="actions">
-				<a class="btn btn-primary" href="/pricing">See pricing</a>
+				<a class="btn btn-primary" href="/pricing/" data-sveltekit-reload>See pricing</a>
 				<form method="POST" action="?/portal" use:enhance>
 					<button type="submit" class="btn btn-ghost">Manage billing ↗</button>
 				</form>

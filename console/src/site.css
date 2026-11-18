@@ -1,0 +1,1371 @@
+/*
+ * The public pages' stylesheet (EPSILON-169 PR 2): the static site's src/static/styles.css, with
+ * every rule scoped to the public pages' <main class="site">, so nothing here reaches the
+ * signed-in app. Its tokens, base element rules, header and footer are dropped: app.css and the
+ * SiteHeader and SiteFooter components state those. Changes beyond the scope are at the end,
+ * under "One app".
+ */
+
+.site a {
+	color: inherit;
+	text-decoration: none;
+}
+.site a:hover {
+	color: var(--accent);
+}
+.site a:focus-visible,
+.site button:focus-visible,
+.site input:focus-visible,
+.site summary:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+	border-radius: 2px;
+}
+.site h1,
+.site h2,
+.site h3,
+.site h4,
+.site p,
+.site ul,
+.site ol,
+.site dl,
+.site dd,
+.site figure {
+	margin: 0;
+}
+.site ul,
+.site ol {
+	padding: 0;
+	list-style: none;
+}
+.site pre {
+	margin: 0;
+}
+.site code,
+.site .mono {
+	font-family: var(--mono);
+}
+.site code {
+	font-size: 0.9em;
+}
+
+.site .sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+.site .skip {
+	position: absolute;
+	left: 16px;
+	top: -48px;
+	z-index: 10;
+	background: var(--accent);
+	color: var(--accent-ink);
+	padding: 10px 14px;
+	border-radius: var(--radius-sm);
+}
+.site .skip:focus {
+	top: 12px;
+}
+.site .hidden {
+	display: none;
+}
+
+.site .wrap {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 32px;
+}
+.site .wrap-wide {
+	max-width: 1360px;
+	margin: 0 auto;
+	padding: 0 32px;
+}
+
+/* Buttons and links */
+.site .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 11px 18px;
+	border-radius: var(--radius-sm);
+	font-weight: 600;
+	font-size: 15px;
+	border: 1px solid transparent;
+	cursor: pointer;
+	font-family: inherit;
+}
+.site .btn-primary {
+	background: var(--accent);
+	color: var(--accent-ink);
+}
+.site .btn-primary:hover {
+	background: var(--accent-hover);
+	color: var(--accent-ink);
+}
+.site .btn-ghost {
+	border-color: var(--line-strong);
+	color: var(--text);
+}
+.site .btn-ghost:hover {
+	border-color: var(--accent);
+}
+.site .btn-lg {
+	padding: 14px 22px;
+	font-size: 16px;
+}
+.site .btn-sm {
+	min-height: 38px;
+	padding: 8px 14px;
+	font-size: 14px;
+}
+.site .link {
+	color: var(--accent);
+	border-bottom: 1px solid rgba(255, 181, 71, 0.4);
+	margin-right: 18px;
+}
+.site .link:hover {
+	border-bottom-color: var(--accent);
+}
+
+.site .kicker {
+	font-family: var(--mono);
+	font-size: 13px;
+	color: var(--accent);
+}
+.site .lede {
+	font-size: 20px;
+	line-height: 1.55;
+	color: var(--muted);
+	max-width: 60ch;
+}
+.site .actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+.site .dim {
+	color: var(--faint);
+}
+
+/* Hero */
+.site .hero {
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+	gap: 56px;
+	align-items: center;
+	padding-top: 88px;
+	padding-bottom: 80px;
+}
+.site .hero-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 26px;
+}
+.site .hero h1 {
+	font-size: clamp(40px, 5.2vw, 64px);
+	line-height: 1.03;
+	letter-spacing: -0.03em;
+	font-weight: 700;
+}
+
+/* The console: the one loud element on the landing page */
+.site .console {
+	background: var(--panel-deep);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.4),
+		0 30px 80px -40px rgba(255, 181, 71, 0.25);
+	overflow: hidden;
+	min-width: 0;
+}
+.site .console-bar {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 16px;
+	border-bottom: 1px solid var(--line);
+	font-family: var(--mono);
+	font-size: 12px;
+	color: var(--muted);
+}
+.site .console-body .code {
+	padding: 20px 20px 18px;
+}
+.site .prompt {
+	color: var(--accent);
+}
+.site .res {
+	font-weight: 500;
+}
+.site .res-ok {
+	color: var(--ok);
+}
+.site .console-event {
+	border-top: 1px dashed var(--line-strong);
+	padding: 18px 20px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.site .event-line {
+	font-family: var(--mono);
+	font-size: 13px;
+	color: var(--code);
+	overflow-wrap: anywhere;
+}
+.site .readout {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1px;
+	background: var(--line);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+}
+.site .readout div {
+	background: var(--panel);
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+.site .readout dt {
+	font-size: 12px;
+	color: var(--faint);
+}
+.site .readout dd {
+	font-family: var(--mono);
+	font-size: 17px;
+	color: var(--text);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.site .readout dd span {
+	font-size: 12px;
+	color: var(--faint);
+}
+.site .caption {
+	font-size: 12px;
+	color: var(--faint);
+}
+
+/* Code panels */
+.site .panel {
+	background: var(--panel);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+.site .panel-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 40px;
+	padding: 6px 8px 6px 16px;
+	border-bottom: 1px solid var(--line);
+	font-family: var(--mono);
+	font-size: 12px;
+	color: var(--faint);
+}
+.site .code {
+	padding: 18px 20px;
+	font-family: var(--mono);
+	font-size: 13px;
+	line-height: 1.7;
+	color: var(--code);
+	overflow-x: auto;
+	white-space: pre;
+	tab-size: 2;
+}
+.site .copy {
+	font: 500 12px var(--mono);
+	color: var(--muted);
+	background: transparent;
+	cursor: pointer;
+	border: 1px solid var(--line-strong);
+	border-radius: 4px;
+	padding: 4px 10px;
+	min-height: 28px;
+}
+.site .copy:hover {
+	color: var(--accent);
+	border-color: var(--accent);
+}
+
+/* Bands and sections */
+.site .band {
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+	background: var(--bg-band);
+}
+.site .steps {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 32px;
+	padding-top: 52px;
+	padding-bottom: 52px;
+	counter-reset: none;
+}
+.site .steps li {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.site .steps .num {
+	font-family: var(--mono);
+	font-size: 13px;
+	color: var(--accent);
+}
+.site .steps h3 {
+	font-size: 21px;
+	letter-spacing: -0.01em;
+}
+.site .steps p:last-child {
+	color: var(--muted);
+	line-height: 1.6;
+}
+.site .steps code {
+	color: var(--text);
+}
+
+.site .section {
+	padding-top: 88px;
+	padding-bottom: 88px;
+	display: flex;
+	flex-direction: column;
+	gap: 36px;
+}
+.site .rule-top {
+	border-top: 1px solid var(--line);
+}
+.site .section-head {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: end;
+	gap: 12px 24px;
+}
+.site .section h2 {
+	font-size: clamp(30px, 4vw, 42px);
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+}
+.site .section-head p {
+	color: var(--faint);
+	max-width: 56ch;
+}
+.site .section-head code {
+	color: var(--code);
+}
+.site .section-head a:hover code {
+	color: var(--accent);
+}
+
+/* Operation list (generated from the contract) */
+.site .op-group {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+	gap: 24px 48px;
+}
+.site .op-group + .op-group {
+	border-top: 1px solid var(--line);
+	padding-top: 36px;
+}
+.site .op-group-head {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.site .op-group-head h3 {
+	font-size: 22px;
+}
+.site .op-group-head p {
+	color: var(--faint);
+	line-height: 1.55;
+}
+.site .op-list {
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+.site .op-list li + li {
+	border-top: 1px solid var(--line);
+}
+.site .op-list a {
+	display: grid;
+	grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+	align-items: baseline;
+	gap: 16px;
+	padding: 15px 20px;
+	color: var(--muted);
+}
+.site .op-list a:hover {
+	background: var(--panel);
+	color: var(--text);
+}
+.site .op-list a:hover .op-name {
+	color: var(--accent);
+}
+.site .op-name {
+	color: var(--text);
+	font-size: 15px;
+}
+.site .op-desc {
+	line-height: 1.5;
+}
+.site .op-desc code {
+	color: var(--text-soft);
+}
+.site .op-flag {
+	font-size: 12px;
+	color: var(--faint);
+	border: 1px solid var(--line-strong);
+	border-radius: 99px;
+	padding: 2px 9px;
+	white-space: nowrap;
+}
+
+/* Split section */
+.site .split {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 48px 64px;
+}
+.site .split-copy {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.site .split-copy h2 {
+	font-size: clamp(26px, 3vw, 32px);
+}
+.site .split-copy p {
+	color: var(--muted);
+	line-height: 1.65;
+	max-width: 52ch;
+}
+
+/* Roadmap */
+.site .roadmap-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+	gap: 12px;
+}
+.site .roadmap-list li {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	border: 1px dashed var(--line-strong);
+	border-radius: var(--radius-sm);
+	padding: 14px 16px;
+	color: var(--text-soft);
+}
+.site .tag {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 3px 10px;
+	border-radius: 99px;
+	white-space: nowrap;
+}
+.site .tag-roadmap {
+	color: var(--faint);
+	border: 1px solid var(--line-strong);
+	font-weight: 500;
+}
+
+/* Closing CTA band */
+.site .access {
+	text-align: center;
+	align-items: center;
+	max-width: 760px;
+	margin: 0 auto;
+	gap: 24px;
+}
+.site .access p {
+	color: var(--muted);
+	font-size: 18px;
+	line-height: 1.6;
+}
+
+/* 404 */
+.site .status-page {
+	min-height: 62vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 22px;
+	padding-top: 80px;
+	padding-bottom: 80px;
+}
+.site .status-page h1 {
+	font-size: clamp(36px, 5vw, 52px);
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	max-width: 20ch;
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Docs */
+
+.site .docs {
+	display: grid;
+	grid-template-columns: 240px minmax(0, 1fr);
+	gap: 56px;
+}
+.site .docs-side {
+	padding-top: 40px;
+}
+.site .docs-side > nav {
+	position: sticky;
+	top: 0;
+	max-height: 100vh;
+	overflow-y: auto;
+	padding: 8px 4px 40px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	font-size: 15px;
+}
+.site .side-pages {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.site .side-page {
+	padding: 7px 12px;
+	border-radius: var(--radius-sm);
+	color: var(--text-soft);
+	border-left: 2px solid transparent;
+}
+.site .side-page[aria-current='page'] {
+	background: var(--panel);
+	color: var(--text);
+	border-left-color: var(--accent);
+	border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.site .toc summary {
+	font-size: 13px;
+	color: var(--faint);
+	cursor: pointer;
+	padding: 4px 12px;
+	list-style: none;
+}
+.site .toc summary::-webkit-details-marker {
+	display: none;
+}
+.site .toc-links {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	margin-top: 8px;
+	border-left: 1px solid var(--line);
+	margin-left: 12px;
+}
+.site .toc-links a {
+	padding: 4px 12px;
+	color: var(--muted);
+	font-size: 14px;
+	line-height: 1.4;
+}
+.site .toc-links a:hover {
+	color: var(--accent);
+}
+.site .toc-links .toc-2 {
+	color: var(--text-soft);
+	margin-top: 8px;
+}
+.site .toc-links .toc-2:first-child {
+	margin-top: 0;
+}
+.site .toc-links .toc-3 {
+	padding-left: 24px;
+	font-size: 13px;
+}
+
+.site .docs-main {
+	min-width: 0;
+	max-width: 880px;
+	padding: 48px 0 112px;
+	display: flex;
+	flex-direction: column;
+	gap: 72px;
+}
+.site .docs-main section {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+.site .docs-main h1 {
+	font-size: clamp(34px, 4.6vw, 48px);
+	letter-spacing: -0.025em;
+	line-height: 1.08;
+}
+.site .docs-main h2 {
+	font-size: 30px;
+	letter-spacing: -0.015em;
+	scroll-margin-top: 20px;
+}
+.site .docs-main h3 {
+	font-size: 21px;
+	scroll-margin-top: 20px;
+}
+.site .docs-main h4 {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-soft);
+	margin-top: 8px;
+}
+.site .docs-main h4 code {
+	color: var(--text);
+}
+.site .docs-main p,
+.site .docs-main li {
+	font-size: 16.5px;
+	line-height: 1.65;
+	color: var(--muted);
+}
+.site .docs-main p code,
+.site .docs-main li code,
+.site .docs-main td code {
+	color: var(--text);
+}
+.site .docs-main a:not(.btn):not(.side-page) {
+	color: var(--accent);
+}
+.site .docs-main a:not(.btn):hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.site .docs-main ul:not(.checklist):not(.next-links) {
+	list-style: disc;
+	padding-left: 22px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.site .doc-intro {
+	gap: 20px !important;
+}
+.site .doc-intro .lede {
+	font-size: 19px;
+}
+.site .note {
+	font-size: 14.5px !important;
+	color: var(--faint) !important;
+	border-left: 2px solid var(--accent);
+	padding: 4px 0 4px 14px;
+}
+.site .note code {
+	color: var(--text-soft) !important;
+}
+
+.site .checklist {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.site .checklist li {
+	position: relative;
+	padding-left: 28px;
+}
+.site .checklist li::before {
+	content: '';
+	position: absolute;
+	left: 4px;
+	top: 0.75em;
+	width: 10px;
+	height: 2px;
+	background: var(--accent);
+}
+.site .checklist strong {
+	color: var(--text);
+	font-weight: 600;
+}
+.site .next-links {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.site .callout {
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	padding: 20px 22px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.site .callout-soon {
+	border-style: dashed;
+}
+
+/* Reference */
+.site .endpoint,
+.site .operation {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding-top: 28px;
+	border-top: 1px solid var(--line);
+}
+.site .endpoint h3,
+.site .operation h3 {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 10px;
+	font-size: 19px;
+}
+.site .operation h3 code {
+	font-size: 21px;
+	color: var(--accent);
+}
+.site .path {
+	color: var(--text);
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+.site .method {
+	font: 600 12px var(--mono);
+	padding: 3px 8px;
+	border-radius: 4px;
+	letter-spacing: 0.02em;
+	border: 1px solid currentColor;
+	position: relative;
+	top: -2px;
+}
+.site .m-get {
+	color: var(--ok);
+}
+.site .m-post {
+	color: var(--accent);
+}
+.site .endpoint-summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	color: var(--text-soft) !important;
+}
+.site .auth {
+	font-size: 12px;
+	color: var(--faint);
+	border: 1px solid var(--line-strong);
+	border-radius: 99px;
+	padding: 1px 9px;
+}
+.site .auth-open {
+	border-style: dashed;
+}
+.site .lead {
+	color: var(--text-soft) !important;
+}
+.site .opt {
+	margin-left: 8px;
+	font: 400 12px var(--sans);
+	color: var(--faint);
+}
+.site .constraints {
+	font-size: 13px !important;
+	color: var(--faint) !important;
+	margin-top: 4px;
+}
+.site .constraints code {
+	color: var(--text-soft) !important;
+}
+.site .values {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 8px;
+	align-items: center;
+}
+.site .values code {
+	background: var(--panel);
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	padding: 2px 7px;
+	font-size: 13px;
+}
+.site .schemas {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+.site .schema {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 24px 0;
+	border-top: 1px solid var(--line);
+}
+.site .schema h3 {
+	font-size: 18px;
+}
+.site .schema h3 code {
+	color: var(--text);
+}
+.site .schema:target h3 code,
+.site .operation:target h3 code,
+.site .endpoint h3:target .path {
+	color: var(--accent);
+}
+.site .schema h3:target code {
+	color: var(--accent);
+}
+
+/* MCP page */
+.site .docs-main h3.tool-group {
+	font-size: 24px;
+	margin-top: 36px;
+}
+.site table.tool-fields td:first-child {
+	width: 32%;
+}
+.site table.tool-fields td.type {
+	width: 7.5rem;
+	min-width: 0;
+}
+.site .nowrap {
+	white-space: nowrap;
+}
+
+/* Tables */
+.site .table-box {
+	overflow-x: auto;
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+.site table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 15px;
+}
+.site th {
+	text-align: left;
+	color: var(--faint);
+	font-size: 13px;
+	font-weight: 500;
+	background: var(--bg-band);
+}
+.site th,
+.site td {
+	padding: 12px 16px;
+	vertical-align: top;
+}
+.site tbody tr {
+	border-top: 1px solid var(--line);
+}
+.site table.no-head tbody tr:first-child {
+	border-top: 0;
+}
+.site td.mono {
+	font-family: var(--mono);
+	font-size: 14px;
+	color: var(--text);
+	white-space: nowrap;
+}
+.site td.type {
+	font-size: 14px;
+	color: var(--text-soft);
+	min-width: 9rem;
+}
+.site td.type code {
+	font-size: 13px;
+}
+.site td.type a code {
+	color: var(--accent);
+}
+.site td.soft {
+	color: var(--muted);
+	min-width: 16rem;
+}
+.site td.soft p,
+.site td.soft li {
+	font-size: 14.5px !important;
+	line-height: 1.55;
+}
+.site td.soft p + p,
+.site td.soft ul {
+	margin-top: 6px;
+}
+.site table.fields td:first-child {
+	width: 1%;
+}
+.site .status.s2 {
+	color: var(--ok);
+}
+.site .status.s4,
+.site .status.s5 {
+	color: var(--warn);
+}
+
+@media (max-width: 1000px) {
+	.site .hero {
+		grid-template-columns: 1fr;
+		padding-top: 64px;
+	}
+	.site .steps {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.site .op-group {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 900px) {
+	.site .docs {
+		grid-template-columns: 1fr;
+		gap: 0;
+	}
+	.site .docs-side {
+		padding-top: 24px;
+	}
+	.site .docs-side > nav {
+		position: static;
+		max-height: none;
+		padding: 0;
+		gap: 16px;
+	}
+	.site .side-pages {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.site .side-page {
+		border: 1px solid var(--line);
+		border-radius: var(--radius-sm);
+	}
+	.site .side-page[aria-current='page'] {
+		border-color: var(--accent);
+		border-radius: var(--radius-sm);
+	}
+	.site .toc {
+		border: 1px solid var(--line);
+		border-radius: var(--radius-sm);
+		padding: 8px 4px;
+	}
+	.site .toc summary {
+		color: var(--text-soft);
+	}
+	.site .toc summary::before {
+		content: '+ ';
+		color: var(--accent);
+	}
+	.site .toc[open] summary::before {
+		content: '− ';
+	}
+	.site .docs-main {
+		padding-top: 32px;
+		gap: 56px;
+	}
+	.site .side-pages {
+		display: none;
+	}
+}
+
+@media (max-width: 640px) {
+	.site .wrap,
+	.site .wrap-wide {
+		padding: 0 20px;
+	}
+	.site .hero {
+		padding-top: 44px;
+		padding-bottom: 56px;
+		gap: 40px;
+	}
+	.site .lede {
+		font-size: 18px;
+	}
+	.site .readout {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.site .steps {
+		grid-template-columns: 1fr;
+		gap: 28px;
+	}
+	.site .section {
+		padding-top: 64px;
+		padding-bottom: 64px;
+	}
+	.site .split {
+		grid-template-columns: 1fr;
+	}
+	.site .op-list a {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+	.site .op-flag {
+		justify-self: start;
+	}
+	.site .code {
+		font-size: 12px;
+		padding: 16px;
+	}
+	/* Field tables become stacked rows */
+	.site table.fields thead {
+		display: none;
+	}
+	.site table.fields,
+	.site table.fields tbody,
+	.site table.fields tr,
+	.site table.fields td {
+		display: block;
+		width: auto !important;
+	}
+	.site table.fields tr {
+		padding: 10px 0;
+	}
+	.site table.fields td {
+		padding: 3px 16px;
+		min-width: 0;
+	}
+	.site table.fields td.mono {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+	.site td.type,
+	.site td.soft {
+		min-width: 0;
+	}
+	.site .constraints {
+		overflow-wrap: anywhere;
+	}
+}
+
+/* Docs overrides that need to beat `.docs-main p` and `.docs-main td code` */
+.site .docs-main .kicker {
+	font-size: 13px;
+	color: var(--accent);
+}
+.site .docs-main a code,
+.site .docs-main h4 a code {
+	color: var(--accent);
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* Pricing */
+
+.site .pricing-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 24px;
+	margin-top: 48px;
+}
+
+.site .pricing-card {
+	background: var(--panel);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	padding: 32px 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	position: relative;
+}
+
+.site .pricing-card-featured {
+	background: var(--panel-deep);
+	border-color: var(--accent);
+	border-width: 2px;
+	padding: 31px 27px;
+}
+
+.site .pricing-badge {
+	position: absolute;
+	top: -12px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: var(--accent);
+	color: var(--accent-ink);
+	font-size: 12px;
+	font-weight: 600;
+	padding: 4px 12px;
+	border-radius: 99px;
+}
+
+.site .pricing-header {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.site .pricing-header h2 {
+	font-size: 24px;
+	font-weight: 700;
+	color: var(--text);
+}
+
+.site .pricing-description {
+	font-size: 15px;
+	color: var(--muted);
+}
+
+.site .pricing-price {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	padding: 16px 0;
+	border-top: 1px solid var(--line);
+	border-bottom: 1px solid var(--line);
+}
+
+.site .price-amount {
+	font-size: 48px;
+	font-weight: 700;
+	color: var(--accent);
+	line-height: 1;
+}
+
+.site .price-period {
+	font-size: 16px;
+	color: var(--muted);
+}
+
+.site .pricing-note {
+	margin: 8px 0 0;
+	font-size: 14px;
+	color: var(--muted);
+}
+
+.site .pricing-features {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	flex-grow: 1;
+}
+
+.site .pricing-features li {
+	position: relative;
+	padding-left: 24px;
+	font-size: 15px;
+	color: var(--text-soft);
+	line-height: 1.5;
+}
+
+.site .pricing-features li::before {
+	content: '✓';
+	position: absolute;
+	left: 0;
+	color: var(--accent);
+	font-weight: 600;
+}
+
+.site .faq {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	margin-top: 32px;
+}
+
+.site .faq-item {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-bottom: 32px;
+	border-bottom: 1px solid var(--line);
+}
+
+.site .faq-item:last-child {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.site .faq dt {
+	font-size: 19px;
+	font-weight: 600;
+	color: var(--text);
+}
+
+.site .faq dd {
+	font-size: 16px;
+	line-height: 1.65;
+	color: var(--muted);
+}
+
+.site .faq dd a {
+	color: var(--accent);
+}
+
+.site .faq dd a:hover {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+	.site .pricing-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Facts a draft page is still missing (scripts/release-gaps.mjs). A production build refuses them. */
+.site mark.gap {
+	background: rgba(255, 196, 0, 0.14);
+	color: #ffd24d;
+	border: 1px dashed rgba(255, 196, 0, 0.6);
+	border-radius: 3px;
+	padding: 0 4px;
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 0.85em;
+}
+
+/* Product updates signup (landing page; renders only when kitFormId is set) */
+.site .signup {
+	align-items: center;
+}
+.site .signup-box {
+	display: grid;
+	gap: 14px;
+	width: 100%;
+	max-width: 36rem;
+}
+.site .signup-box h2 {
+	font-size: clamp(26px, 3.4vw, 34px);
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+}
+.site .signup-box p:not(.kicker) {
+	color: var(--muted);
+	line-height: 1.6;
+}
+.site .signup-box form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+.site .signup-box input[type='email'] {
+	flex: 1 1 220px;
+	min-width: 0;
+	min-height: 44px;
+	padding: 10px 14px;
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius-sm);
+	background: var(--panel);
+	color: var(--text);
+	font: inherit;
+	font-size: 15px;
+}
+.site .signup-box input[type='email']::placeholder {
+	color: var(--faint);
+}
+.site .signup-box small {
+	color: var(--faint);
+	line-height: 1.5;
+}
+.site .signup-box small a {
+	color: var(--accent);
+	border-bottom: 1px solid rgba(255, 181, 71, 0.4);
+}
+
+/* ------------------------------------------------------------------------------------------ */
+/* One app (EPSILON-169 PR 2): what differs from the static site's stylesheet. */
+
+/* app.css styles some of the same class names for the signed-in app. On the public pages, put
+   the static site's look back where a property would otherwise carry over. */
+.site .console-body {
+	display: block;
+	min-height: 0;
+}
+.site .actions {
+	align-items: normal;
+}
+.site .btn-ghost:hover {
+	color: var(--text);
+}
+.site .table-box {
+	background: none;
+}
+.site tbody tr:hover {
+	background: none;
+}
+.site .readout dd {
+	overflow-wrap: normal;
+}
+.site .pricing-badge {
+	white-space: normal;
+}
+
+/* The home page's example console is a dark island too, like every code panel (app.css): its
+   code stays dark in the light theme, so the frame around it does as well. Same values as
+   app.css's dark islands; tests/site/site-css.test.ts keeps them equal. */
+.site .console {
+	--bg: #0c0e11;
+	--bg-band: #101318;
+	--panel: #14171c;
+	--panel-deep: #0f1215;
+	--line: #262b33;
+	--line-strong: #3a414b;
+	--line-control: #646a73;
+	--text: #e6e8eb;
+	--text-strong: #ffffff;
+	--text-soft: #c3c9d1;
+	--muted: #b4bcc6;
+	--faint: #9aa3ae;
+	--placeholder: #7e8792;
+	--code: #d5dae0;
+	--accent: #ffb547;
+	--accent-hover: #ffc56f;
+	--accent-soft: rgba(255, 181, 71, 0.12);
+	--accent-ink: #14110a;
+	--ok: #7fd69a;
+	--warn: #ff8a7a;
+	--danger: #ff8a80;
+	--surface: var(--panel);
+	--surface-2: var(--panel-deep);
+	--soft: var(--text-soft);
+	--on-accent: var(--accent-ink);
+	color-scheme: dark;
+}
+
+/* Prose links are underlined at rest, not only on hover (EPSILON-169 acceptance). Links drawn as
+   buttons, rows of the operation list and links already underlined by a border stay as they are. */
+.site :is(p, li, dd, td) a:not(.btn):not(.link) {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.site .op-list a {
+	text-decoration: none;
+}
+
+/* Touch targets are at least 44 px (EPSILON-169 acceptance). */
+.site .copy {
+	min-height: 44px;
+	min-width: 44px;
+}
+.site .panel-bar {
+	min-height: 56px;
+}
+.site .side-page {
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+}
+.site .toc summary {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	line-height: 20px;
+}
+.site .toc-links a {
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+}
+
+/* Clean at 320 px (EPSILON-169 acceptance): a long identifier in prose wraps instead of pushing
+   the page wider than the screen. */
+.site :not(pre) > code {
+	overflow-wrap: anywhere;
+}

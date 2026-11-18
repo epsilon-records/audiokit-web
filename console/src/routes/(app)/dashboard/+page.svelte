@@ -51,7 +51,7 @@
 
 	<StatTile label="Plan" value={planLabel} hint="Resets {formatDate(data.account.renewsAt)}">
 		<div class="actions">
-			<a class="btn btn-ghost btn-sm" href="/pricing">Pricing</a>
+			<a class="btn btn-ghost btn-sm" href="/pricing/" data-sveltekit-reload>Pricing</a>
 		</div>
 	</StatTile>
 

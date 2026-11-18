@@ -34,7 +34,7 @@ and the build need no service.
 - **Fonts:** Space Grotesk and JetBrains Mono, self-hosted from `static/fonts/` (shared 0039).
   Nothing is loaded from Google Fonts.
 - **Route groups:** `(site)` holds the public, prerendered pages with the marketing header and
-  footer (they move in from the static site in a later PR); `(app)` is the signed-in shell.
+  footer; `(app)` is the signed-in shell. See "Public pages" below.
 - **Independent of other apps:** the components and the Tailwind setup are copied in, not
   shared; there is no runtime dependency on another app.
 - **Not decided here:** the billing service's HTTP API, session lifetime, and billing vendor
@@ -54,12 +54,41 @@ and the build need no service.
 | `/api-keys`         | List, create (reveal once), revoke                               |
 | `/settings`         | Profile, notifications, session, danger zone                     |
 | `/settings/billing` | Plan, payment summary, invoices                                  |
-| `/pricing`          | Signed-in plan and upgrade                                       |
 | `/logout`           | `POST`: clears the session and returns to `/login`               |
 
-`/` redirects to `/dashboard` (or `/login` when signed out). Everything under the console
+The console's own `/pricing` plan page went with EPSILON-169 PR 2: `/pricing/` is the public
+pricing page, and `/credits` takes the plan page's place in PR 3. Everything under the console
 shell requires a session; the deep link is preserved through sign-in (`/login?next=…`) and
 validated with `safeNext()` so it can't become an open redirect.
+
+## Public pages
+
+EPSILON-169 PR 2 moved the static site's pages into `(site)`, prerendered to plain HTML that
+works with JavaScript off, at the static site's URLs, trailing slash included
+(`trailingSlash = 'always'`): `/`, `/pricing/`, `/privacy/`, `/docs/`, `/docs/reference/`,
+`/docs/sdks/`, `/docs/mcp/`, `/check-your-inbox/`, `/subscribed/` and `/404.html`, plus
+`/docs/openapi.yaml`, `/llms.txt`, `/sitemap.xml` and `/robots.txt`.
+
+- **Text:** `src/lib/site/pages/` holds copies of the static site's `src/pages/`, and
+  `src/lib/site/*.js` copies of its build scripts. `tests/site-parity.test.ts` keeps them equal
+  to the originals (the privacy notice's changes are listed there) until the cleanup removes
+  the static site. A copy change lands in both places until the cut-over.
+- **Rendering:** `src/lib/server/site/render.ts` fills the `{{TOKENS}}` the way
+  `scripts/build.mjs` did. The API reference and the home page's operation list are generated
+  at build time from the contract: `$AUDIOKIT_OPENAPI_URL`, then the live API, then
+  `../contract/openapi.yaml`.
+- **Styles:** `src/site.css` is the static site's stylesheet with every rule scoped to
+  `<main class="site">`, so none of it reaches the signed-in app.
+- **Scripts:** Sentry, the guarded Cloudflare Web Analytics loader and first-touch are added to
+  the prerendered HTML only (`hooks.server.ts`, `src/lib/server/site/public-head.ts`), with the
+  hosts they need added to the page's Content-Security-Policy. Every link on a public page is
+  a full page load (`data-sveltekit-reload`), so they never follow a visitor into the app.
+- **Search:** `robots.txt` disallows everything when Netlify's `SITE_NAME` is
+  `audiokit-console` (or `PUBLIC_SITE_HOST=console`), so console.audiokit.ai doesn't compete with
+  audiokit.ai before the cut-over. Canonical links always name audiokit.ai.
+- **Checks:** `npm run test:build` builds, then checks every old URL and the sitemap against
+  `build/`, each page's policy and its scripts. The `site` Playwright project serves `build/`
+  and checks JavaScript off, 320 px, touch targets, keyboard reach and axe.
 
 ## Auth
 
@@ -136,8 +165,10 @@ npm run dev        # Vite dev server, usually http://localhost:5173
 npm run build      # production build; writes build/ and .netlify/functions-internal/
 npm run check      # svelte-check (type + template diagnostics)
 npm test           # Vitest unit tests for the client, fixtures, formatters and session helper
+npm run test:build # build, then check build/: old URLs, sitemap, CSP, public scripts
 npm run test:storybook  # every story in Chromium with axe, dark and light theme
-npx playwright test     # browser smoke tests against the dev server (mock adapter)
+npx playwright test     # browser tests: the app on the dev server (mock adapter), the public
+                        # pages on a build served by `vite preview`
 npm run lint       # Prettier check
 npm run format     # Prettier write
 ```
@@ -162,7 +193,8 @@ The console is its **own Netlify site**, separate from the static site:
 ## CI
 
 `.github/workflows/console.yml` is path-filtered to `console/**`. It installs with `npm ci`,
-then runs `npm run check`, `npm run build`, `npm test` and the Storybook story tests with axe
+then runs `npm run check`, `npm run build`, the build-output checks, `npm test` and the Storybook
+story tests with axe
 (`npm run test:storybook`). It is independent of the site build
 and does not run when only `src/`, `scripts/` or `contract/` change.
 

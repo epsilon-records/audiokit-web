@@ -1,13 +1,23 @@
 import adapter from '@sveltejs/adapter-netlify';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
+import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
+import YAML from 'yaml';
+
+// The API version the public footer states (EPSILON-169 PR 2), from the repo's contract. The
+// prerendered pages read the contract at build time; this is for the server-rendered 404 page.
+const contractVersion = String(
+	YAML.parse(readFileSync(new URL('../contract/openapi.yaml', import.meta.url), 'utf8'))?.info
+		?.version ?? '?'
+);
 
 export default defineConfig({
 	// Expose PUBLIC_* variables (e.g. PUBLIC_BILLING_API_URL) to the app via
 	// `import.meta.env`, alongside Vite's default VITE_ prefix.
 	envPrefix: ['PUBLIC_', 'VITE_'],
 	define: {
+		__API_VERSION__: JSON.stringify(contractVersion),
 		__METRICS_PRODUCTION__: JSON.stringify(
 			loadEnv('production', '.', 'CONTEXT').CONTEXT === 'production'
 		)
@@ -26,6 +36,10 @@ export default defineConfig({
 			// The adapter writes the client and prerendered assets to build/ and the SSR
 			// function to .netlify/functions-internal/. See netlify.toml.
 			adapter: adapter({ publish: 'build' }),
+
+			// The public pages are prerendered (EPSILON-169 PR 2). Nothing links to the not-found
+			// page, so it is listed here; the crawler finds the rest from '*' and the links.
+			prerender: { entries: ['*', '/404.html'] },
 
 			// Content-Security-Policy (EPSILON-118). SvelteKit adds a per-request nonce to its
 			// own scripts. The browser only talks to this origin: billing is called from the

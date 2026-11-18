@@ -4,3 +4,9 @@ node_modules
 .netlify
 package-lock.json
 storybook-static
+# Ported from the static site as they are (EPSILON-169 PR 2); tests/site-parity.test.ts compares
+# them with ../src and ../scripts, so they keep that code's formatting until the cleanup.
+src/lib/site/pages
+src/lib/site/*.js
+src/lib/site/llms.txt
+src/lib/public/*.js
