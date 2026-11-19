@@ -2,14 +2,17 @@
 	// System / Light / Dark (D3a, EPSILON-169). static/theme-init.js applies the pick before first
 	// paint; this control changes it afterwards. Storage lives in #lib/theme (AudioKit 0079).
 	import { onMount } from 'svelte';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import Moon from '@lucide/svelte/icons/moon';
+	import Sun from '@lucide/svelte/icons/sun';
 	import { browserStorage, readStored, resolve, store, type ThemeChoice } from '#lib/theme';
 
-	const options: { value: ThemeChoice; label: string }[] = [
-		{ value: 'system', label: 'System' },
-		{ value: 'light', label: 'Light' },
-		{ value: 'dark', label: 'Dark' }
-	];
+	const labels = { system: 'System', light: 'Light', dark: 'Dark' };
+	const nextChoice = { system: 'light', light: 'dark', dark: 'system' } as const;
+	const icons = { system: Monitor, light: Sun, dark: Moon };
 	let choice = $state<ThemeChoice>('system');
+	const next = $derived(nextChoice[choice]);
+	const Icon = $derived(icons[choice]);
 
 	onMount(() => {
 		// The page's own record comes first: it holds a pick that couldn't be stored, for example
@@ -32,48 +35,34 @@
 	}
 </script>
 
-<div class="theme-toggle" role="group" aria-label="Theme">
-	{#each options as o (o.value)}
-		<button type="button" aria-pressed={choice === o.value} onclick={() => pick(o.value)}
-			>{o.label}</button
-		>
-	{/each}
-</div>
+<button
+	type="button"
+	aria-label="Theme: {labels[choice]}. Switch to {labels[next]}"
+	title="Theme: {labels[choice]}"
+	onclick={() => pick(next)}
+>
+	<Icon size={18} aria-hidden="true" />
+</button>
 
 <style>
-	.theme-toggle {
+	button {
 		display: inline-flex;
 		align-self: flex-start;
-		border: 1px solid var(--line-control);
-		border-radius: var(--radius-sm);
-		overflow: hidden;
-	}
-	button {
-		min-height: 44px;
-		min-width: 44px;
-		padding: 0 12px;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		padding: 0;
 		border: 0;
 		background: transparent;
 		color: var(--muted);
-		font: inherit;
-		font-size: 13px;
 		cursor: pointer;
-	}
-	button + button {
-		border-left: 1px solid var(--line);
 	}
 	button:hover {
 		color: var(--accent);
 	}
-	button[aria-pressed='true'] {
-		background: var(--accent);
-		color: var(--accent-ink);
-		font-weight: 600;
-	}
 	button:focus-visible {
 		outline-offset: -4px;
-	}
-	button[aria-pressed='true']:focus-visible {
-		outline-color: var(--accent-ink);
 	}
 </style>

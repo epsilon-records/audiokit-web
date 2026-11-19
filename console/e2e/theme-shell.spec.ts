@@ -71,13 +71,16 @@ test('the console toggle switches the theme, code panels stay dark, and the pick
 	await signIn(page, 'theme-e2e@example.test');
 	await page.goto('/dashboard');
 	await page.waitForLoadState('networkidle');
-	const toggle = page.getByRole('group', { name: 'Theme' });
-	await toggle.getByRole('button', { name: 'Light' }).click();
+	const system = page.getByRole('button', { name: 'Theme: System. Switch to Light' });
+	const light = page.getByRole('button', { name: 'Theme: Light. Switch to Dark' });
+	const dark = page.getByRole('button', { name: 'Theme: Dark. Switch to System' });
+	await expect(system).toHaveAttribute('title', 'Theme: System');
+	await expect(system).toHaveCSS('width', '44px');
+	await expect(system).toHaveCSS('height', '44px');
+	await expect(system.locator('svg')).toHaveAttribute('width', '18');
+	await system.click();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-	await expect(toggle.getByRole('button', { name: 'Light' })).toHaveAttribute(
-		'aria-pressed',
-		'true'
-	);
+	await expect(light).toBeVisible();
 
 	// The page is paper; the code panel stays dark.
 	const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -93,15 +96,15 @@ test('the console toggle switches the theme, code panels stay dark, and the pick
 	// Kept across a reload, then System hands it back to the system.
 	await page.reload();
 	await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-	// The toggle may still be hydrating after the reload; a click before then does nothing.
 	await page.waitForLoadState('networkidle');
-	await expect(async () => {
-		await page
-			.getByRole('group', { name: 'Theme' })
-			.getByRole('button', { name: 'System' })
-			.click();
-		await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark', { timeout: 1_000 });
-	}).toPass();
+	await light.click();
+	await expect(dark).toBeVisible();
+	await expect(page.locator('html')).toHaveAttribute('data-theme-choice', 'dark');
+	expect(await page.evaluate(() => localStorage.getItem('ak-theme'))).toBe('dark');
+	await dark.click();
+	await expect(system).toBeVisible();
+	await expect(page.locator('html')).toHaveAttribute('data-theme-choice', 'system');
+	await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 	expect(await page.evaluate(() => localStorage.getItem('ak-theme'))).toBeNull();
 });
 
