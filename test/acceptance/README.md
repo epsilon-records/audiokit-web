@@ -9,6 +9,15 @@ claims (shared 0040, AudioKit 0052) and the anonymous rate limit. It creates, ch
 nothing. Run it with `npm run test:acceptance:probe`, or the **Acceptance probe (read-only)**
 workflow, which also runs on pull requests that touch this folder.
 
+The probe also checks the store-first credits surface (AudioKit 0072, 0073): the served contract
+names `awaiting_credit`, `refused` and `insufficient_credits`; billing's two credit calls refuse a
+made-up service token; and the removed routes (billing's `POST /v1/jobs`,
+`/v1/internal/job-settlements`, `/v1/usage/quota`, Pro Checkout) answer `404`.
+
+**The credits flow end to end** (holds, finalize, refusals, a signed pack purchase, webhook replay,
+usage) is tested in CI against a local stack, not here: epsilon-billing's `test/e2e/` suite runs
+billing, the API and Postgres together, so it needs no production account.
+
 **The smoke suite** (`smoke.acceptance.mjs`) is described below. It runs against **production** with
 **Stripe in test mode** and creates one throwaway account, which it deletes at the end
 (through self-serve account deletion, which it also proves).
@@ -103,7 +112,7 @@ The input's `sha256`, which the API requires, is computed by downloading `AUDIOK
 
 - It refuses to start without the confirmation phrase.
 - Before any billing step it requires a `cs_test_` Checkout session on a Stripe URL and a
-  `/p/session/test_` portal session. Any live-mode id (`*_live_*`) or `livemode: true` in a
+  `/p/session/test_` (or `/p/session?secret=test_`) portal session. Any live-mode id (`*_live_*`) or `livemode: true` in a
   response stops the run immediately with exit code 3 and touches nothing more, not even
   cleanup. Stripe's mode is not otherwise visible to the suite, and signup creates a Stripe
   customer best effort, so confirm the Stripe dashboard is in test mode before step 1.

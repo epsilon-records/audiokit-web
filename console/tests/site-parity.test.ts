@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -11,8 +12,8 @@ import { siteConfig } from '../src/lib/site/config';
  * do. It goes with the static site's source in the cleanup (plan, X).
  */
 
-const repo = new URL('../../', import.meta.url).pathname;
-const app = new URL('../', import.meta.url).pathname;
+const repo = fileURLToPath(new URL('../../', import.meta.url));
+const app = fileURLToPath(new URL('../', import.meta.url));
 const read = (path: string) => readFileSync(path, 'utf8');
 
 function walk(dir: string): string[] {
@@ -57,6 +58,10 @@ const PRIVACY_CHANGES: [string, string][] = [
 	[
 		'<p>Once you are signed in, the console sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. The console needs it to work. The console runs no analytics script.</p>',
 		'<p>Once you are signed in, audiokit.ai sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. Signed-in pages need it to work, and they run no analytics script.</p>'
+	],
+	[
+		'<p>If you pick Light or Dark with the theme switch on audiokit.ai, your browser keeps that choice in its local storage as <code>ak-theme</code>. It is saved only when you pick a theme, is used for nothing else, and is removed when you pick System again.</p>',
+		'<p>If you choose Light or Dark on audiokit.ai, your browser remembers that choice on this device. Choosing System clears the saved choice and follows your device’s appearance settings.</p>'
 	],
 	[
 		'If you arrive at the console directly, the host name',

@@ -107,7 +107,7 @@
 	color: var(--accent-ink);
 }
 .site .btn-primary:hover {
-	background: #ffc56f;
+	background: var(--accent-hover);
 	color: var(--accent-ink);
 }
 .site .btn-ghost {

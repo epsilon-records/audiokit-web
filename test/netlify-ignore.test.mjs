@@ -49,8 +49,8 @@ function fixtureGitEnv() {
 }
 
 // Exit 0 skips the build.
-function runIgnore(ignore, { cached, current, cwd }) {
-  const refs = { CACHED_COMMIT_REF: cached, COMMIT_REF: current };
+function runIgnore(ignore, { cached, current, cwd, context, head }) {
+  const refs = { CACHED_COMMIT_REF: cached, COMMIT_REF: current, CONTEXT: context, HEAD: head };
   for (const key of Object.keys(refs)) if (refs[key] === undefined) delete refs[key];
   return spawnSync("sh", ["-c", ignore], {
     cwd,
@@ -172,6 +172,41 @@ for (const [name, site] of Object.entries(sites)) {
       assert.notEqual(runIgnore(site.ignore, { cached: undefined, current: head, cwd }), 0, "cached ref missing");
       assert.notEqual(runIgnore(site.ignore, { cached: "", current: head, cwd }), 0, "cached ref empty");
       assert.notEqual(runIgnore(site.ignore, { cached: undefined, current: undefined, cwd }), 0, "both missing");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+}
+
+// Deploy previews are off until 14 Dec (Oracle, knowledge#134): every site skips a
+// deploy-preview build, even one that touches its inputs, unless the branch ends in -preview.
+const previewSites = {
+  ...sites,
+  "audiokit-storybook": { ignore: ignoreOf("../storybook-site/netlify.toml"), base: "storybook-site" },
+};
+const ownInput = {
+  audiokit: "src/pages/index.html",
+  "audiokit-console": "console/src/routes/+page.svelte",
+  "audiokit-storybook": "storybook-site/netlify.toml",
+};
+
+for (const [name, site] of Object.entries(previewSites)) {
+  test(`${name}: skips deploy previews unless the branch ends in -preview`, () => {
+    const { root, git, changed } = fixture();
+    try {
+      const cwd = join(root, site.base);
+      const from = git("rev-parse", "HEAD");
+      const to = changed(ownInput[name]);
+      const run = (extra) => runIgnore(site.ignore, { cached: from, current: to, cwd, ...extra });
+      assert.equal(run({ context: "deploy-preview", head: "epsilon-169-pr1-shell" }), 0, "preview skipped");
+      assert.equal(run({ context: "deploy-preview", head: undefined }), 0, "preview without HEAD skipped");
+      assert.notEqual(run({ context: "deploy-preview", head: "fix-nav-preview" }), 0, "opt-in preview builds");
+      assert.notEqual(run({ context: "production", head: "main" }), 0, "production still builds");
+      assert.notEqual(
+        runIgnore(site.ignore, { cached: undefined, current: to, cwd, context: "deploy-preview", head: "x-preview" }),
+        0,
+        "uncached opt-in preview builds",
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

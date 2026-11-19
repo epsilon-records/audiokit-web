@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-export const build = new URL('../build/', import.meta.url).pathname;
-export const repo = new URL('../../', import.meta.url).pathname;
+export const build = fileURLToPath(new URL('../build/', import.meta.url));
+export const repo = fileURLToPath(new URL('../../', import.meta.url));
 
 if (!existsSync(join(build, 'index.html'))) {
 	throw new Error('build/ is missing: run `npm run build` first (or `npm run test:build`)');

@@ -14,7 +14,12 @@ import { contractCandidates } from '../src/lib/server/site/contract';
 
 // EPSILON-169 PR 2: the public pages render from the static site's sources, at build time.
 
+// Render from the repo's contract, not the live API: the version and anchor checks below compare
+// against contract/openapi.yaml, so both sides must come from the same file (and the test stays offline).
+const realFetch = globalThis.fetch;
+globalThis.fetch = (() => Promise.reject(new Error('no network in unit tests'))) as typeof fetch;
 const pages = await Promise.all(SITE_PAGES.map((p) => renderSitePage(p.path)));
+globalThis.fetch = realFetch;
 const byPath = new Map(pages.map((p) => [p.path, p]));
 
 describe('every public page renders', () => {

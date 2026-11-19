@@ -171,7 +171,10 @@ export function assertCheckoutIsTestMode(checkout) {
   }
 }
 
-/** A portal answer proves test mode only for a billing.stripe.com session whose id starts `test_`. */
+/**
+ * A portal answer proves test mode only for a billing.stripe.com session marked `test_`. Stripe
+ * uses two URL shapes: `/p/session/test_…` and `/p/session?secret=test_…` (seen 17 Nov 2026).
+ */
 export function assertPortalIsTestMode(portal) {
   assertNotLive(portal, "portal");
   let parsed;
@@ -180,7 +183,9 @@ export function assertPortalIsTestMode(portal) {
   } catch {
     throw new LiveModeError("portal url is not a URL");
   }
-  if (parsed.protocol !== "https:" || !parsed.hostname.endsWith("stripe.com") || !/\/p\/session\/test_/.test(parsed.pathname)) {
+  const pathMarked = /^\/p\/session\/test_/.test(parsed.pathname);
+  const queryMarked = parsed.pathname === "/p/session" && (parsed.searchParams.get("secret") ?? "").startsWith("test_");
+  if (parsed.protocol !== "https:" || !parsed.hostname.endsWith("stripe.com") || !(pathMarked || queryMarked)) {
     throw new LiveModeError("portal url is not a Stripe test-mode portal session");
   }
 }

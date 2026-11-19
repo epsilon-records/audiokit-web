@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -27,7 +28,7 @@ const textOf = (svelte: string) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
-const routes = new URL('../src/routes/', import.meta.url).pathname;
+const routes = fileURLToPath(new URL('../src/routes/', import.meta.url));
 function walk(dir: string): string[] {
 	return readdirSync(dir).flatMap((name) => {
 		const path = join(dir, name);
