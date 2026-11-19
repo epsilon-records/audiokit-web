@@ -17,25 +17,29 @@
 <Story name="Default" />
 
 <Story
-	name="Picking a theme"
+	name="Cycling through themes"
 	play={async ({ canvas, userEvent, globals }) => {
 		const before = root().dataset.theme;
-		const light = canvas.getByRole('button', { name: 'Light' });
-		const dark = canvas.getByRole('button', { name: 'Dark' });
-		const system = canvas.getByRole('button', { name: 'System' });
+		const systemName = 'Theme: System. Switch to Light';
+		const button = await canvas.findByRole('button');
+		// The preview may have a saved choice. Reach System through the control before testing.
+		for (let step = 0; step < 2 && button.getAttribute('aria-label') !== systemName; step++) {
+			await userEvent.click(button);
+		}
+		const system = await canvas.findByRole('button', { name: systemName });
 
-		await userEvent.click(light);
-		await expect(light).toHaveAttribute('aria-pressed', 'true');
+		await userEvent.click(system);
+		const light = await canvas.findByRole('button', { name: 'Theme: Light. Switch to Dark' });
 		await expect(root().dataset.theme).toBe('light');
 		await expect(localStorage.getItem('ak-theme')).toBe('light');
 
-		await userEvent.click(dark);
-		await expect(dark).toHaveAttribute('aria-pressed', 'true');
-		await expect(light).toHaveAttribute('aria-pressed', 'false');
+		await userEvent.click(light);
+		const dark = await canvas.findByRole('button', { name: 'Theme: Dark. Switch to System' });
 		await expect(root().dataset.theme).toBe('dark');
+		await expect(localStorage.getItem('ak-theme')).toBe('dark');
 
-		await userEvent.click(system);
-		await expect(system).toHaveAttribute('aria-pressed', 'true');
+		await userEvent.click(dark);
+		await canvas.findByRole('button', { name: systemName });
 		await expect(localStorage.getItem('ak-theme')).toBeNull();
 
 		// Leave the page in the theme this run checks.
