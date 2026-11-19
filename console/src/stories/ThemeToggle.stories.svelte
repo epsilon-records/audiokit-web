@@ -20,7 +20,13 @@
 	name="Cycling through themes"
 	play={async ({ canvas, userEvent, globals }) => {
 		const before = root().dataset.theme;
-		const system = await canvas.findByRole('button', { name: 'Theme: System. Switch to Light' });
+		const systemName = 'Theme: System. Switch to Light';
+		const button = await canvas.findByRole('button');
+		// The preview may have a saved choice. Reach System through the control before testing.
+		for (let step = 0; step < 2 && button.getAttribute('aria-label') !== systemName; step++) {
+			await userEvent.click(button);
+		}
+		const system = await canvas.findByRole('button', { name: systemName });
 
 		await userEvent.click(system);
 		const light = await canvas.findByRole('button', { name: 'Theme: Light. Switch to Dark' });
@@ -33,7 +39,7 @@
 		await expect(localStorage.getItem('ak-theme')).toBe('dark');
 
 		await userEvent.click(dark);
-		await canvas.findByRole('button', { name: 'Theme: System. Switch to Light' });
+		await canvas.findByRole('button', { name: systemName });
 		await expect(localStorage.getItem('ak-theme')).toBeNull();
 
 		// Leave the page in the theme this run checks.
