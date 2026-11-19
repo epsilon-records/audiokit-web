@@ -109,8 +109,10 @@ describe('the plain files', () => {
 		);
 	});
 
-	it('/llms.txt is the static site’s', () => {
-		expect(readBuilt('llms.txt')).toBe(readFileSync(join(staticDir, 'llms.txt'), 'utf8'));
+	it('/llms.txt matches the app copy', () => {
+		expect(readBuilt('llms.txt')).toBe(
+			readFileSync(join(repo, 'console/src/lib/site/llms.txt'), 'utf8')
+		);
 	});
 
 	it('/404.html is the not-found page, noindex', () => {

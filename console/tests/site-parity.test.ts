@@ -8,8 +8,8 @@ import { siteConfig } from '../src/lib/site/config';
 /**
  * EPSILON-169 PR 2 moves the public pages into this app with their text as it is. Until the
  * cut-over the static site in ../src still serves audiokit.ai, so the two copies must not drift
- * (the plan freezes site copy; legal and pricing fixes land in both). This test fails when they
- * do. It goes with the static site's source in the cleanup (plan, X).
+ * except for the explicit app changes tracked here. This test goes with the static site's source
+ * in the cleanup (plan, X).
  */
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
@@ -95,6 +95,44 @@ const PRIVACY_CHANGES: [string, string][] = [
 	]
 ];
 
+const FEATURE_COPY_CHANGES: Record<string, [string, string][]> = {
+	'index.html': [
+		[
+			' MCP is rolling out in early access.',
+			' The hosted MCP endpoint is available in early access.'
+		],
+		['    <li><span>Stem separation</span><span class="tag tag-roadmap">Roadmap</span></li>\n', '']
+	],
+	'docs/mcp.html': [
+		[
+			'MCP is rolling out, in early access like the rest of AudioKit. Until it reaches your base URL, agents can call the <a href="/docs/reference/">HTTP API</a> directly.',
+			'The hosted endpoint at <code>https://api.audiokit.ai/mcp</code> accepts AudioKit API keys. It is listed in the <a href="https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.epsilon-records%2Faudiokit">official MCP Registry</a>. Agents can also call the <a href="/docs/reference/">HTTP API</a> directly.'
+		]
+	],
+	'pricing.html': [
+		[
+			'All analysis and processing operations',
+			'Analysis and processing operations <a href="/docs/reference/#op-getCapabilities">listed by the API</a>'
+		]
+	]
+};
+
+const LLMS_CHANGES: [string, string][] = [
+	[
+		'`stems` (on the roadmap; check capabilities before relying on it)',
+		'`stems` (separates vocals, drums, bass and other instruments)'
+	],
+	['denoise, stem separation (see above), transcription', 'denoise, transcription']
+];
+
+function withChanges(source: string, changes: [string, string][]): string {
+	for (const [from, to] of changes) {
+		expect(source.split(from).length, from).toBe(2);
+		source = source.replace(from, to);
+	}
+	return source;
+}
+
 describe('the public pages are the static site’s, as they are', () => {
 	const staticPages = join(repo, 'src/pages');
 	const appPages = join(app, 'src/lib/site/pages');
@@ -110,14 +148,9 @@ describe('the public pages are the static site’s, as they are', () => {
 
 	for (const file of files) {
 		it(file, () => {
-			let expected = read(join(staticPages, file));
-			if (file === 'privacy.html') {
-				for (const [from, to] of PRIVACY_CHANGES) {
-					expect(expected.split(from).length, from).toBe(2);
-					expected = expected.replace(from, to);
-				}
-			}
-			expect(read(join(appPages, file))).toBe(expected);
+			const changes =
+				file === 'privacy.html' ? PRIVACY_CHANGES : (FEATURE_COPY_CHANGES[file] ?? []);
+			expect(read(join(appPages, file))).toBe(withChanges(read(join(staticPages, file)), changes));
 		});
 	}
 });
@@ -128,11 +161,16 @@ describe('the build modules are the static site’s, as they are', () => {
 		['src/lib/site/kit-form.js', 'scripts/kit-form.mjs'],
 		['src/lib/site/release-gaps.js', 'scripts/release-gaps.mjs'],
 		['src/lib/site/analytics-config.js', 'scripts/analytics-config.mjs'],
-		['src/lib/site/llms.txt', 'src/static/llms.txt'],
 		['src/lib/public/analytics.js', 'src/static/analytics.js']
 	]) {
 		it(ours, () => expect(read(join(app, ours))).toBe(read(join(repo, theirs))));
 	}
+
+	it('llms.txt differs only in current feature status', () => {
+		expect(read(join(app, 'src/lib/site/llms.txt'))).toBe(
+			withChanges(read(join(repo, 'src/static/llms.txt')), LLMS_CHANGES)
+		);
+	});
 
 	it('first-touch.js differs only in finding sign-up and sign-in on its own origin', () => {
 		const ours = read(join(app, 'src/lib/public/first-touch.js'));

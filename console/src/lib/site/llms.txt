@@ -8,9 +8,9 @@ Twelve job operations are defined; `GET https://api.audiokit.ai/v1/capabilities`
 
 - Files: `probe` (container, codec, format, duration), `loudness` (EBU R128 integrated loudness, loudness range, true peak, sample peak), `waveform` (peak envelope), `transcode` (WAV, FLAC, MP3, AAC), `preview` (short excerpt with fades), `normalize`
 - Music analysis: `tempo`, `key`, `fingerprint`, `tags` (genre and mood), `analyze` (several analyses from one read)
-- Separation: `stems` (on the roadmap; check capabilities before relying on it)
+- Separation: `stems` (separates vocals, drums, bass and other instruments)
 
-Planned, not available yet: denoise, stem separation (see above), transcription, mastering, consent-gated voice cloning, MIDI to audio, music generation, sound search, song ID.
+Planned, not available yet: denoise, transcription, mastering, consent-gated voice cloning, MIDI to audio, music generation, sound search, song ID.
 
 ## Docs
 
