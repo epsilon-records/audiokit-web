@@ -345,13 +345,19 @@ function isoOrNull(value: unknown): string | null {
 	return typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
 }
 
-function toLots(wire: unknown): CreditLot[] {
-	if (!Array.isArray(wire)) return [];
+// A collection billing did not send stays undefined, so the page can say "unavailable" instead of
+// claiming it is empty; an array (even an empty one) is billing confirming what is there.
+function toLots(wire: unknown): CreditLot[] | undefined {
+	if (!Array.isArray(wire)) return undefined;
 	return wire.flatMap((item): CreditLot[] => {
 		const lot = record(item);
 		const credits = finite(lot?.credits);
 		const remaining = finite(lot?.remaining);
 		if (!lot || credits === null || remaining === null) return [];
+		// An explicit null never expires (0074); a missing or unreadable date is not that claim, so the
+		// row is dropped rather than shown as "Never expires".
+		const expiresAt = lot.expires_at === null ? null : isoOrNull(lot.expires_at);
+		if (lot.expires_at !== null && expiresAt === null) return [];
 		const source: CreditLotSource =
 			lot.source === 'free_monthly' || lot.source === 'purchase' ? lot.source : 'grant';
 		return [
@@ -360,7 +366,7 @@ function toLots(wire: unknown): CreditLot[] {
 				credits,
 				remaining,
 				// null is a lot that never expires (0074); before epsilon-billing#79 every lot has a date.
-				expiresAt: isoOrNull(lot.expires_at),
+				expiresAt,
 				pack: typeof lot.pack === 'string' ? lot.pack : null,
 				createdAt: isoOrNull(lot.created_at) ?? ''
 			}
@@ -370,8 +376,8 @@ function toLots(wire: unknown): CreditLot[] {
 
 const ENTRY_KINDS = new Set<CreditEntry['kind']>(['credit', 'debit', 'expiry', 'release', 'repay']);
 
-function toEntries(wire: unknown): CreditEntry[] {
-	if (!Array.isArray(wire)) return [];
+function toEntries(wire: unknown): CreditEntry[] | undefined {
+	if (!Array.isArray(wire)) return undefined;
 	return wire.flatMap((item): CreditEntry[] => {
 		const entry = record(item);
 		const credits = finite(entry?.credits);
@@ -707,12 +713,11 @@ export function createHttpAdapter(options: HttpAdapterOptions): ConsoleApi {
 			if (typeof wire?.balance !== 'number' || !Number.isFinite(wire.balance)) {
 				throw new HttpApiError('server-error', 'The billing service returned no credit balance.');
 			}
-			const credits: Credits = {
-				balance: wire.balance,
-				lots: toLots(wire.lots),
-				entries: toEntries(wire.entries),
-				packs: toPacks(wire.packs)
-			};
+			const credits: Credits = { balance: wire.balance, packs: toPacks(wire.packs) };
+			const lots = toLots(wire.lots);
+			const entries = toEntries(wire.entries);
+			if (lots) credits.lots = lots;
+			if (entries) credits.entries = entries;
 			const lowBalance = toLowBalance(wire.low_balance);
 			if (lowBalance) credits.lowBalance = lowBalance;
 			return credits;

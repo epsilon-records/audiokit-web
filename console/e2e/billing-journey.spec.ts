@@ -73,6 +73,11 @@ test('creating a key reveals its webhook secret beside it, and the list never sh
 	// Done drops the reveal: neither the key nor its webhook secret stays in the DOM.
 	await expect(page.getByText(value)).toHaveCount(0);
 	await expect(page.getByText(key)).toHaveCount(0);
+	// getByText skips <noscript>, so read the document too: the no-JavaScript reveal must not leave
+	// the secrets behind in the client DOM either.
+	const html = await page.content();
+	expect(html).not.toContain(value);
+	expect(html).not.toContain(key);
 	await page.reload();
 	await expect(page.getByText(value)).toHaveCount(0);
 });

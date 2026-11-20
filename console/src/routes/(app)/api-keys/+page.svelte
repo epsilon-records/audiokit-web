@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import Alert from '#lib/components/console/Alert.svelte';
 	import CodeBlock from '#lib/components/console/CodeBlock.svelte';
 	import CopyButton from '#lib/components/console/CopyButton.svelte';
@@ -37,6 +38,10 @@
 	const createError = $derived(form && 'createError' in form ? form.createError : null);
 	const revokeError = $derived(form && 'revokeError' in form ? form.revokeError : null);
 	const revokedLabel = $derived(form && 'revoked' in form ? form.revoked : null);
+	// Without JavaScript a key is revoked in two requests: the row's Revoke link opens this
+	// confirmation (`?revoke=<id>`), whose form posts to the same `?/revoke` action the dialog uses.
+	const revokeParam = $derived(page.url.searchParams.get('revoke'));
+	const pendingRevoke = $derived(data.keys.find((key) => key.id === revokeParam && !key.revoked));
 
 	// `form` keeps the created key until the next action, so the reveal renders from `reveal`
 	// instead: once the dialog closes (Done, ✕ or Esc) that key is dismissed and neither it nor its
@@ -97,6 +102,50 @@
 	</noscript>
 {/if}
 
+<!-- Without JavaScript: the same actions as plain forms. The dialogs below are the enhancement. -->
+<noscript>
+	{#if created}
+		<Panel code label={created.label}>
+			{#snippet bar()}<span class={faint}>Copy this key now. It is shown once.</span>{/snippet}
+			<CodeBlock value={created.secret} />
+		</Panel>
+		{#if created.webhookSecret}
+			<Panel code label="Webhook secret">
+				{#snippet bar()}<span class={faint}>Also shown only now.</span>{/snippet}
+				<CodeBlock value={created.webhookSecret} />
+			</Panel>
+		{/if}
+	{/if}
+	{#if createError}
+		<Alert tone="warn" role="alert" class="mb-5">{createError}</Alert>
+	{/if}
+	{#if revokeError}
+		<Alert tone="warn" role="alert" class="mb-5">{revokeError}</Alert>
+	{/if}
+	{#if pendingRevoke}
+		<form method="POST" action="?/revoke" class="mb-5">
+			<input type="hidden" name="id" value={pendingRevoke.id} />
+			<Alert tone="warn">
+				<span>
+					Revoke <strong>{pendingRevoke.label}</strong> ({pendingRevoke.prefix})? Any client using
+					this key will start failing immediately. This can't be undone.
+				</span>
+				<span class={actionRow}>
+					<Button type="submit" variant="danger">Revoke key</Button>
+					<a class={linkTarget} href="/api-keys">Keep key</a>
+				</span>
+			</Alert>
+		</form>
+	{/if}
+	<form method="POST" action="?/create" class="mb-5 flex flex-wrap items-end gap-3">
+		<Field.Field>
+			<Field.Label for="key-label-nojs">Label (optional)</Field.Label>
+			<Input id="key-label-nojs" name="label" type="text" maxlength={40} placeholder="staging" />
+		</Field.Field>
+		<Button type="submit" variant="primary">Create key</Button>
+	</form>
+</noscript>
+
 {#if data.keys.length === 0}
 	<EmptyState title="No API keys yet">
 		Create a key, then submit your first job.
@@ -137,6 +186,9 @@
 					</Table.Cell>
 					<Table.Cell class="text-right" data-label="Actions">
 						{#if !key.revoked}
+							<noscript>
+								<a class={linkTarget} href="?revoke={key.id}">Revoke</a>
+							</noscript>
 							<Button
 								variant="ghost"
 								size="small"

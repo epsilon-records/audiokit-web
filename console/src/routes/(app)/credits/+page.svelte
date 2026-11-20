@@ -60,7 +60,11 @@
 {#if credits}
 	<section class="{section} mb-7" aria-labelledby="lots-heading">
 		<h2 class={sectionTitle} id="lots-heading">Where your balance comes from</h2>
-		{#if (credits.lots ?? []).length === 0}
+		{#if !credits.lots}
+			<EmptyState title="Credit sources unavailable">
+				Billing did not send the credits this balance is made of. Try again in a moment.
+			</EmptyState>
+		{:else if credits.lots.length === 0}
 			<EmptyState title="No credits to spend">
 				Your free credits renew on the first day of each month (UTC).
 			</EmptyState>
@@ -75,7 +79,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each credits.lots ?? [] as lot, index (index)}
+					{#each credits.lots as lot, index (index)}
 						<Table.Row>
 							<Table.Cell data-label="Source">{lotSourceLabel(lot.source)}</Table.Cell>
 							<Table.Cell class={Table.cellNumeric} data-label="Remaining"
@@ -91,7 +95,11 @@
 
 	<section class="{section} mb-7" aria-labelledby="movements-heading">
 		<h2 class={sectionTitle} id="movements-heading">Recent movements</h2>
-		{#if (credits.entries ?? []).length === 0}
+		{#if !credits.entries}
+			<EmptyState title="Movements unavailable">
+				Billing did not send recent movements. Try again in a moment.
+			</EmptyState>
+		{:else if credits.entries.length === 0}
 			<EmptyState title="No movements yet">
 				Credits added, spent and returned will appear here.
 			</EmptyState>
@@ -107,7 +115,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each credits.entries ?? [] as entry, index (index)}
+					{#each credits.entries as entry, index (index)}
 						<Table.Row>
 							<Table.Cell class={Table.cellMono} data-label="When"
 								>{formatDate(entry.createdAt)} · {formatTime(entry.createdAt)}</Table.Cell

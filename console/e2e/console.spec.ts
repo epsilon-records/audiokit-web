@@ -194,6 +194,36 @@ test('revoking a key asks in an Alert Dialog that Esc cancels, returning focus',
 	await expect(revoke).toBeFocused();
 });
 
+test.describe('api keys without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('a key can be created, its one-time secret is shown, and it can be revoked', async ({
+		page,
+		context
+	}) => {
+		await signedIn(context);
+		await page.goto('/api-keys');
+		// The mock's keys live in the dev server's memory, so each run names its own.
+		const label = `nojs-${Date.now()}`;
+		const form = page.locator('form[action="?/create"]');
+		await form.getByLabel('Label (optional)').fill(label);
+		await form.getByRole('button', { name: 'Create key' }).click();
+		// The reveal is in the response to the POST itself. Playwright's text and role engines skip
+		// <noscript>, which is where this markup lives, so read the document and use CSS.
+		await expect.poll(() => page.content()).toContain('Copy this key now. It is shown once.');
+		expect(await page.content()).toMatch(/ak_live_[0-9a-f]+/);
+		await page.goto('/api-keys');
+		expect(await page.content()).not.toContain('Copy this key now. It is shown once.');
+		const row = page.getByRole('row', { name: label });
+		await row.locator('a[href^="?revoke="]').click();
+		await expect.poll(() => page.content()).toContain(`<strong>${label}</strong>`);
+		await page.locator('form[action="?/revoke"] button[type="submit"]').click();
+		await expect(
+			page.getByRole('row', { name: label }).getByText('revoked', { exact: true })
+		).toBeVisible();
+	});
+});
+
 test('revoking a key says so in a toast', async ({ page }) => {
 	// A fresh account, so revoking doesn't change the fixture account other tests read.
 	await page.goto('/signup');
@@ -240,17 +270,25 @@ test('settings: the low-balance switch is a switch, and saving says so in a toas
 	await page.waitForLoadState('networkidle');
 	const toggle = page.getByRole('switch', { name: 'Low-balance alerts' });
 	await expect(toggle).toBeChecked();
-	await toggle.focus();
-	await page.keyboard.press('Space');
-	await expect(toggle).not.toBeChecked();
-	await page.getByRole('button', { name: 'Save preferences' }).click();
-	await expect(page.getByText('Preferences saved.')).toBeVisible();
-	await page.reload();
-	await expect(page.getByRole('switch', { name: 'Low-balance alerts' })).not.toBeChecked();
-	// Put it back for the other tests.
-	await page.getByRole('switch', { name: 'Low-balance alerts' }).check();
-	await page.getByRole('button', { name: 'Save preferences' }).click();
-	await expect(page.getByText('Preferences saved.').first()).toBeVisible();
+	try {
+		await toggle.focus();
+		await page.keyboard.press('Space');
+		await expect(toggle).not.toBeChecked();
+		await page.getByRole('button', { name: 'Save preferences' }).click();
+		await expect(page.getByText('Preferences saved.')).toBeVisible();
+		await page.reload();
+		await expect(page.getByRole('switch', { name: 'Low-balance alerts' })).not.toBeChecked();
+	} finally {
+		// Put it back for the other tests, even when an assertion above failed after the first save.
+		await page.goto('/settings');
+		await page.waitForLoadState('networkidle');
+		const restore = page.getByRole('switch', { name: 'Low-balance alerts' });
+		if (!(await restore.isChecked())) {
+			await restore.check();
+			await page.getByRole('button', { name: 'Save preferences' }).click();
+			await expect(page.getByText('Preferences saved.').first()).toBeVisible();
+		}
+	}
 });
 
 test('settings: deleting the account asks once more in an Alert Dialog', async ({

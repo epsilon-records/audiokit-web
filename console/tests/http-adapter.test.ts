@@ -658,9 +658,34 @@ describe('http adapter: credits', () => {
 		expect(await clientFor({ balance: -12, lots: [] }).client.getCredits()).toEqual({
 			balance: -12,
 			lots: [],
-			entries: [],
 			packs: []
 		});
+	});
+
+	it('keeps a collection billing did not send distinct from a confirmed empty one', async () => {
+		const missing = await clientFor({ balance: 5, lots: 'nope' }).client.getCredits();
+		expect(missing.lots).toBeUndefined();
+		expect(missing.entries).toBeUndefined();
+		const empty = await clientFor({ balance: 5, lots: [], entries: [] }).client.getCredits();
+		expect(empty.lots).toEqual([]);
+		expect(empty.entries).toEqual([]);
+	});
+
+	it('drops a lot whose expiry is missing or unreadable, and keeps an explicit null', async () => {
+		const lot = (expires_at: unknown) => ({
+			source: 'purchase',
+			credits: 10,
+			remaining: 10,
+			pack: null,
+			created_at: '2026-11-14T09:00:00.000Z',
+			...(expires_at === undefined ? {} : { expires_at })
+		});
+		const { client } = clientFor({
+			balance: 30,
+			lots: [lot(undefined), lot('invalid'), lot(null), lot('2027-01-01T00:00:00.000Z')]
+		});
+		const lots = (await client.getCredits()).lots ?? [];
+		expect(lots.map((l) => l.expiresAt)).toEqual([null, '2027-01-01T00:00:00.000Z']);
 	});
 
 	// The shape billing's GET /v1/credits answers on main (9b591c0): lots, entries and packs.
