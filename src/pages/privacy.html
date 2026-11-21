@@ -26,7 +26,7 @@
   <h2 id="site">Visiting audiokit.ai</h2>
   <h3 id="site-hosting" data-toc="Hosting and fonts">Hosting and fonts</h3>
   <p>The site is served by Netlify. As with any website, your browser sends its IP address and request details (such as the page requested, browser type and referring page) to the host, which keeps them in its server logs.</p>
-  <p>Pages on audiokit.ai and in the console load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page.</p>
+  <p>Pages on audiokit.ai load their typefaces from Google Fonts (<code>fonts.googleapis.com</code> and <code>fonts.gstatic.com</code>). Your browser therefore connects to Google and sends it your IP address and browser details when you open a page.</p>
   <h3 id="site-errors" data-toc="Error monitoring">Error monitoring</h3>
   <p>Public pages load Sentry's browser script, which reports errors that happen in your browser on our pages and timing data for a sample of page loads. A report can include the page address, browser and operating system, and the IP address it was sent from.</p>
   <h3 id="site-analytics" data-toc="Analytics">Analytics</h3>
@@ -41,6 +41,7 @@
   <h3 id="account-signin" data-toc="Signing in">Signing in</h3>
   <p>You sign up and sign in with your email address. We email you a single-use sign-in link that expires after 15 minutes. We keep only a cryptographic hash of each link, with when it was created, used and expires. There is no password.</p>
   <p>Once you are signed in, the console sets one cookie, <code>ak_console_session</code>. It keeps you signed in, cannot be read by scripts on the page, and expires after 8 hours. The console needs it to work. The console runs no analytics script.</p>
+  <p>If you pick Light or Dark with the theme switch on audiokit.ai, your browser keeps that choice in its local storage as <code>ak-theme</code>. It is saved only when you pick a theme, is used for nothing else, and is removed when you pick System again.</p>
   <h3 id="account-data" data-toc="What we keep">What we keep about you</h3>
   <ul>
     <li><strong>Account:</strong> email address, name, and company if you give one; when the address was verified; account status; when the account was created and last signed in.</li>
@@ -104,7 +105,7 @@
     <tr><td>Stripe</td><td>Payments, subscriptions, invoices and tax</td><td>United States</td></tr>
     <tr><td>Sentry</td><td>Error monitoring for the site, API and billing service</td><td>United States</td></tr>
     <tr><td>Resend</td><td>Sending our email</td><td>United States</td></tr>
-    <tr><td>Google Fonts</td><td>Typefaces for the site and console</td><td>United States</td></tr>
+    <tr><td>Google Fonts</td><td>Typefaces for the site</td><td>United States</td></tr>
 <!--kit-->
     <tr><td>Kit</td><td>Runs the product updates list: stores subscribers' email addresses and sends the confirmation and update emails</td><td>United States</td></tr>
 <!--/kit-->

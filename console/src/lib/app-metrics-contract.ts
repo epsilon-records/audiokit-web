@@ -5,7 +5,7 @@ export type Metric = 'document_mount_ms' | 'client_navigation_ms';
 export type Sample = { v: 1; route: 'dashboard'; metric: Metric; ms: number };
 export function routeCode(id: string | null | undefined): 'dashboard' | null {
 	switch (id) {
-		case '/(console)/dashboard':
+		case '/(app)/dashboard':
 			return 'dashboard';
 		default:
 			return null;

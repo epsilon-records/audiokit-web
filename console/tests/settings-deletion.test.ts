@@ -14,7 +14,7 @@ vi.mock('#lib/api-client', async (importOriginal) => {
 	return { ...original, apiFor: () => client };
 });
 
-const { actions } = await import('../src/routes/(console)/settings/+page.server');
+const { actions } = await import('../src/routes/(app)/settings/+page.server');
 const { SESSION_COOKIE } = await import('../src/lib/session');
 
 function event() {

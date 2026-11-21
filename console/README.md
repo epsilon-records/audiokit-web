@@ -18,13 +18,25 @@ and the build need no service.
   website build (`npm run build` at the repo root) does not touch it, and this app's build does
   not touch the site. They deploy as two Netlify sites.
 - **Stack:** SvelteKit 3 + Svelte 5 (runes) + TypeScript + Vite, with
-  [`@sveltejs/adapter-netlify`](https://svelte.dev/docs/kit/adapter-netlify). No UI or CSS
-  framework.
-- **Styling:** plain CSS in `src/app.css`, built on the site's CSS custom-property tokens copied
-  verbatim from `src/static/styles.css` (direction A, "Console"). No Tailwind. When the site's
-  tokens change, update both blocks.
-- **Independent of ERMS:** no shared components, no shared theme, no runtime dependency on
-  another app.
+  [`@sveltejs/adapter-netlify`](https://svelte.dev/docs/kit/adapter-netlify). Tailwind v4 and
+  shadcn-svelte for the shared components (knowledge shared 0046), on the way to one app at
+  audiokit.ai (AudioKit 0053, EPSILON-169).
+- **Styling:** the design tokens live in `src/app.css`, in line with the `[data-product='audiokit']`
+  block of the shared token set. `src/tailwind.css` maps Tailwind's names onto them with
+  `@theme inline` (theme and utilities only: no Preflight yet, so pages that haven't moved to the
+  components keep their look). The components are in `src/lib/components/ui` (Button, Checkbox,
+  Field, Input, Label, NativeSelect, Textarea), and `cn()` is in `src/lib/utils.ts`.
+- **Theme:** dark by default, light when the system asks for it, or the visitor's pick (System,
+  Light, Dark) stored in `localStorage` as `ak-theme`. `static/theme-init.js` sets `data-theme`
+  on `<html>` before first paint; `src/lib/theme.ts` and `ThemeToggle.svelte` change it after.
+  Code panels stay dark in both themes. The stored pick is pending knowledge#131 Q7; `theme.ts`
+  says how to drop it.
+- **Fonts:** Space Grotesk and JetBrains Mono, self-hosted from `static/fonts/` (shared 0039).
+  Nothing is loaded from Google Fonts.
+- **Route groups:** `(site)` holds the public, prerendered pages with the marketing header and
+  footer; `(app)` is the signed-in shell. See "Public pages" below.
+- **Independent of other apps:** the components and the Tailwind setup are copied in, not
+  shared; there is no runtime dependency on another app.
 - **Not decided here:** the billing service's HTTP API, session lifetime, and billing vendor
   details. Those are open questions in the design and decisions in the knowledge repo; the
   client boundary and `TODO(EPSILON-46)` comments mark where they land.
@@ -42,12 +54,41 @@ and the build need no service.
 | `/api-keys`         | List, create (reveal once), revoke                               |
 | `/settings`         | Profile, notifications, session, danger zone                     |
 | `/settings/billing` | Plan, payment summary, invoices                                  |
-| `/pricing`          | Signed-in plan and upgrade                                       |
 | `/logout`           | `POST`: clears the session and returns to `/login`               |
 
-`/` redirects to `/dashboard` (or `/login` when signed out). Everything under the console
+The console's own `/pricing` plan page went with EPSILON-169 PR 2: `/pricing/` is the public
+pricing page, and `/credits` takes the plan page's place in PR 3. Everything under the console
 shell requires a session; the deep link is preserved through sign-in (`/login?next=…`) and
 validated with `safeNext()` so it can't become an open redirect.
+
+## Public pages
+
+EPSILON-169 PR 2 moved the static site's pages into `(site)`, prerendered to plain HTML that
+works with JavaScript off, at the static site's URLs, trailing slash included
+(`trailingSlash = 'always'`): `/`, `/pricing/`, `/privacy/`, `/docs/`, `/docs/reference/`,
+`/docs/sdks/`, `/docs/mcp/`, `/check-your-inbox/`, `/subscribed/` and `/404.html`, plus
+`/docs/openapi.yaml`, `/llms.txt`, `/sitemap.xml` and `/robots.txt`.
+
+- **Text:** `src/lib/site/pages/` holds copies of the static site's `src/pages/`, and
+  `src/lib/site/*.js` copies of its build scripts. `tests/site-parity.test.ts` keeps them equal
+  to the originals (the privacy notice's changes are listed there) until the cleanup removes
+  the static site. A copy change lands in both places until the cut-over.
+- **Rendering:** `src/lib/server/site/render.ts` fills the `{{TOKENS}}` the way
+  `scripts/build.mjs` did. The API reference and the home page's operation list are generated
+  at build time from the contract: `$AUDIOKIT_OPENAPI_URL`, then the live API, then
+  `../contract/openapi.yaml`.
+- **Styles:** `src/site.css` is the static site's stylesheet with every rule scoped to
+  `<main class="site">`, so none of it reaches the signed-in app.
+- **Scripts:** Sentry, the guarded Cloudflare Web Analytics loader and first-touch are added to
+  the prerendered HTML only (`hooks.server.ts`, `src/lib/server/site/public-head.ts`), with the
+  hosts they need added to the page's Content-Security-Policy. Every link on a public page is
+  a full page load (`data-sveltekit-reload`), so they never follow a visitor into the app.
+- **Search:** `robots.txt` disallows everything when Netlify's `SITE_NAME` is
+  `audiokit-console` (or `PUBLIC_SITE_HOST=console`), so console.audiokit.ai doesn't compete with
+  audiokit.ai before the cut-over. Canonical links always name audiokit.ai.
+- **Checks:** `npm run test:build` builds, then checks every old URL and the sitemap against
+  `build/`, each page's policy and its scripts. The `site` Playwright project serves `build/`
+  and checks JavaScript off, 320 px, touch targets, keyboard reach and axe.
 
 ## Auth
 
@@ -124,11 +165,16 @@ npm run dev        # Vite dev server, usually http://localhost:5173
 npm run build      # production build; writes build/ and .netlify/functions-internal/
 npm run check      # svelte-check (type + template diagnostics)
 npm test           # Vitest unit tests for the client, fixtures, formatters and session helper
+npm run test:build # build, then check build/: old URLs, sitemap, CSP, public scripts
+npm run test:storybook  # every story in Chromium with axe, dark and light theme
+npx playwright test     # browser tests: the app on the dev server (mock adapter), the public
+                        # pages on a build served by `vite preview`
 npm run lint       # Prettier check
 npm run format     # Prettier write
 ```
 
-Node 22 or newer.
+Node 22 or newer. `npm run test:storybook` needs Playwright's Chromium (`npx playwright install
+chromium`), or `PLAYWRIGHT_CHROMIUM_PATH` pointing at a local Chrome.
 
 ## Deploy
 
@@ -140,11 +186,16 @@ The console is its **own Netlify site**, separate from the static site:
   `netlify.toml`).
 - The server-side routes run as the adapter's Netlify Function; `static/` assets are served
   from `build/`.
+- `netlify.toml`'s `ignore` skips the build unless this directory or `../contract` changed, so
+  a static-site change doesn't cost a console deploy (`test/netlify-ignore.test.mjs` at the repo
+  root checks it).
 
 ## CI
 
 `.github/workflows/console.yml` is path-filtered to `console/**`. It installs with `npm ci`,
-then runs `npm run check`, `npm run build` and `npm test`. It is independent of the site build
+then runs `npm run check`, `npm run build`, the build-output checks, `npm test` and the Storybook
+story tests with axe
+(`npm run test:storybook`). It is independent of the site build
 and does not run when only `src/`, `scripts/` or `contract/` change.
 
 ## What is deliberately not done
@@ -167,8 +218,9 @@ These are the design's open questions, left as TODOs rather than guessed:
 
 ```
 src/
-  app.css                tokens (copied from src/static/styles.css) + console styles
-  app.html               fonts, metadata shell
+  app.css                tokens (dark, light, dark islands) + console styles
+  tailwind.css           Tailwind v4 theme and utilities, mapped onto the tokens
+  app.html               metadata shell, pre-paint theme script, self-hosted fonts
   hooks.server.ts        session resolution + security headers
   lib/
     api-client.ts        typed client boundary and adapter selection
@@ -183,7 +235,8 @@ src/
   routes/
     login/               magic-link request
     auth/callback/       magic-link consumption
-    (console)/           guarded shell: dashboard, usage, api-keys, settings, pricing
+    (app)/               guarded shell: dashboard, usage, api-keys, settings, pricing
+    (site)/              public pages' layout: header with the Menu disclosure, footer
     logout/              POST sign-out
 tests/                   Vitest unit tests
 ```
@@ -199,7 +252,7 @@ or reuse a session JWT, API key or general billing service token. Deploy and rev
 billing first; do not enable the console until its database/machine configuration
 and browser proof have been reviewed.
 
-Only framework route ID `/(console)/dashboard` maps to the wire symbol `dashboard`.
+Only framework route ID `/(app)/dashboard` maps to the wire symbol `dashboard`.
 The collector emits `document_mount_ms` at initial client mount, from numeric
 `performance.now()`. This is not load completion, paint, a Web Vital, visits or an
 authentication timer. All client navigations and all other routes are excluded in

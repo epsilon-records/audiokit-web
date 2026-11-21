@@ -19,8 +19,8 @@ function setup(enabled = true, origin = METRICS_ORIGIN) {
 }
 it('sends one fresh fixed object through credential-free native fetch options', async () => {
 	const { client, fetch } = setup();
-	client.after('/(console)/dashboard', 'enter');
-	client.after('/(console)/dashboard', 'enter');
+	client.after('/(app)/dashboard', 'enter');
+	client.after('/(app)/dashboard', 'enter');
 	expect(fetch).toHaveBeenCalledTimes(1);
 	const [url, options] = fetch.mock.calls[0];
 	expect(url).toBe('/api/app-metrics');
@@ -44,12 +44,12 @@ it('sends one fresh fixed object through credential-free native fetch options', 
 it('drops disabled/wrong-origin/unknown/hidden initial documents', () => {
 	for (const s of [setup(false), setup(true, 'http://localhost'), setup()]) {
 		s.hide();
-		s.client.after('/(console)/dashboard', 'enter');
+		s.client.after('/(app)/dashboard', 'enter');
 		expect(s.fetch).not.toHaveBeenCalled();
 	}
 	const s = setup();
 	s.client.after('/auth/callback', 'enter');
-	s.client.after('/(console)/dashboard', 'link');
+	s.client.after('/(app)/dashboard', 'link');
 	expect(s.fetch).not.toHaveBeenCalled();
 });
 it('conservatively drops same-symbol, excluded, canceled, stale and form navigation', () => {
@@ -57,22 +57,22 @@ it('conservatively drops same-symbol, excluded, canceled, stale and form navigat
 	client.after('/login', 'enter');
 	time(2000);
 	for (const type of ['link', 'goto', 'popstate', 'form']) {
-		client.before({ from: '/(console)/dashboard', to: '/(console)/dashboard', type });
-		client.after('/(console)/dashboard', type);
-		client.before({ from: '/(console)/dashboard', to: '/releases/[id]', type });
+		client.before({ from: '/(app)/dashboard', to: '/(app)/dashboard', type });
+		client.after('/(app)/dashboard', type);
+		client.before({ from: '/(app)/dashboard', to: '/releases/[id]', type });
 		client.after('/releases/[id]', type);
-		client.before({ from: '/releases/[id]', to: '/(console)/dashboard', type });
+		client.before({ from: '/releases/[id]', to: '/(app)/dashboard', type });
 		client.invalidate();
-		client.after('/(console)/dashboard', type);
+		client.after('/(app)/dashboard', type);
 	}
 	client.before({
-		from: '/(console)/dashboard',
-		to: '/(console)/dashboard',
+		from: '/(app)/dashboard',
+		to: '/(app)/dashboard',
 		type: 'link',
 		leaving: true
 	});
 	client.destroy();
-	client.after('/(console)/dashboard', 'enter');
+	client.after('/(app)/dashboard', 'enter');
 	expect(fetch).not.toHaveBeenCalled();
 });
 it('aborts on deadline and lifecycle invalidation; catches failures', async () => {
@@ -84,12 +84,12 @@ it('aborts on deadline and lifecycle invalidation; catches failures', async () =
 				options!.signal!.addEventListener('abort', () => reject(new Error('fake')))
 			)
 	);
-	s.client.after('/(console)/dashboard', 'enter');
+	s.client.after('/(app)/dashboard', 'enter');
 	const signal = s.fetch.mock.calls[0][1]!.signal!;
 	await vi.advanceTimersByTimeAsync(1000);
 	expect(signal.aborted).toBe(true);
 	const t = setup();
-	t.client.after('/(console)/dashboard', 'enter');
+	t.client.after('/(app)/dashboard', 'enter');
 	t.client.invalidate();
 	expect(t.fetch.mock.calls[0][1]!.signal!.aborted).toBe(true);
 });
@@ -108,14 +108,14 @@ it('shares one document mount/budget across duplicate initialization and root re
 		lifetime
 	};
 	const first = createCollector(options);
-	first.after('/(console)/dashboard', 'enter');
+	first.after('/(app)/dashboard', 'enter');
 	const second = createCollector(options);
-	second.after('/(console)/dashboard', 'enter');
-	first.after('/(console)/dashboard', 'enter');
+	second.after('/(app)/dashboard', 'enter');
+	first.after('/(app)/dashboard', 'enter');
 	first.destroy();
-	second.after('/(console)/dashboard', 'enter');
+	second.after('/(app)/dashboard', 'enter');
 	expect(fetch).toHaveBeenCalledTimes(1);
 	second.destroy();
-	createCollector(options).after('/(console)/dashboard', 'enter');
+	createCollector(options).after('/(app)/dashboard', 'enter');
 	expect(fetch).toHaveBeenCalledTimes(1);
 });

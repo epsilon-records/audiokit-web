@@ -12,12 +12,16 @@
     "test:build": "npm run build && node test/analytics-output.mjs && node test/csp-output.mjs",
     "test:analytics:browser": "node test/analytics.browser.mjs",
     "test:acceptance": "node --test test/acceptance/smoke.acceptance.mjs",
-    "test:acceptance:probe": "node --test --test-concurrency=1 test/acceptance/probe.acceptance.mjs"
+    "test:acceptance:probe": "node --test --test-concurrency=1 test/acceptance/probe.acceptance.mjs",
+    "test:e2e:public": "playwright test"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0"
   }
 }

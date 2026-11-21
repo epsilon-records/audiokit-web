@@ -2,6 +2,8 @@ import type { Session } from '#lib/types';
 
 declare global {
 	const __METRICS_PRODUCTION__: boolean;
+	/** The contract's info.version, at build time (vite.config.ts). */
+	const __API_VERSION__: string;
 	namespace App {
 		interface Platform {
 			context?: { site?: { id?: string } };

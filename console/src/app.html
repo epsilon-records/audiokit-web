@@ -3,15 +3,21 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="color-scheme" content="dark" />
-		<meta name="theme-color" content="#0c0e11" />
+		<meta name="color-scheme" content="dark light" />
+		<meta name="theme-color" content="#0c0e11" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!-- Sets data-theme (and data-js) before first paint, so neither theme flashes. -->
+		<script src="%sveltekit.assets%/theme-init.js"></script>
+		<!-- Space Grotesk and JetBrains Mono are self-hosted (shared 0039, audit F-08). -->
 		<link
-			href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-			rel="stylesheet"
+			rel="preload"
+			href="%sveltekit.assets%/fonts/space-grotesk-400-latin.woff2"
+			as="font"
+			type="font/woff2"
+			crossorigin="anonymous"
 		/>
+		<link rel="stylesheet" href="%sveltekit.assets%/fonts.css" />
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

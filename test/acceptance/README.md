@@ -112,7 +112,7 @@ The input's `sha256`, which the API requires, is computed by downloading `AUDIOK
 
 - It refuses to start without the confirmation phrase.
 - Before any billing step it requires a `cs_test_` Checkout session on a Stripe URL and a
-  `/p/session/test_` portal session. Any live-mode id (`*_live_*`) or `livemode: true` in a
+  `/p/session/test_` (or `/p/session?secret=test_`) portal session. Any live-mode id (`*_live_*`) or `livemode: true` in a
   response stops the run immediately with exit code 3 and touches nothing more, not even
   cleanup. Stripe's mode is not otherwise visible to the suite, and signup creates a Stripe
   customer best effort, so confirm the Stripe dashboard is in test mode before step 1.

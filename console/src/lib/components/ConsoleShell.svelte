@@ -33,7 +33,10 @@
 
 <svelte:window
 	onkeydown={(event) => {
-		if (event.key === 'Escape') drawerOpen = false;
+		// Esc closes the navigation and returns focus to the Menu button (audit F-16).
+		if (event.key !== 'Escape' || !drawerOpen) return;
+		drawerOpen = false;
+		document.getElementById('console-menu-button')?.focus();
 	}}
 />
 
