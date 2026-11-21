@@ -1,4 +1,4 @@
-// The terms page (audiokit-web#78) is a DRAFT: Nate approves the text before it ships (shared 0012).
+// The terms page (audiokit-web#78): Nate approved the text (audiokit 0090) and it ships for the 23 Nov launch (shared 0012).
 // Every clause nobody has decided is a visible <mark class="gap">[OPEN: …]</mark>, and a production
 // build refuses to publish while any is left. Settled clauses follow AudioKit decisions 0052, 0057,
 // 0063, 0072, 0074, 0081, 0082 and 0085 and shared decision 0040. Run: npm test
@@ -26,14 +26,10 @@ test("it has the sections terms need", () => {
   }
 });
 
-test("every undecided clause is a visible, marked [OPEN: …] placeholder", () => {
-  const marked = [...page.matchAll(/<mark class="gap">\[OPEN:[^\]<]+\]<\/mark>/g)].length;
-  assert.ok(marked > 0, "a draft has open points");
-  assert.equal(marked, findGaps(page).length, "each [OPEN: …] sits in a <mark class=\"gap\">");
-  const gaps = findGaps(page).join(" | ").toLowerCase();
-  for (const topic of ["effective date", "has not approved"]) {
-    assert.match(gaps, new RegExp(topic), topic);
-  }
+test("no [OPEN: …] marker is left, and the effective date is set (audiokit 0090)", () => {
+  assert.equal(findGaps(page).length, 0, "a production build refuses any gap");
+  assert.match(text, /Effective from 23 November 2026\./);
+  assert.doesNotMatch(text, /has not approved|Do not publish/i);
 });
 
 test("the release gate sees [OPEN: …] markers as gaps", () => {
