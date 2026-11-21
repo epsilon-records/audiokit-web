@@ -106,11 +106,13 @@ describe('static/theme-init.js', () => {
 });
 
 describe('#lib/theme', () => {
-	it('stores a pick and clears it for System', () => {
+	it('stores successive Light and Dark picks and clears them for System', () => {
 		const storage = memoryStorage();
 		store(storage, 'light');
 		expect(storage.data.get('ak-theme')).toBe('light');
 		expect(readStored(storage)).toBe('light');
+		store(storage, 'dark');
+		expect(readStored(storage)).toBe('dark');
 		store(storage, 'system');
 		expect(storage.data.has('ak-theme')).toBe(false);
 		expect(readStored(storage)).toBe('system');
