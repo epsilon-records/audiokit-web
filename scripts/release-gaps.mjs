@@ -1,16 +1,17 @@
 // Release gate for facts only Nate can supply (shared decision 0012).
 //
-// A draft page marks each missing fact as <mark class="gap">TODO(privacy): …</mark>. Deploy
+// A draft page marks each missing fact as <mark class="gap">TODO(privacy): …</mark>, or, for a
+// legal clause nobody has decided yet, <mark class="gap">[OPEN: …]</mark>. Deploy
 // previews and CI build it with the gaps visible. A production build (Netlify sets
 // CONTEXT=production) or `node scripts/build.mjs --release` refuses to publish while any gap is
 // left, so the privacy notice cannot go live incomplete. Once this is merged, production deploys
 // of the whole site stop until every gap is filled.
 
-export const GAP = /TODO\(privacy\):\s*([^<]*)/g;
+export const GAP = /TODO\(privacy\):\s*([^<]*)|\[OPEN:\s*([^\]<]*)\]/g;
 
 /** Every open gap in an HTML string, as its description. */
 export function findGaps(html) {
-  return [...html.matchAll(GAP)].map((m) => m[1].trim());
+  return [...html.matchAll(GAP)].map((m) => (m[1] ?? m[2]).trim());
 }
 
 export function isRelease(env = process.env, argv = process.argv) {

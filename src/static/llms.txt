@@ -31,3 +31,4 @@ Planned, not available yet: denoise, stem separation (see above), transcription,
 ## Optional
 
 - [Privacy notice](https://audiokit.ai/privacy/)
+- [Terms of service](https://audiokit.ai/terms/)

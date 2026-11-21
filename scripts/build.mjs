@@ -98,6 +98,7 @@ function footer(meta, ctx) {
       <a href="/docs/mcp/">MCP</a>
       <a href="/pricing/">Pricing</a>
       <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
       <a href="/docs/openapi.yaml">openapi.yaml</a>
     </nav>
   </div>
@@ -390,9 +391,9 @@ async function main() {
     built.set(route, html);
     await write(outPath(rel), html);
   }
-  // Facts only Nate can supply are marked TODO(privacy); a production build refuses them.
+  // Facts only Nate can supply are marked TODO(privacy), and undecided legal clauses [OPEN: …]; a production build refuses both.
   const gaps = [...built.values()].reduce((n, html) => n + findGaps(html).length, 0);
-  if (gaps) console.warn(`gaps: ${gaps} TODO(privacy) marker(s); a production build will refuse to publish`);
+  if (gaps) console.warn(`gaps: ${gaps} gap marker(s) (TODO(privacy) or [OPEN: …]); a production build will refuse to publish`);
   assertNoGaps(built, isRelease());
 
   const refRoute = "/docs/reference/";

@@ -15,7 +15,7 @@ async function htmlFiles(dir = root) {
   return result;
 }
 const files = await htmlFiles();
-assert.equal(files.length, 10, 'review public route inventory when adding pages');
+assert.equal(files.length, 11, 'review public route inventory when adding pages');
 let loaders = 0;
 for (const file of files) {
   const html = await readFile(file, 'utf8');
