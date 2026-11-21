@@ -65,7 +65,8 @@
 				<div class="panel-bar">
 					<span>Default key</span><CopyButton value={apiKey} label="Copy key" />
 				</div>
-				<pre class="code">{apiKey}</pre>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+				<pre class="code" tabindex="0">{apiKey}</pre>
 			</div>
 			{#if webhookSecret}
 				<p class="muted">
@@ -79,7 +80,8 @@
 							label="Copy webhook secret"
 						/>
 					</div>
-					<pre class="code">{webhookSecret}</pre>
+					<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+					<pre class="code" tabindex="0">{webhookSecret}</pre>
 				</div>
 			{/if}
 			<h2>3. Explore the API</h2>
@@ -91,7 +93,8 @@
 				<div class="panel-bar">
 					<span>Terminal</span><CopyButton value={example} label="Copy example" />
 				</div>
-				<pre class="code">{example}</pre>
+				<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
+				<pre class="code" tabindex="0">{example}</pre>
 			</div>
 			<label class="checkbox"
 				><input type="checkbox" name="savedKey" required /><span

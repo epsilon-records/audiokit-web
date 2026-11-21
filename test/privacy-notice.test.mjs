@@ -109,3 +109,12 @@ test("a production build refuses to publish while the notice has gaps", async ()
     await run;
   }
 });
+
+test("the theme choice it describes matches the code (AudioKit decision 0079)", async () => {
+  const theme = await read("console/src/lib/theme.ts");
+  const key = /THEME_STORAGE_KEY = '([^']+)'/.exec(theme)[1];
+  assert.ok(text.includes(key), `notice names the ${key} storage key`);
+  assert.match(text, /saved only when you pick a theme, is used for nothing else, and is removed when you pick System again/);
+  // System removes the key, so nothing stays stored once the visitor goes back to the default.
+  assert.match(theme, /if \(choice === 'system'\) storage\?\.removeItem\(THEME_STORAGE_KEY\)/);
+});

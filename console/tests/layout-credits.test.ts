@@ -13,7 +13,7 @@ vi.mock('#lib/api-client', async (importOriginal) => {
 	return { ...original, apiFor: () => client };
 });
 
-const { load } = await import('../src/routes/(console)/+layout.server');
+const { load } = await import('../src/routes/(app)/+layout.server');
 const { CREDITS_DEADLINE_MS } = await import('../src/lib/credits');
 
 const account = { id: 'a', email: 'you@example.com' };

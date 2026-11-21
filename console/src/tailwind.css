@@ -1,0 +1,45 @@
+/*
+ * Tailwind v4 for the shared components in src/lib/components/ui (shared 0046, EPSILON-169).
+ * Theme and utilities only: Preflight stays off until the old page CSS in app.css is gone, so
+ * pages that haven't moved to the components keep their look. The tokens in app.css stay the
+ * source of truth; `@theme inline` points Tailwind's names at them instead of copying values,
+ * so the light and dark themes and the dark islands reach the components too.
+ */
+@import 'tailwindcss/theme' layer(theme);
+/* source(none): only the @source below is scanned, so class names the pages already use (flex,
+   hidden, ...) don't pick up Tailwind rules. */
+@import 'tailwindcss/utilities' layer(utilities) source(none);
+
+@source './lib/components/ui';
+
+@theme inline {
+	--color-background: var(--bg);
+	--color-foreground: var(--text);
+	--color-surface: var(--surface);
+	--color-surface-2: var(--surface-2);
+	--color-border: var(--line);
+	--color-border-strong: var(--line-control);
+	--color-strong: var(--text-strong);
+	--color-soft: var(--soft);
+	--color-muted: var(--muted);
+	--color-accent: var(--accent);
+	--color-accent-hover: var(--accent-hover);
+	--color-accent-soft: var(--accent-soft);
+	--color-on-accent: var(--on-accent);
+	--color-ok: var(--ok);
+	--color-warn: var(--warn);
+	--color-danger: var(--danger);
+	/* shadcn-svelte's names, so the copied-in form controls need few edits. */
+	--color-muted-foreground: var(--muted);
+	--color-input: var(--line-control);
+	--color-placeholder: var(--placeholder);
+	--color-primary: var(--accent);
+	--color-primary-foreground: var(--on-accent);
+	--color-destructive: var(--danger);
+	--color-ring: var(--accent);
+	--font-sans: var(--sans);
+	--font-mono: var(--mono);
+	/* AudioKit keeps its rounded corners: 6 px on controls, 10 px on cards. */
+	--radius-control: var(--radius-sm);
+	--radius-card: var(--radius);
+}

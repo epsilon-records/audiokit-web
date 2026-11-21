@@ -1,0 +1,71 @@
+<!--
+	shadcn-svelte Input in the console's control style: 44 px, 6 px corners, surface fill. `aria-invalid`
+	turns the border red; pair it with aria-describedby pointing at the Field.Error.
+-->
+<script lang="ts">
+	import { cn, type WithElementRef } from '#lib/utils.js';
+	import type { HTMLInputAttributes } from 'svelte/elements';
+
+	// A closed list: Svelte's HTMLInputTypeAttribute also allows any string, which would let
+	// 'checkbox' or 'radio' through to bind:value. Checkboxes use the Checkbox component, and
+	// files take the `type: 'file'` branch below.
+	type InputType =
+		| 'text'
+		| 'email'
+		| 'password'
+		| 'search'
+		| 'url'
+		| 'tel'
+		| 'number'
+		| 'date'
+		| 'datetime-local'
+		| 'time'
+		| 'month'
+		| 'week'
+		| 'color'
+		| 'range'
+		| 'hidden';
+
+	type Props = WithElementRef<
+		Omit<HTMLInputAttributes, 'type'> &
+			({ type: 'file'; files?: FileList } | { type?: InputType; files?: undefined })
+	>;
+
+	let {
+		ref = $bindable(null),
+		value = $bindable(),
+		type,
+		files = $bindable(),
+		class: className,
+		'data-slot': dataSlot = 'input',
+		...restProps
+	}: Props = $props();
+
+	const base =
+		'min-h-11 w-full min-w-0 rounded-control border border-input bg-background px-3 font-sans text-[15px] text-foreground placeholder:text-placeholder aria-invalid:border-destructive disabled:cursor-not-allowed disabled:opacity-50';
+</script>
+
+{#if type === 'file'}
+	<input
+		bind:this={ref}
+		data-slot={dataSlot}
+		class={cn(
+			base,
+			'py-[9px] file:mr-3 file:border-0 file:bg-transparent file:font-sans file:font-semibold file:text-foreground',
+			className
+		)}
+		type="file"
+		bind:files
+		bind:value
+		{...restProps}
+	/>
+{:else}
+	<input
+		bind:this={ref}
+		data-slot={dataSlot}
+		class={cn(base, className)}
+		{type}
+		bind:value
+		{...restProps}
+	/>
+{/if}
