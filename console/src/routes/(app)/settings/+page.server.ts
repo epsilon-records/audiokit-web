@@ -27,11 +27,16 @@ export const actions: Actions = {
 		const client = apiFor(locals.sessionToken);
 		// Quota emails are gone (AudioKit 0066), so the form no longer has a toggle for them. Billing
 		// still stores the field; send back what it holds so saving here never changes it (EPSILON-169).
-		const { quotaWarnings } = await client.getNotificationPreferences();
+		const current = await client.getNotificationPreferences();
 		const preferences = await client.updateNotificationPreferences({
-			quotaWarnings,
+			quotaWarnings: current.quotaWarnings,
 			paymentReceipts: form.get('paymentReceipts') === 'on',
-			productUpdates: form.get('productUpdates') === 'on'
+			productUpdates: form.get('productUpdates') === 'on',
+			// Low-balance alerts (EPSILON-257): only when billing reports the preference, so the form
+			// had the switch. Otherwise it is left out and billing keeps what it has.
+			...(current.lowBalanceAlerts !== undefined
+				? { lowBalanceAlerts: form.get('lowBalanceAlerts') === 'on' }
+				: {})
 		});
 		return { preferencesSaved: true, preferences };
 	},

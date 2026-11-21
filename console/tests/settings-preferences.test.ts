@@ -40,4 +40,61 @@ describe('settings: save preferences', () => {
 		});
 		expect(result).toMatchObject({ preferencesSaved: true });
 	});
+
+	// EPSILON-257: the low-balance switch is saved only when billing reports the preference.
+	async function save(form: FormData) {
+		return actions.savePreferences({
+			request: new Request('https://console.test/settings?/savePreferences', {
+				method: 'POST',
+				body: form
+			}),
+			locals: { sessionToken: 'token' }
+		} as unknown as Parameters<typeof actions.savePreferences>[0]);
+	}
+
+	it('saves the low-balance switch when billing has the preference', async () => {
+		client.updateNotificationPreferences.mockClear();
+		client.getNotificationPreferences.mockResolvedValue({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false,
+			lowBalanceAlerts: true
+		});
+		client.updateNotificationPreferences.mockImplementation(async (next) => next);
+
+		const off = new FormData();
+		off.set('paymentReceipts', 'on');
+		await save(off);
+		expect(client.updateNotificationPreferences).toHaveBeenLastCalledWith({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false,
+			lowBalanceAlerts: false
+		});
+
+		const on = new FormData();
+		on.set('lowBalanceAlerts', 'on');
+		await save(on);
+		expect(client.updateNotificationPreferences).toHaveBeenLastCalledWith(
+			expect.objectContaining({ lowBalanceAlerts: true })
+		);
+	});
+
+	it('never sends the low-balance preference when billing does not report it', async () => {
+		client.updateNotificationPreferences.mockClear();
+		client.getNotificationPreferences.mockResolvedValue({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false
+		});
+		client.updateNotificationPreferences.mockImplementation(async (next) => next);
+
+		// Even a forged field is ignored: there is no switch to have sent it.
+		const form = new FormData();
+		form.set('lowBalanceAlerts', 'on');
+		await save(form);
+		expect(client.updateNotificationPreferences.mock.lastCall?.[0]).not.toHaveProperty(
+			'lowBalanceAlerts'
+		);
+	});
 });

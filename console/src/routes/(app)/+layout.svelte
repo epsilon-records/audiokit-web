@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ConsoleShell from '#lib/components/ConsoleShell.svelte';
+	import ConsoleShell from '#lib/components/console/ConsoleShell.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
