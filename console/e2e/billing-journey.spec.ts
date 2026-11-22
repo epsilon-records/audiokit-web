@@ -39,7 +39,7 @@ test('signup reveals the default key and its webhook secret once', async ({ page
 	await page.getByRole('link', { name: 'Open the magic link' }).click();
 	await expect(page.getByRole('heading', { name: 'Welcome to AudioKit' })).toBeVisible();
 	await expect(page.getByText('Webhook secret', { exact: true })).toBeVisible();
-	await expect(page.locator('pre.code', { hasText: /^whsec_mock_[0-9a-f]{32}$/ })).toBeVisible();
+	await expect(page.locator('pre', { hasText: /^whsec_mock_[0-9a-f]{32}$/ })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Copy webhook secret' })).toBeVisible();
 });
 
@@ -64,15 +64,20 @@ test('creating a key reveals its webhook secret beside it, and the list never sh
 	await createDialog.getByRole('button', { name: 'Create key' }).click();
 	const reveal = page.getByRole('dialog', { name: 'Key created — copy it now' });
 	await expect(reveal.getByText('Webhook secret', { exact: true })).toBeVisible();
-	const secret = reveal.locator('pre.code', { hasText: /^whsec_mock_/ });
+	const secret = reveal.locator('pre', { hasText: /^whsec_mock_/ });
 	await expect(secret).toBeVisible();
 	const value = (await secret.textContent())!.trim();
-	const key = (await reveal.locator('pre.code', { hasText: /^ak_/ }).textContent())!.trim();
+	const key = (await reveal.locator('pre', { hasText: /^ak_/ }).textContent())!.trim();
 	await reveal.getByRole('button', { name: 'Done' }).click();
 	await expect(reveal).toBeHidden();
 	// Done drops the reveal: neither the key nor its webhook secret stays in the DOM.
 	await expect(page.getByText(value)).toHaveCount(0);
 	await expect(page.getByText(key)).toHaveCount(0);
+	// getByText skips <noscript>, so read the document too: the no-JavaScript reveal must not leave
+	// the secrets behind in the client DOM either.
+	const html = await page.content();
+	expect(html).not.toContain(value);
+	expect(html).not.toContain(key);
 	await page.reload();
 	await expect(page.getByText(value)).toHaveCount(0);
 });

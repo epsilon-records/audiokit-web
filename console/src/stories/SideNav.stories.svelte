@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import SideNav from '#lib/components/SideNav.svelte';
+	import SideNav from '#lib/components/console/SideNav.svelte';
 	import { apiVersion } from './mock-data';
 
 	const { Story } = defineMeta({

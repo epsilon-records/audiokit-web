@@ -106,8 +106,39 @@ export const recentJobs: Job[] = [
 	}
 ];
 
-/** Free's 100 credits less the 84 jobs the usage fixture counts at one credit each. */
-export const credits: Credits = { balance: 16 };
+/**
+ * Free's 100 credits less the 84 jobs the usage fixture counts at one credit each, shaped like
+ * billing's `GET /v1/credits`. No packs: none is on sale (0066). 16 is below the 20-credit
+ * threshold (0077), so `lowBalance` reads `low`, as epsilon-billing#81 would answer.
+ */
+export const credits: Credits = {
+	balance: 16,
+	lots: [
+		{
+			source: 'free_monthly',
+			credits: 100,
+			remaining: 16,
+			expiresAt: '2026-12-01T00:00:00.000Z',
+			pack: null,
+			createdAt: '2026-11-01T00:00:00.000Z'
+		}
+	],
+	entries: [
+		{ kind: 'debit', credits: -1, ref: 'a1b2c3d4', createdAt: '2026-11-14T12:01:05.000Z' },
+		{ kind: 'debit', credits: -2, ref: 'e5f6a7b8', createdAt: '2026-11-14T11:58:40.000Z' },
+		{ kind: 'release', credits: 1, ref: 'c9d0e1f2', createdAt: '2026-11-14T11:40:20.000Z' },
+		{ kind: 'debit', credits: -1, ref: 'c9d0e1f2', createdAt: '2026-11-14T11:40:02.000Z' },
+		{ kind: 'credit', credits: 100, ref: null, createdAt: '2026-11-01T00:00:00.000Z' }
+	],
+	packs: [],
+	lowBalance: {
+		state: 'low',
+		threshold: 20,
+		since: '2026-11-14T10:22:00.000Z',
+		emailsEnabled: false,
+		emailsOptedIn: true
+	}
+};
 
 export const usage: UsageSummary = {
 	periodStart: '2026-11-01T00:00:00.000Z',
@@ -195,7 +226,8 @@ export const billing: BillingSummary = {
 export const notificationPreferences: NotificationPreferences = {
 	quotaWarnings: true,
 	paymentReceipts: true,
-	productUpdates: false
+	productUpdates: false,
+	lowBalanceAlerts: true
 };
 
 /** The API base URL shown in quick-start snippets. Mirrors site.config.mjs. */

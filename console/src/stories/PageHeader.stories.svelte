@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import PageHeader from '#lib/components/console/PageHeader.svelte';
 
 	const { Story } = defineMeta({
 		title: 'Console/PageHeader',
@@ -20,7 +21,7 @@
 	{#snippet template(args)}
 		<PageHeader {...args}>
 			{#snippet actions()}
-				<button type="button" class="btn btn-primary">Create a key</button>
+				<Button variant="primary">Create a key</Button>
 			{/snippet}
 		</PageHeader>
 	{/snippet}

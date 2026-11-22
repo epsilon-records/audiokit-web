@@ -1,9 +1,20 @@
 <script lang="ts">
-	import CopyButton from '#lib/components/CopyButton.svelte';
-	import EmptyState from '#lib/components/EmptyState.svelte';
-	import PageHeader from '#lib/components/PageHeader.svelte';
-	import StatTile from '#lib/components/StatTile.svelte';
-	import StatusBadge from '#lib/components/StatusBadge.svelte';
+	import CodeBlock from '#lib/components/console/CodeBlock.svelte';
+	import CopyButton from '#lib/components/console/CopyButton.svelte';
+	import EmptyState from '#lib/components/console/EmptyState.svelte';
+	import PageHeader from '#lib/components/console/PageHeader.svelte';
+	import Panel from '#lib/components/console/Panel.svelte';
+	import StatTile from '#lib/components/console/StatTile.svelte';
+	import StatusBadge from '#lib/components/console/StatusBadge.svelte';
+	import {
+		actions,
+		linkTarget,
+		muted,
+		section,
+		sectionTitle
+	} from '#lib/components/console/classes';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
 	import { outOfCreditsNotice } from '#lib/credits';
 	import { formatDate, formatNumber, formatTime } from '#lib/format';
 	import type { PageProps } from './$types';
@@ -33,7 +44,7 @@
 	meta="Times shown in UTC"
 />
 
-<div class="stat-grid">
+<div class="mb-7 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 max-stack:grid-cols-1">
 	<StatTile
 		label="Credit balance"
 		value={balance === null ? 'Balance unavailable' : formatNumber(balance)}
@@ -50,8 +61,8 @@
 	/>
 
 	<StatTile label="Plan" value={planLabel} hint="Resets {formatDate(data.account.renewsAt)}">
-		<div class="actions">
-			<a class="btn btn-ghost btn-sm" href="/pricing/" data-sveltekit-reload>Pricing</a>
+		<div class={actions}>
+			<Button size="small" href="/pricing/" data-sveltekit-reload>Pricing</Button>
 		</div>
 	</StatTile>
 
@@ -60,71 +71,65 @@
 		value="{data.activeKeys} active"
 		hint="Keys authorise jobs, which spend your credits"
 	>
-		<div class="actions">
-			<a class="btn btn-ghost btn-sm" href="/api-keys">Manage</a>
+		<div class={actions}>
+			<Button size="small" href="/api-keys">Manage</Button>
 		</div>
 	</StatTile>
 </div>
 
-<section class="section-block" aria-labelledby="recent-jobs">
-	<div class="actions spread">
-		<h2 id="recent-jobs">Recent jobs</h2>
-		<a class="link" href="/usage">View all →</a>
+<section class="{section} mb-7" aria-labelledby="recent-jobs">
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<h2 class={sectionTitle} id="recent-jobs">Recent jobs</h2>
+		<a class={linkTarget} href="/usage">View all →</a>
 	</div>
 
 	{#if data.jobs.length === 0}
 		<EmptyState title="No jobs yet">
 			Create an API key, then submit your first job.
-			<div class="actions">
-				<a class="btn btn-primary btn-sm" href="/api-keys">Create API key</a>
-				<a class="link" href="https://audiokit.ai/docs/">Read the guide ↗</a>
+			<div class={actions}>
+				<Button variant="primary" size="small" href="/api-keys">Create API key</Button>
+				<a class={linkTarget} href="https://audiokit.ai/docs/">Read the guide ↗</a>
 			</div>
 		</EmptyState>
 	{:else}
-		<div class="table-box">
-			<table class="stack">
-				<caption>Newest jobs first. Times shown in UTC.</caption>
-				<thead>
-					<tr>
-						<th scope="col">Job id</th>
-						<th scope="col">Operation</th>
-						<th scope="col">Status</th>
-						<th scope="col">Created</th>
-						<th scope="col"><span class="sr-only">Detail</span></th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each data.jobs as job (job.id)}
-						<tr>
-							<td class="mono" data-label="Job id">… {job.id}</td>
-							<td class="mono" data-label="Operation">{job.operation}</td>
-							<td data-label="Status"><StatusBadge status={job.status} /></td>
-							<td class="mono" data-label="Created">
-								{formatDate(job.createdAt)} · {formatTime(job.createdAt)}
-							</td>
-							<td class="row-actions" data-label="Detail">
-								<a class="btn btn-quiet btn-sm" href="/usage">Detail →</a>
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+		<Table.Root stack>
+			<Table.Caption>Newest jobs first. Times shown in UTC.</Table.Caption>
+			<Table.Header>
+				<Table.Row>
+					<Table.Head>Job id</Table.Head>
+					<Table.Head>Operation</Table.Head>
+					<Table.Head>Status</Table.Head>
+					<Table.Head>Created</Table.Head>
+					<Table.Head><span class="sr-only">Detail</span></Table.Head>
+				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each data.jobs as job (job.id)}
+					<Table.Row>
+						<Table.Cell class={Table.cellMono} data-label="Job id">… {job.id}</Table.Cell>
+						<Table.Cell class={Table.cellMono} data-label="Operation">{job.operation}</Table.Cell>
+						<Table.Cell data-label="Status"><StatusBadge status={job.status} /></Table.Cell>
+						<Table.Cell class={Table.cellMono} data-label="Created">
+							{formatDate(job.createdAt)} · {formatTime(job.createdAt)}
+						</Table.Cell>
+						<Table.Cell class="text-right" data-label="Detail">
+							<Button variant="ghost" size="small" href="/usage">Detail →</Button>
+						</Table.Cell>
+					</Table.Row>
+				{/each}
+			</Table.Body>
+		</Table.Root>
 	{/if}
 </section>
 
-<section class="section-block" aria-labelledby="quick-start">
-	<h2 id="quick-start">Quick start</h2>
-	<div class="panel">
-		<div class="panel-bar">
-			<span>Base URL</span>
-			<CopyButton value={data.apiBaseUrl} label="Copy URL" />
+<section class={section} aria-labelledby="quick-start">
+	<h2 class={sectionTitle} id="quick-start">Quick start</h2>
+	<Panel code label="Base URL">
+		{#snippet bar()}<CopyButton value={data.apiBaseUrl} label="Copy URL" />{/snippet}
+		<div class="flex flex-col gap-4 p-5 max-stack:p-4">
+			<p class={muted}>Base URL: <code>{data.apiBaseUrl}</code></p>
+			<CodeBlock value={curl} label="Example job request" class="-mx-5 max-stack:-mx-4" />
+			<a class="{linkTarget} self-start" href="https://audiokit.ai/docs/">Get started guide ↗</a>
 		</div>
-		<div class="panel-body">
-			<p class="muted">Base URL: <code>{data.apiBaseUrl}</code></p>
-			<!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable code panel must be reachable by keyboard; axe scrollable-region-focusable) -->
-			<pre class="code" tabindex="0" aria-label="Example job request">{curl}</pre>
-			<a class="link" href="https://audiokit.ai/docs/">Get started guide ↗</a>
-		</div>
-	</div>
+	</Panel>
 </section>

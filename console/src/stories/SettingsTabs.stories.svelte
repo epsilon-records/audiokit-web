@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import SettingsTabs from '#lib/components/SettingsTabs.svelte';
+	import SettingsTabs from '#lib/components/console/SettingsTabs.svelte';
 
 	const { Story } = defineMeta({
 		title: 'Console/SettingsTabs',

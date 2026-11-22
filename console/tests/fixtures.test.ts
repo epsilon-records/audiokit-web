@@ -81,7 +81,8 @@ describe('generic fixtures', () => {
 		expect(notificationPreferences).toEqual({
 			quotaWarnings: true,
 			paymentReceipts: true,
-			productUpdates: false
+			productUpdates: false,
+			lowBalanceAlerts: true
 		});
 	});
 });

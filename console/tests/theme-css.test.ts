@@ -73,10 +73,24 @@ it('code panels restate the dark values (dark in both themes)', () => {
 });
 
 it('controls draw their border in --line-control', () => {
-	for (const selector of ['.btn-ghost', '.input', '.copy', '.menu-btn', '.dialog-close']) {
-		const start = css.indexOf(`\n${selector} {`);
-		const body = css.slice(start, css.indexOf('}', start));
-		expect(body, selector).toContain('var(--line-control)');
+	// EPSILON-169 PR 3: the controls are components now. Tailwind's `input` and `border-strong`
+	// colours are --line-control (tailwind.css), and every control's border uses one of them.
+	const tailwind = readFileSync(new URL('../src/tailwind.css', import.meta.url), 'utf8');
+	expect(tailwind).toMatch(/--color-input: var\(--line-control\);/);
+	expect(tailwind).toMatch(/--color-border-strong: var\(--line-control\);/);
+	const controls = {
+		'ui/input/input.svelte': 'border-input',
+		'ui/textarea/textarea.svelte': 'border-input',
+		'ui/native-select/native-select.svelte': 'border-input',
+		'ui/checkbox/checkbox.svelte': 'border-input',
+		'ui/switch/switch.svelte': 'border-input',
+		'ui/button/button.svelte': 'border-border-strong',
+		'console/CopyButton.svelte': 'border-input',
+		'console/TopBar.svelte': 'border-input'
+	};
+	for (const [file, token] of Object.entries(controls)) {
+		const source = readFileSync(new URL(`../src/lib/components/${file}`, import.meta.url), 'utf8');
+		expect(source, file).toContain(token);
 	}
 });
 

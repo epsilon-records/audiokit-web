@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import UsageChart from '#lib/components/UsageChart.svelte';
+	import UsageChart from '#lib/components/console/UsageChart.svelte';
 	import { usage } from './mock-data';
 
 	const { Story } = defineMeta({

@@ -1,16 +1,29 @@
 /*
- * Tailwind v4 for the shared components in src/lib/components/ui (shared 0046, EPSILON-169).
- * Theme and utilities only: Preflight stays off until the old page CSS in app.css is gone, so
- * pages that haven't moved to the components keep their look. The tokens in app.css stay the
- * source of truth; `@theme inline` points Tailwind's names at them instead of copying values,
- * so the light and dark themes and the dark islands reach the components too.
+ * Tailwind v4 for the console (shared 0046, EPSILON-169). The tokens in app.css stay the source
+ * of truth; `@theme inline` points Tailwind's names at them instead of copying values, so the
+ * light and dark themes and the dark islands reach the components too.
+ *
+ * Preflight is in console.css, which only the signed-in app and the sign-in screens import: the
+ * public pages keep the static site's stylesheet (site.css) and browser defaults.
  */
+/* The layer order, stated once so a stylesheet loaded later (console.css's base layer) can't
+   reorder them. */
+@layer theme, base, components, utilities;
+
 @import 'tailwindcss/theme' layer(theme);
-/* source(none): only the @source below is scanned, so class names the pages already use (flex,
-   hidden, ...) don't pick up Tailwind rules. */
+/* source(none): only the @source paths below are scanned. The public pages' components
+   (SiteHeader, SiteFooter, SitePage) and their HTML aren't, so their class names never pick up
+   Tailwind rules. */
 @import 'tailwindcss/utilities' layer(utilities) source(none);
 
 @source './lib/components/ui';
+@source './lib/components/console';
+@source './routes/(app)';
+@source './routes/login';
+@source './routes/signup';
+@source './routes/auth';
+@source './routes/onboarding';
+@source './stories';
 
 @theme inline {
 	--color-background: var(--bg);
@@ -22,6 +35,10 @@
 	--color-strong: var(--text-strong);
 	--color-soft: var(--soft);
 	--color-muted: var(--muted);
+	--color-faint: var(--faint);
+	--color-band: var(--bg-band);
+	--color-line-strong: var(--line-strong);
+	--color-code: var(--code);
 	--color-accent: var(--accent);
 	--color-accent-hover: var(--accent-hover);
 	--color-accent-soft: var(--accent-soft);
@@ -42,4 +59,8 @@
 	/* AudioKit keeps its rounded corners: 6 px on controls, 10 px on cards. */
 	--radius-control: var(--radius-sm);
 	--radius-card: var(--radius);
+	/* The console's two layout widths: the side navigation becomes a drawer below 900 px, and
+	   dense tables stack below 720 px. Used as max-nav: and max-stack:. */
+	--breakpoint-nav: 56.25rem;
+	--breakpoint-stack: 45rem;
 }

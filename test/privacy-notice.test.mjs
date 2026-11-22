@@ -23,7 +23,7 @@ test("the site footer links the notice", () => {
 });
 
 test("the console links the notice on the auth screens and in the shell", async () => {
-  for (const file of ["console/src/lib/components/AuthCard.svelte", "console/src/lib/components/SideNav.svelte"]) {
+  for (const file of ["console/src/lib/components/console/AuthCard.svelte", "console/src/lib/components/console/SideNav.svelte"]) {
     assert.match(await read(file), /href="https:\/\/audiokit\.ai\/privacy\/"/, file);
   }
 });
