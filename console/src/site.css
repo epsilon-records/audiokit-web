@@ -1090,10 +1090,13 @@
 	transform: translateX(-50%);
 	background: var(--accent);
 	color: var(--accent-ink);
-	font-size: 12px;
-	font-weight: 600;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
 	padding: 4px 12px;
 	border-radius: 99px;
+	/* A ring in the page colour separates the pill from the card's accent border it sits on. */
+	box-shadow: 0 0 0 3px var(--bg);
 }
 
 .site .pricing-header {
