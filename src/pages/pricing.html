@@ -91,7 +91,7 @@
     </div>
     <div class="faq-item">
       <dt>How are per-minute jobs charged?</dt>
-      <dd>A job is accepted when your balance covers the operation's minimum. Once the worker has measured the audio, the job is checked against its full cost for the real length before the expensive step runs. If your balance can't cover it, the job fails with <code>insufficient_credits</code> and isn't charged. Your balance never goes below zero.</dd>
+      <dd>A job is accepted when your balance covers the operation's minimum. Once the worker has measured the audio, the job is checked against its full cost for the real length before the expensive step runs. If your balance can't cover it, the job fails with <code>insufficient_credits</code> and isn't charged. When a job finishes, it's charged for the audio's real length, never more than the amount held for it. Your balance never goes below zero.</dd>
     </div>
     <div class="faq-item">
       <dt>Can I get a refund on a credit pack?</dt>

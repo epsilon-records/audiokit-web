@@ -49,6 +49,7 @@ test("states the credit price, the Free allowance and every pack from 0052", () 
   assert.match(text, /Bought credits don't expire/, "purchased credits never expire (0074)");
   assert.doesNotMatch(text, /12 months/, "no expiry period for purchased credits (0074)");
   assert.doesNotMatch(text, /below zero;|negative balance is repaid/i, "no debt (0072)");
+  assert.match(text, /never more than the amount held/, "final charge never exceeds the hold (0072)");
 });
 
 test("states every rate from 0052", () => {
