@@ -26,6 +26,8 @@
 
 	const credits = $derived(data.credits);
 	const low = $derived(credits?.lowBalance);
+	/** True only when billing sent its pack list; without it we cannot say which packs are on sale. */
+	const packsKnown = $derived(Boolean(credits?.packs));
 	const onSale = $derived(new Set((credits?.packs ?? []).map((pack) => pack.pack)));
 	const lowTone = $derived(low?.state === 'ok' ? 'ok' : 'warn');
 </script>
@@ -145,7 +147,9 @@
 					{formatNumber(pack.credits)} credits
 				</p>
 				<p class="text-[15px] text-soft">{packPrice(pack.priceCents)}</p>
-				{#if !onSale.has(pack.pack)}
+				{#if !packsKnown}
+					<p class="text-[13px] text-faint">Availability unavailable. Try again in a moment.</p>
+				{:else if !onSale.has(pack.pack)}
 					<p class="text-[13px] text-faint">Not on sale yet</p>
 				{/if}
 			</li>

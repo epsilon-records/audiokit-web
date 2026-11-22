@@ -9,6 +9,7 @@
 
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
+import { lookup } from "node:dns/promises";
 import { call, headerSummary, makeEvidence, pricingFindings, sleep } from "./lib.mjs";
 
 const trim = (v) => (v ?? "").trim();
@@ -211,14 +212,16 @@ step("pricing page: no $99 Pro, no uptime SLA, credits shown (shared 0040, Audio
   return f;
 });
 
-step("old console host state is recorded (0053: removed once the new app is live)", async () => {
-  let r;
+step("old console host no longer resolves (0053: the host was deleted)", async () => {
+  const host = new URL(cfg.oldConsoleUrl).hostname;
   try {
-    r = await page(cfg.oldConsoleUrl, "/login");
+    const found = await lookup(host);
+    assert.fail(`${host} still resolves (${found.address}); the old console host must be gone`);
   } catch (e) {
-    return { reachable: false, error: String(e.message).slice(0, 80) };
+    if (e instanceof assert.AssertionError) throw e;
+    assert.ok(e.code === "ENOTFOUND" || e.code === "ENODATA", `${host} lookup failed with ${e.code ?? e.message}, not a DNS non-existence answer`);
+    return { resolves: false, dns_error: e.code };
   }
-  return { reachable: true, status: r.status, location: r.location };
 });
 
 step("anonymous rate limit: a burst on capabilities is answered 429 with Retry-After", async () => {

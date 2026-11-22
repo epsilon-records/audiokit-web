@@ -52,7 +52,7 @@
 			>
 			<a
 				class="inline-flex min-h-11 items-center hover:text-accent max-nav:hidden"
-				href="https://audiokit.ai/docs/">Docs ↗</a
+				href="https://audiokit.ai/docs/" data-sveltekit-reload>Docs ↗</a
 			>
 			<details class="group relative min-w-0">
 				<summary

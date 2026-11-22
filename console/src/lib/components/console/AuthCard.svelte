@@ -40,8 +40,8 @@
 
 	<footer class="flex w-full max-w-[420px] flex-col gap-2 text-center text-[14px] text-faint">
 		<p>
-			Read the <a class="text-accent" href="https://audiokit.ai/docs/">docs</a> ↗ ·
-			<a class="text-accent" href="https://audiokit.ai/privacy/">Privacy notice</a> ↗
+			Read the <a class="text-accent" href="https://audiokit.ai/docs/" data-sveltekit-reload>docs</a> ↗ ·
+			<a class="text-accent" href="https://audiokit.ai/privacy/" data-sveltekit-reload>Privacy notice</a> ↗
 		</p>
 	</footer>
 </main>

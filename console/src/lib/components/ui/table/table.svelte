@@ -1,6 +1,6 @@
 <!--
 	shadcn-svelte Table in the console's style: a bordered, scrollable box. `stack` turns each row
-	into a small card below 720 px: the header row hides, and each cell shows its column name from
+	into a small card below 720 px: the header row stays for screen readers but is hidden visually, and each cell shows its column name from
 	`data-label` above its value, so a phone never scrolls sideways.
 -->
 <script lang="ts">
@@ -18,7 +18,7 @@
 	const stacked = [
 		'max-stack:block',
 		'max-stack:[&_caption]:block',
-		'max-stack:[&_thead]:hidden',
+		'max-stack:[&_thead]:sr-only',
 		'max-stack:[&_tbody]:block',
 		'max-stack:[&_tr]:block max-stack:[&_tr]:py-2.5',
 		'max-stack:[&_tbody_tr:first-child]:border-t-0',

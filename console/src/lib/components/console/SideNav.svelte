@@ -41,9 +41,9 @@
 </nav>
 
 <div class="mt-auto flex flex-col gap-1 border-t border-border pt-4 text-[14px] text-faint">
-	<a class={outLink} href="https://audiokit.ai/docs/">Docs ↗</a>
+	<a class={outLink} href="https://audiokit.ai/docs/" data-sveltekit-reload>Docs ↗</a>
 	<a class={outLink} href="https://audiokit.ai/">Marketing site ↗</a>
-	<a class={outLink} href="https://audiokit.ai/privacy/">Privacy ↗</a>
+	<a class={outLink} href="https://audiokit.ai/privacy/" data-sveltekit-reload>Privacy ↗</a>
 	<span class="mt-2 mb-2 font-mono text-[12px]">API v{apiVersion}</span>
 	<ThemeToggle />
 </div>

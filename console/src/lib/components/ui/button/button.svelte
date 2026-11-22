@@ -4,7 +4,7 @@
 
 	/** Mirrors the console's `.btn` look (44 px touch target, 6 px corners, Space Grotesk 600) so pages can move over one by one. */
 	export const buttonVariants = tv({
-		base: 'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control border font-sans font-semibold whitespace-nowrap no-underline transition-colors outline-hidden focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55',
+		base: 'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-control border font-sans font-semibold whitespace-nowrap no-underline transition-colors outline-hidden focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-3 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-55 aria-disabled:cursor-not-allowed aria-disabled:opacity-55',
 		variants: {
 			variant: {
 				/** The secondary button (the old `.btn-ghost`): a --line-control border at 3:1. */
