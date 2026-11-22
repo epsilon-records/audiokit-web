@@ -11,7 +11,9 @@ function project(theme: 'dark' | 'light'): TestProjectConfiguration {
 		plugins: [storybookTest({ configDir: '.storybook' })],
 		// Pre-bundled up front: discovered mid-run, Vite re-optimises and reloads the page, which
 		// fails every story in flight on a cold cache (CI).
-		optimizeDeps: { include: ['bits-ui', 'tailwind-variants', 'clsx', 'tailwind-merge'] },
+		optimizeDeps: {
+			include: ['bits-ui', 'tailwind-variants', 'clsx', 'tailwind-merge', 'svelte-sonner']
+		},
 		define: { 'import.meta.env.VITE_STORYBOOK_THEME': JSON.stringify(theme) },
 		test: {
 			name: `storybook-${theme}`,

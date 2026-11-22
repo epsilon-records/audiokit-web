@@ -1,6 +1,7 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import EmptyState from '#lib/components/EmptyState.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import EmptyState from '#lib/components/console/EmptyState.svelte';
 
 	const { Story } = defineMeta({
 		title: 'Console/EmptyState',
@@ -12,9 +13,9 @@
 <Story name="With action">
 	{#snippet template()}
 		<EmptyState title="No API keys yet">
-			<p class="muted">Create a key to call the AudioKit API.</p>
+			<p>Create a key to call the AudioKit API.</p>
 			{#snippet actions()}
-				<button type="button" class="btn btn-primary">Create a key</button>
+				<Button variant="primary">Create a key</Button>
 			{/snippet}
 		</EmptyState>
 	{/snippet}

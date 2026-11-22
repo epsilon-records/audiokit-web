@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import Welcome from '#lib/components/Welcome.svelte';
+	import Welcome from '#lib/components/console/Welcome.svelte';
 	import { account } from './mock-data';
 
 	const { Story } = defineMeta({

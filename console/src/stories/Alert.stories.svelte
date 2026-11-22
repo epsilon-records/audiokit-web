@@ -1,6 +1,6 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import Alert from '#lib/components/Alert.svelte';
+	import Alert from '#lib/components/console/Alert.svelte';
 	import { outOfCreditsNotice } from '#lib/credits';
 
 	const { Story } = defineMeta({

@@ -22,10 +22,15 @@ and the build need no service.
   shadcn-svelte for the shared components (knowledge shared 0046), on the way to one app at
   audiokit.ai (AudioKit 0053, EPSILON-169).
 - **Styling:** the design tokens live in `src/app.css`, in line with the `[data-product='audiokit']`
-  block of the shared token set. `src/tailwind.css` maps Tailwind's names onto them with
-  `@theme inline` (theme and utilities only: no Preflight yet, so pages that haven't moved to the
-  components keep their look). The components are in `src/lib/components/ui` (Button, Checkbox,
-  Field, Input, Label, NativeSelect, Textarea), and `cn()` is in `src/lib/utils.ts`.
+  block of the shared token set, with a few element rules in the `base` layer. `src/tailwind.css`
+  maps Tailwind's names onto the tokens with `@theme inline`. The console's pages are Tailwind
+  utilities on components (EPSILON-169 PR 3): the shadcn-svelte layer in `src/lib/components/ui`
+  (Alert Dialog, Badge, Button, Checkbox, Dialog, Field, Input, Label, NativeSelect, Sonner, Switch,
+  Table, Tabs, Textarea, Tooltip), and the console's own pieces in `src/lib/components/console`
+  (shell, page header, panels, stat tiles; shared class strings in `classes.ts`). `cn()` is in
+  `src/lib/utils.ts`. Tailwind's Preflight is in `src/console.css`, which only the console shell
+  and the sign-in screens import: the public pages keep `site.css` on browser defaults, and
+  `tests-build/preflight.test.ts` checks that no prerendered page loads it.
 - **Theme:** dark by default, light when the system asks for it, or the visitor's pick (System,
   Light, Dark) stored in `localStorage` as `ak-theme`. `static/theme-init.js` sets `data-theme`
   on `<html>` before first paint; `src/lib/theme.ts` and `ThemeToggle.svelte` change it after.
@@ -52,12 +57,16 @@ and the build need no service.
 | `/dashboard`        | Usage overview, recent jobs, quick start                         |
 | `/usage`            | Chart, per-operation breakdown, 12-period history                |
 | `/api-keys`         | List, create (reveal once), revoke                               |
+| `/credits`          | Balance, its lots, recent movements, credit packs, low balance   |
 | `/settings`         | Profile, notifications, session, danger zone                     |
 | `/settings/billing` | Plan, payment summary, invoices                                  |
 | `/logout`           | `POST`: clears the session and returns to `/login`               |
 
 The console's own `/pricing` plan page went with EPSILON-169 PR 2: `/pricing/` is the public
-pricing page, and `/credits` takes the plan page's place in PR 3. Everything under the console
+pricing page, and `/credits` took the plan page's place in PR 3. It reads billing's
+`GET /v1/credits` through the layout's 2 s read; the low-balance badge, the shell's low banner and
+the Low-balance alerts switch in Settings show only when billing sends `credits.low_balance` and
+`low_balance_alerts` (epsilon-billing#81). Buying a pack is PR 5. Everything under the console
 shell requires a session; the deep link is preserved through sign-in (`/login?next=…`) and
 validated with `safeNext()` so it can't become an open redirect.
 

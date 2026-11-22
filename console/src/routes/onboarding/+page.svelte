@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Welcome from '#lib/components/Welcome.svelte';
+	import Welcome from '#lib/components/console/Welcome.svelte';
 	import type { PageProps } from './$types';
 	let { data, form }: PageProps = $props();
 </script>

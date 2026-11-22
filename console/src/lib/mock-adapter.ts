@@ -162,7 +162,7 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		},
 
 		async getCredits(_signal?: AbortSignal) {
-			return { ...fixtures.credits };
+			return structuredClone(fixtures.credits);
 		},
 
 		async getNotificationPreferences() {

@@ -73,9 +73,65 @@ export type UsageSummary = {
 	}[];
 };
 
-/** The account's prepaid credit balance from billing's `GET /v1/credits`. May be negative (debt). */
+/** Where a lot of credits came from (billing's `credit_lots.source`). */
+export type CreditLotSource = 'free_monthly' | 'purchase' | 'grant';
+
+/** An open lot: credits the account can still spend, from one source. */
+export type CreditLot = {
+	/** A source this console doesn't know reads as a grant. */
+	source: CreditLotSource;
+	credits: number;
+	remaining: number;
+	/** ISO timestamp. null: never expires (purchased credits, AudioKit 0074, epsilon-billing#79). */
+	expiresAt: string | null;
+	pack: string | null;
+	createdAt: string;
+};
+
+/** One movement in the credit ledger, newest first. `credits` is signed: a debit is negative. */
+export type CreditEntry = {
+	kind: 'credit' | 'debit' | 'expiry' | 'release' | 'repay';
+	credits: number;
+	ref: string | null;
+	createdAt: string;
+};
+
+/** A pack billing has a Stripe price for, so it is on sale (AudioKit 0066). */
+export type CreditPackOnSale = {
+	pack: string;
+	credits: number;
+	priceCents: number;
+	currency: string;
+};
+
+/**
+ * The low-balance state (EPSILON-233, AudioKit 0077), `credits.low_balance` in billing. Optional:
+ * billing adds it in epsilon-billing#81, and the console shows the balance alone until then.
+ */
+export type LowBalance = {
+	/** From the spendable balance: `ok` at or above the threshold, `low` below it, `empty` at 0. */
+	state: 'ok' | 'low' | 'empty';
+	threshold: number;
+	/** ISO timestamp the balance went below the threshold; null while ok. */
+	since: string | null;
+	/** Whether this deployment sends the emails at all. Not shown: 0077 keeps sending off. */
+	emailsEnabled: boolean;
+	/** Whether this account's preference is on. */
+	emailsOptedIn: boolean;
+};
+
+/**
+ * The account's prepaid credits from billing's `GET /v1/credits` (decision 0052). The balance is
+ * never negative (0072). Lots, entries and packs are always sent by billing; they are optional
+ * here so a caller that only has the balance (the shell, stories) can say so.
+ */
 export type Credits = {
 	balance: number;
+	lots?: CreditLot[];
+	entries?: CreditEntry[];
+	packs?: CreditPackOnSale[];
+	/** Absent until billing sends `credits.low_balance` (epsilon-billing#81). */
+	lowBalance?: LowBalance;
 };
 
 export type ApiKey = {
@@ -107,6 +163,11 @@ export type NotificationPreferences = {
 	quotaWarnings: boolean;
 	paymentReceipts: boolean;
 	productUpdates: boolean;
+	/**
+	 * Low-balance alert emails (EPSILON-233, `low_balance_alerts`). undefined while billing doesn't
+	 * send the field (before epsilon-billing#81): the switch is hidden and a save never sends it.
+	 */
+	lowBalanceAlerts?: boolean;
 };
 
 export type BillingSummary = {

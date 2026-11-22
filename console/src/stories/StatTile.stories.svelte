@@ -1,9 +1,9 @@
 <script module lang="ts">
 	import { defineMeta } from '@storybook/addon-svelte-csf';
-	import StatTile from '#lib/components/StatTile.svelte';
+	import StatTile from '#lib/components/console/StatTile.svelte';
 	import { outOfCreditsNotice } from '#lib/credits';
-	import Meter from '#lib/components/Meter.svelte';
-	import { FREE_CREDITS_PER_MONTH, creditsLeft, creditsUsed } from './mock-data';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { creditsLeft } from './mock-data';
 
 	const { Story } = defineMeta({
 		title: 'Console/StatTile',
@@ -31,15 +31,12 @@
 	name="Jobs this month"
 	args={{ label: 'Jobs this month', value: '84', hint: 'Submitted this period · Free plan' }}
 />
-<Story name="With meter">
+<Story name="With low-balance badge" args={{ tone: 'warn', value: '12' }}>
 	{#snippet template(args)}
 		<StatTile {...args}>
-			<Meter
-				used={creditsUsed}
-				limit={FREE_CREDITS_PER_MONTH}
-				label="Free credits used this month"
-				showCaption={false}
-			/>
+			<p class="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+				<Badge tone="warn">Low</Badge><span>Below 20 credits since 14 Nov.</span>
+			</p>
 		</StatTile>
 	{/snippet}
 </Story>
