@@ -43,7 +43,7 @@
         <li>$10 for 1,000 credits</li>
         <li>$50 for 5,500 credits</li>
         <li>$200 for 24,000 credits</li>
-        <li>Bought credits stay valid for 12 months after purchase</li>
+        <li>Bought credits don't expire</li>
         <li>Credit packs are non-refundable</li>
       </ul>
       <p class="pricing-note">Packs open soon. Nothing can be bought during the beta.</p>
@@ -83,15 +83,15 @@
     </div>
     <div class="faq-item">
       <dt>Do credits expire?</dt>
-      <dd>Free credits lapse at the end of each calendar month (UTC). Credits from a pack stay valid for 12 months after you buy it.</dd>
+      <dd>Free credits lapse at the end of each calendar month (UTC). Credits from a pack don't expire.</dd>
     </div>
     <div class="faq-item">
       <dt>Which credits are spent first?</dt>
-      <dd>Your monthly Free credits, then credits from packs, then any credits granted to you. A pack can expire unused while your Free credits are spent first.</dd>
+      <dd>Your monthly Free credits, then credits from packs, then any credits granted to you. Pack credits are spent oldest first.</dd>
     </div>
     <div class="faq-item">
       <dt>How are per-minute jobs charged?</dt>
-      <dd>A job is accepted when your balance covers the operation's minimum. When it finishes, it is charged for the audio's real length. One long job can take your balance below zero; new jobs are then refused until you top up. A negative balance is repaid from the next credits you get, including your monthly Free credits.</dd>
+      <dd>A job is accepted when your balance covers the operation's minimum. Once the worker has measured the audio, the job is checked against its full cost for the real length before the expensive step runs. If your balance can't cover it, the job fails with <code>insufficient_credits</code> and isn't charged. When a job finishes, it's charged for the audio's real length, never more than the amount held for it. Your balance never goes below zero.</dd>
     </div>
     <div class="faq-item">
       <dt>Can I get a refund on a credit pack?</dt>

@@ -1,7 +1,7 @@
 // The pricing page states prepaid credits and nothing else.
 // AudioKit decision 0052: credits replace the Pro and Enterprise subscriptions (supersedes 0023,
 // 0024 and 0027). 1 credit = $0.01; Free 100 credits a month; packs $10/1,000, $50/5,500,
-// $200/24,000, valid 12 months; per-operation rates below.
+// $200/24,000; per-operation rates below. 0074: purchased credits never expire. 0072: no debt.
 // AudioKit decision 0057: packs are non-refundable.
 // Shared decision 0040: no AudioKit sales until credits ship, and no uptime SLA claim. So the page
 // shows pack prices with an "opens soon" note and no way to buy one.
@@ -46,7 +46,10 @@ test("states the credit price, the Free allowance and every pack from 0052", () 
   for (const [price, credits] of [["$10", "1,000"], ["$50", "5,500"], ["$200", "24,000"]]) {
     assert.ok(text.includes(`${price} for ${credits} credits`), `missing the ${price} pack (${credits} credits)`);
   }
-  assert.match(text, /valid for 12 months after/);
+  assert.match(text, /Bought credits don't expire/, "purchased credits never expire (0074)");
+  assert.doesNotMatch(text, /12 months/, "no expiry period for purchased credits (0074)");
+  assert.doesNotMatch(text, /below zero;|negative balance is repaid/i, "no debt (0072)");
+  assert.match(text, /never more than the amount held/, "final charge never exceeds the hold (0072)");
 });
 
 test("states every rate from 0052", () => {

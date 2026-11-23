@@ -92,9 +92,10 @@ works with JavaScript off, at the static site's URLs, trailing slash included
   the prerendered HTML only (`hooks.server.ts`, `src/lib/server/site/public-head.ts`), with the
   hosts they need added to the page's Content-Security-Policy. Every link on a public page is
   a full page load (`data-sveltekit-reload`), so they never follow a visitor into the app.
-- **Search:** `robots.txt` disallows everything when Netlify's `SITE_NAME` is
-  `audiokit-console` (or `PUBLIC_SITE_HOST=console`), so console.audiokit.ai doesn't compete with
-  audiokit.ai before the cut-over. Canonical links always name audiokit.ai.
+- **Search:** `robots.txt` allows every crawler on audiokit.ai. It disallows everything only when
+  `PUBLIC_SITE_HOST=console` is set (or Netlify's `SITE_NAME` is `audiokit-console`, a site that no
+  longer exists), which keeps a copy served from another host out of search. Canonical links always
+  name audiokit.ai.
 - **Checks:** `npm run test:build` builds, then checks every old URL and the sitemap against
   `build/`, each page's policy and its scripts. The `site` Playwright project serves `build/`
   and checks JavaScript off, 320 px, touch targets, keyboard reach and axe.

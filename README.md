@@ -85,7 +85,12 @@ for a new customer (`<consoleUrl>/signup`) and `{{CONSOLE_LOGIN}}` for a returni
 (`<consoleUrl>/login`). There is no early-access request form, no Netlify Form and no email
 function on this site any more, and `test/signin-cta.test.mjs` keeps it that way.
 
-The console lives in `console/` in this repo and deploys as its own Netlify site
+**Cut-over (AudioKit 0053).** The `audiokit` Netlify site now builds the SvelteKit app in `console/`
+(the repo-root `netlify.toml` sets `base = "console"`), so audiokit.ai serves the public pages and
+the signed-in app together. The static pages in `src/` and `scripts/build.mjs` are no longer
+deployed; they stay until the cleanup step, because the app's parity tests compare against them.
+
+The console lives in `console/` in this repo; it used to deploy as its own Netlify site
 ([AudioKit decisions 0016 and 0021](https://github.com/epsilon-records/knowledge/tree/main/audiokit/decisions));
 see [`console/README.md`](console/README.md) for its routes and auth. Neither screen needs a
 password or an invitation: `/signup` and `/login` both email a magic link, and a link sent to an

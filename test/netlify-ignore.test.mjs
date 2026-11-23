@@ -1,5 +1,5 @@
-// The audiokit and audiokit-console Netlify sites both build from this repo, and before
-// EPSILON-169 every push to main rebuilt both. Each build's `ignore` command now skips the site
+// Before the cut-over the audiokit and audiokit-console Netlify sites both built from this repo,
+// and before EPSILON-169 every push to main rebuilt both. Now the audiokit site builds the app. Each build's `ignore` command now skips the site
 // when none of its own inputs changed (each production deploy costs 15 Free-plan credits). A wrong
 // rule fails silently, so this runs the real commands against a throwaway git repo, the same way
 // test/storybook-site.test.mjs checks the Storybook site's rule.
@@ -21,10 +21,11 @@ function ignoreOf(path) {
 }
 
 const sites = {
-  // The static site's base directory is the repo root.
-  audiokit: { ignore: ignoreOf("../netlify.toml"), base: "." },
-  // The console's base directory is console/.
-  "audiokit-console": { ignore: ignoreOf("../console/netlify.toml"), base: "console" },
+  // Since the cut-over (AudioKit 0053, step C) the audiokit site builds the app in console/: the
+  // repo-root netlify.toml sets base = "console", so the command runs there.
+  audiokit: { ignore: ignoreOf("../netlify.toml"), base: "console" },
+  // console/netlify.toml keeps the same settings, for whichever file Netlify reads.
+  "console/netlify.toml": { ignore: ignoreOf("../console/netlify.toml"), base: "console" },
 };
 
 const GIT_LOCATION_VARS = [
@@ -102,51 +103,48 @@ function fixture() {
   return { root, git, changed };
 }
 
-const expectations = {
-  audiokit: {
-    builds: [
-      "src/pages/index.html",
-      "src/static/styles.css",
-      "scripts/build.mjs",
-      "contract/openapi.yaml",
-      "site.config.mjs",
-      "netlify.toml",
-      "package.json",
-      "package-lock.json",
-    ],
-    skips: [
-      "console/src/routes/+page.svelte",
-      "console/static/theme-init.js",
-      "console/package.json",
-      "console/netlify.toml",
-      "storybook-site/netlify.toml",
-      "docs/notes.md",
-      "test/a.test.mjs",
-      ".github/workflows/ci.yml",
-    ],
-  },
-  "audiokit-console": {
-    builds: [
-      "console/src/routes/+page.svelte",
-      "console/static/theme-init.js",
-      "console/package.json",
-      "console/netlify.toml",
-      "console/README.md",
-      "contract/openapi.yaml",
-    ],
-    skips: [
-      "src/pages/index.html",
-      "src/static/styles.css",
-      "scripts/build.mjs",
-      "site.config.mjs",
-      "netlify.toml",
-      "package.json",
-      "storybook-site/netlify.toml",
-      "docs/notes.md",
-      "test/a.test.mjs",
-    ],
-  },
+const appExpectations = {
+  builds: [
+    "console/src/routes/+page.svelte",
+    "console/static/theme-init.js",
+    "console/package.json",
+    "console/netlify.toml",
+    "console/README.md",
+    "contract/openapi.yaml",
+    "netlify.toml",
+  ],
+  skips: [
+    "src/pages/index.html",
+    "src/static/styles.css",
+    "scripts/build.mjs",
+    "site.config.mjs",
+    "package.json",
+    "package-lock.json",
+    "storybook-site/netlify.toml",
+    "docs/notes.md",
+    "test/a.test.mjs",
+    "README.md",
+    ".github/workflows/ci.yml",
+  ],
 };
+const expectations = { audiokit: appExpectations, "console/netlify.toml": appExpectations };
+
+test("the repo-root and console netlify.toml carry the same build settings", () => {
+  const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
+  const root = read("../netlify.toml");
+  const app = read("../console/netlify.toml");
+  assert.match(root, /^\s*base = "console"$/m, "the root file builds console/");
+  for (const key of ["command", "publish", "ignore"]) {
+    const line = (t) => t.match(new RegExp(`^\\s*${key} = .*$`, "m"))?.[0];
+    assert.ok(line(root), `root ${key}`);
+    assert.equal(line(root), line(app), key);
+  }
+  const section = (t, header) => t.slice(t.indexOf(header)).replace(/^#.*$/gm, "").trim();
+  for (const header of ['[[headers]]\n  for = "/*"', '[[redirects]]']) {
+    assert.ok(root.includes(header.split("\n")[0]) && app.includes(header.split("\n")[0]), header);
+  }
+  assert.equal(section(root, "[[headers]]").replace(/\s+/g, " "), section(app, "[[headers]]").replace(/\s+/g, " "));
+});
 
 for (const [name, site] of Object.entries(sites)) {
   test(`${name}: builds for its own inputs, skips the rest, and builds when uncached`, () => {
@@ -185,8 +183,8 @@ const previewSites = {
   "audiokit-storybook": { ignore: ignoreOf("../storybook-site/netlify.toml"), base: "storybook-site" },
 };
 const ownInput = {
-  audiokit: "src/pages/index.html",
-  "audiokit-console": "console/src/routes/+page.svelte",
+  audiokit: "console/src/routes/+page.svelte",
+  "console/netlify.toml": "console/src/routes/+page.svelte",
   "audiokit-storybook": "storybook-site/netlify.toml",
 };
 

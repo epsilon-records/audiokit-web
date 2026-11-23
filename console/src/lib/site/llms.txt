@@ -26,7 +26,7 @@ Planned, not available yet: denoise, transcription, mastering, consent-gated voi
 
 ## Account
 
-- [Console](https://console.audiokit.ai/login): sign in with a magic link (no password, no card) to get an API key and see usage
+- [Console](https://audiokit.ai/login): sign in with a magic link (no password, no card) to get an API key and see usage
 
 ## Optional
 
