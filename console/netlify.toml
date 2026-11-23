@@ -1,19 +1,21 @@
-# The console is its own Netlify site. In the Netlify UI set the site's "Base directory"
-# to `console` so this file is used; the repo-root netlify.toml belongs to the static site.
+# Since the cut-over (AudioKit 0053, EPSILON-169 step C) the audiokit.ai site builds this app, and
+# the repo-root netlify.toml sets `base = "console"`. This file keeps the same build, ignore and
+# header settings for whichever of the two files Netlify reads; test/netlify-ignore.test.mjs
+# keeps them equal.
 #
 # `npm run build` runs SvelteKit through @sveltejs/adapter-netlify: the adapter writes the
 # client and prerendered assets to build/ and the SSR function to .netlify/functions-internal/.
 [build]
   command = "npm run build"
   publish = "build"
-  # Each production deploy costs 15 Free-plan credits: only build when the app (this directory)
-  # or the API contract it reads changes, not for a change to the static site (EPSILON-169).
+  # Each production deploy costs 15 Free-plan credits: only build when the app (console/), the API
+  # contract it reads or the repo-root netlify.toml changes (paths are repo-root relative, :/ magic).
   # An uncached build (refs equal, or either ref missing) always builds, as in
   # storybook-site/netlify.toml. test/netlify-ignore.test.mjs runs this command against a
   # throwaway repo.
   # Deploy previews are off (Oracle, knowledge#134: Netlify credits until 14 Dec): a
   # deploy-preview build is skipped unless its branch name ends in -preview.
-  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ../contract; }"
+  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- :/console :/contract :/netlify.toml; }"
 
 [build.environment]
   NODE_VERSION = "22"
@@ -34,3 +36,10 @@
   for = "/docs/openapi.yaml"
   [headers.values]
     Content-Type = "application/yaml; charset=utf-8"
+
+# The site's address is https://audiokit.ai. Send the platform address there too.
+[[redirects]]
+  from = "https://audiokit.netlify.app/*"
+  to = "https://audiokit.ai/:splat"
+  status = 301
+  force = true

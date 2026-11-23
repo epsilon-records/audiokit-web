@@ -122,7 +122,9 @@ const LLMS_CHANGES: [string, string][] = [
 		'`stems` (on the roadmap; check capabilities before relying on it)',
 		'`stems` (separates vocals, drums, bass and other instruments)'
 	],
-	['denoise, stem separation (see above), transcription', 'denoise, transcription']
+	['denoise, stem separation (see above), transcription', 'denoise, transcription'],
+	// The cut-over (AudioKit 0053): sign-in is on audiokit.ai itself.
+	['(https://console.audiokit.ai/login)', '(https://audiokit.ai/login)']
 ];
 
 function withChanges(source: string, changes: [string, string][]): string {

@@ -1,43 +1,36 @@
-# The build renders src/ into dist/ and generates the API reference from the OpenAPI contract
-# (see scripts/build.mjs for where the contract comes from).
+# The audiokit.ai Netlify site builds the SvelteKit app in console/ (AudioKit 0053, EPSILON-169,
+# cut-over step C). console/netlify.toml carries the same build and header settings, for whichever
+# of the two files Netlify reads once `base` is set; keep them equal (test/netlify-ignore.test.mjs).
+#
+# `npm run build` runs SvelteKit through @sveltejs/adapter-netlify: the adapter writes the client
+# and prerendered assets to build/ and the SSR function to .netlify/functions-internal/.
 [build]
+  base = "console"
   command = "npm run build"
-  publish = "dist"
-  # Each production deploy costs 15 Free-plan credits: only build when the static site's own files
-  # change, not for a console/ or storybook-site/ change (EPSILON-169). An uncached build (refs
-  # equal, or either ref missing) always builds, as in storybook-site/netlify.toml.
-  # test/netlify-ignore.test.mjs runs this command against a throwaway repo.
-  # Deploy previews are off (Oracle, knowledge#134: Netlify credits until 14 Dec): a
+  publish = "build"
+  # Each production deploy costs 15 Free-plan credits: only build when the app (console/), the API
+  # contract it reads or this file changes. The paths are repo-root relative (:/ magic), because the
+  # command runs in the base directory. An uncached build (refs equal, or either ref missing)
+  # always builds. Deploy previews are off (Oracle, knowledge#134: Netlify credits until 14 Dec): a
   # deploy-preview build is skipped unless its branch name ends in -preview.
-  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- src scripts contract site.config.mjs netlify.toml package.json package-lock.json; }"
+  # test/netlify-ignore.test.mjs runs this command against a throwaway repo.
+  ignore = "{ [ \"$CONTEXT\" = \"deploy-preview\" ] && [ \"${HEAD%-preview}\" = \"$HEAD\" ]; } || { [ -n \"$CACHED_COMMIT_REF\" ] && [ -n \"$COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- :/console :/contract :/netlify.toml; }"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# The Content-Security-Policy allows what the pages load (EPSILON-118): Google Fonts, the Sentry
-# browser bundle and its ingest host (shared decisions 0003, 0004), the Cloudflare Web Analytics
-# beacon (0011) and the Kit signup form's POST (0027), whose redirect returns to audiokit.ai.
-# The pages carry no inline scripts or styles; keep it that way (test/csp-output.mjs checks).
+# Static assets are served by Netlify, so the app's handle() headers don't apply to them.
+# The Content-Security-Policy is set per page by SvelteKit (vite.config.ts), not here.
 [[headers]]
   for = "/*"
   [headers.values]
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://browser.sentry-cdn.com https://static.cloudflareinsights.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src 'self' https://cloudflareinsights.com https://o337159.ingest.us.sentry.io; form-action 'self' https://app.kit.com https://audiokit.ai; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-[[headers]]
-  for = "/styles.css"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-
-[[headers]]
-  for = "/site.js"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-
+# The contract the API reference is generated from, as the static site served it.
 [[headers]]
   for = "/docs/openapi.yaml"
   [headers.values]
