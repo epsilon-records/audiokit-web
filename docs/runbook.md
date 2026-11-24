@@ -7,14 +7,18 @@ audiokit.ai. The former console site (`console.audiokit.ai`) no longer exists (A
 there is no old host to fall back to. Recovery means putting a previous `audiokit` deploy or the
 previous commit back.
 
-1. **Fastest: restore the previous deploy.** In the `audiokit` site's Deploys list in Netlify,
-   publish the last good production deploy. This changes production settings, so it needs the
-   Oracle or Nate; coding agents don't do it.
-2. **Then fix the source.** Revert the offending merge on `main` through a PR (reverting the
-   cut-over merge, `00194b4`, would restore the static-site build, because the pre-cut-over
-   root `netlify.toml` is what that commit replaced). Netlify then deploys the revert. Publishing a
-   deploy in step 1 may pause automatic publishing for the site; whether it does is unknown to
-   this repo and not checked here. Check the site's deploy settings before relying on a push.
+1. **Fastest: restore the previous deploy, then lock it.** In the `audiokit` site's Deploys list
+   in Netlify, publish the last good production deploy, then select Lock publishing so a new push
+   to `main` cannot replace it before the fix is ready. This changes production settings, so it
+   needs the Oracle or Nate; coding agents don't do it.
+2. **Then fix the source, and don't revert the cut-over merge.** Revert or fix only the offending
+   change on `main` through a PR. Do not revert the cut-over merge (`00194b4`) as a rollback: it
+   restores the static-site build, which has no `/login`, `/auth/callback`, `/credits` or
+   `/settings/billing`, and its Sign in link points at `console.audiokit.ai`, which no longer
+   exists. Customers could then not sign in or return from billing. A revert of that merge is safe
+   only after the board has named a working sign-in host and set the billing variables in step 3
+   to it. When the fix is merged, a locked site does not deploy it by itself: unlock the site or
+   publish the new deploy manually.
 3. **Billing variables.** Magic links, Stripe Checkout and the Stripe portal send customers to
    URLs built from variables on the billing service, which this repo does not change:
    `CONSOLE_BASE_URL` (now `https://audiokit.ai`), `STRIPE_CHECKOUT_SUCCESS_URL`,
