@@ -23,8 +23,9 @@ previous commit back.
    restores the static-site build, which has no `/login`, `/auth/callback`, `/credits` or
    `/settings/billing`, and its Sign in link points at `console.audiokit.ai`, which no longer
    exists. Customers could then not sign in or return from billing. A revert of that merge is safe
-   only after the board has named a working sign-in host and set the billing variables in step 3
-   to it. When the fix is merged, a locked site does not deploy it by itself: unlock the site or
+   only on the same condition as step 1: `console.audiokit.ai` serves sign-in again, or the
+   static build is rebuilt so its Sign in link points at the board's named working host, and the
+   billing variables in step 3 point at that host. When the fix is merged, a locked site does not deploy it by itself: unlock the site or
    publish the new deploy manually.
 3. **Billing variables.** Magic links, Stripe Checkout and the Stripe portal send customers to
    URLs built from variables on the billing service, which this repo does not change:
