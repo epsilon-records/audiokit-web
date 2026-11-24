@@ -40,5 +40,8 @@ previous commit back.
    variables pointed at it. Unknown:
    what that host would be, because nothing in this repo says how `console.audiokit.ai` would be
    recreated.
-4. **Verify.** Request a magic link on `https://audiokit.ai/login`, open it, and confirm
-   `/auth/callback` lands in the console; load `/`, `/pricing/` and `/docs/`.
+4. **Verify.** After restoring a post-cut-over deploy, request a magic link on
+   `https://audiokit.ai/login`, open it, and confirm `/auth/callback` lands in the console; load
+   `/`, `/pricing/` and `/docs/`. After a static-build rollback, `/login` does not exist on that
+   build: use its Sign in link, sign in on the working host the board named, and confirm the
+   callback and a Stripe return land on that same host; load `/`, `/pricing/` and `/docs/`.
