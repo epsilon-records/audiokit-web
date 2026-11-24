@@ -38,10 +38,17 @@ const oldSitemap = [
 			(f) => !/"noindex":\s*true/.test(readFileSync(join(pagesDir, f), 'utf8').split('\n')[0])
 		)
 		.map(routeOf),
-	'/docs/reference/'
+	'/docs/reference/',
+	// App-only page (AudioKit 0090): the static site is retired and has no terms page.
+	'/terms/'
 ].sort();
 
-const oldUrls = [...pageRoutes, ...generated, ...staticFiles.filter((f) => !REPLACED.includes(f))];
+const oldUrls = [
+	...pageRoutes,
+	'/terms/',
+	...generated,
+	...staticFiles.filter((f) => !REPLACED.includes(f))
+];
 
 describe('every URL of the static site is in the build', () => {
 	it('knows the whole list', () => {
@@ -63,7 +70,8 @@ describe('every URL of the static site is in the build', () => {
 				'/privacy/',
 				'/robots.txt',
 				'/sitemap.xml',
-				'/subscribed/'
+				'/subscribed/',
+				'/terms/'
 			].sort()
 		);
 		expect(staticFiles.filter((f) => REPLACED.includes(f)).sort()).toEqual([...REPLACED].sort());

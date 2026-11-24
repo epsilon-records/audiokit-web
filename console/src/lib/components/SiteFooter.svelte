@@ -13,6 +13,7 @@
 		{ href: '/docs/mcp/', label: 'MCP' },
 		{ href: '/pricing/', label: 'Pricing' },
 		{ href: '/privacy/', label: 'Privacy' },
+		{ href: '/terms/', label: 'Terms' },
 		{ href: '/docs/openapi.yaml', label: 'openapi.yaml' }
 	];
 </script>
