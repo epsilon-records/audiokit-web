@@ -59,12 +59,13 @@ test('no request-access form, link or copy is left behind', () => {
 
 test('no unpublished mailbox is advertised', () => {
 	// The one exception is the privacy contact Nate chose in shared decision 0013
-	// (hello@epsilonrecords.com), and only on the privacy notice.
+	// (hello@epsilonrecords.com), and only on the privacy notice and the terms (AudioKit 0088, 0090).
 	const PRIVACY_CONTACT = 'mailto:hello@epsilonrecords.com';
 	pageFiles.forEach((file, i) => {
-		const html = file.endsWith('privacy.html')
-			? pages[i].replaceAll(`"${PRIVACY_CONTACT}"`, '""')
-			: pages[i];
+		const html =
+			file.endsWith('privacy.html') || file.endsWith('terms.html')
+				? pages[i].replaceAll(`"${PRIVACY_CONTACT}"`, '""')
+				: pages[i];
 		assert.doesNotMatch(
 			html,
 			/mailto:/i,

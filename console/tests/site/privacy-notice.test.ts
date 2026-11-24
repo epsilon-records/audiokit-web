@@ -97,10 +97,10 @@ test('it describes the first-touch signup source billing stores (decision 0040)'
 test('it names the controller, address and contact Nate supplied (shared 0013, 0015)', () => {
 	assert.match(
 		text,
-		/The controller for the personal data described here is Epsilon Records, Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam\./
+		/The controller for the personal data described here is Epsilon Records LLC, a company registered in Nevada, USA, with its address at Nieuwe Uilenburgerstraat 21C, 1011LM Amsterdam\./
 	);
 	assert.match(notice, /href="mailto:hello@epsilonrecords\.com">hello@epsilonrecords\.com</);
-	assert.doesNotMatch(text, /Epsilon Records (B\.V\.|BV|V\.O\.F|VOF|LLC|Ltd|Inc)/i);
+	assert.doesNotMatch(text, /Epsilon Records (B\.V\.|BV|V\.O\.F|VOF|Ltd|Inc)/i);
 });
 
 test('the analytics statement follows the configured beacon', () => {

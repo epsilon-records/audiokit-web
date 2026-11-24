@@ -37,6 +37,7 @@ describe('every public page renders', () => {
 			'/',
 			'/pricing/',
 			'/privacy/',
+			'/terms/',
 			'/docs/',
 			'/docs/reference/',
 			'/docs/sdks/',
@@ -137,7 +138,7 @@ describe('the build helpers the static site had', () => {
 });
 
 describe('sitemap.xml and robots.txt', () => {
-	it('lists the seven indexable pages, as the static site does', async () => {
+	it('lists the indexable pages: the static site seven and the app-only terms', async () => {
 		const locs = [...(await sitemapXml()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 		expect(locs).toEqual([
 			'https://audiokit.ai/',
@@ -146,7 +147,8 @@ describe('sitemap.xml and robots.txt', () => {
 			'https://audiokit.ai/docs/reference/',
 			'https://audiokit.ai/docs/sdks/',
 			'https://audiokit.ai/pricing/',
-			'https://audiokit.ai/privacy/'
+			'https://audiokit.ai/privacy/',
+			'https://audiokit.ai/terms/'
 		]);
 	});
 
