@@ -1,13 +1,13 @@
 // Run after the static build. Checks that the built pages fit the Content-Security-Policy in
-// netlify.toml (EPSILON-118): no inline scripts, styles or event handlers, and every external
+// test/static-site.netlify.toml (EPSILON-118): no inline scripts, styles or event handlers, and every external
 // script, stylesheet and form target is allowed by its directive.
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 
 const root = new URL('../dist/', import.meta.url);
-const toml = await readFile(new URL('../netlify.toml', import.meta.url), 'utf8');
+const toml = await readFile(new URL('./static-site.netlify.toml', import.meta.url), 'utf8');
 const header = /^\s*Content-Security-Policy = "([^"]+)"/m.exec(toml);
-assert.ok(header, 'netlify.toml sets a Content-Security-Policy');
+assert.ok(header, 'static-site.netlify.toml sets a Content-Security-Policy');
 const csp = new Map(
   header[1].split(';').map((d) => d.trim().split(/\s+/)).map(([name, ...sources]) => [name, sources]),
 );
