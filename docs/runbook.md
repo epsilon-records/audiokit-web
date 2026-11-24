@@ -8,7 +8,11 @@ there is no old host to fall back to. Recovery means putting a previous `audioki
 previous commit back.
 
 1. **Fastest: restore the previous deploy, then lock it.** In the `audiokit` site's Deploys list
-   in Netlify, publish the last good production deploy, then select Lock publishing so a new push
+   in Netlify, publish the last good production deploy that was built after the cut-over (one
+   that serves `/login`, `/auth/callback`, `/credits` and `/settings/billing`). Do not publish a
+   pre-cut-over (static-site) deploy unless the board has first named a working sign-in host and
+   set the billing variables in step 3 to it, because that build's Sign in link points at
+   `console.audiokit.ai`. After publishing, select Lock publishing so a new push
    to `main` cannot replace it before the fix is ready. This changes production settings, so it
    needs the Oracle or Nate; coding agents don't do it.
 2. **Then fix the source, and don't revert the cut-over merge.** Revert or fix only the offending
@@ -25,10 +29,11 @@ previous commit back.
    `STRIPE_CHECKOUT_CANCEL_URL`, and `STRIPE_PORTAL_RETURN_URL` (unset; derives
    `https://audiokit.ai/settings/billing`). They point at audiokit.ai, which is where the
    rollback also serves, so a rollback of the Netlify deploy needs no change to them as long as
-   the restored deploy serves `/auth/callback`, `/credits` and `/settings/billing`. Only a
-   rollback to a build that lacks those routes needs the board to change them on billing.
-   Unknown: whether a different host would be needed (for example a restored
-   `console.audiokit.ai`), because that site is gone and nothing in this repo says how it would
-   be recreated.
+   the restored deploy serves `/auth/callback`, `/credits` and `/settings/billing`. A rollback to a
+   build that lacks those routes (the static site) is not made safe by changing these variables
+   alone: that build's own Sign in link points at `console.audiokit.ai`, which is gone. It needs a
+   working sign-in host named by the board first, then the variables pointed at it. Unknown:
+   what that host would be, because nothing in this repo says how `console.audiokit.ai` would be
+   recreated.
 4. **Verify.** Request a magic link on `https://audiokit.ai/login`, open it, and confirm
    `/auth/callback` lands in the console; load `/`, `/pricing/` and `/docs/`.
