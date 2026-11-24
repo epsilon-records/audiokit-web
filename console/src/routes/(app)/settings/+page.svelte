@@ -121,7 +121,11 @@
 			method="POST"
 			action="?/savePreferences"
 			class="{formStack} p-5 max-stack:p-4"
-			use:enhance
+			use:enhance={() =>
+				// No reset after a save: reset() puts each control back to its HTML default, which showed
+				// the low-balance switch as off although it was saved on, and the next save then sent off.
+				({ update }) =>
+					update({ reset: false })}
 		>
 			<Field.Field orientation="horizontal" class="items-start">
 				<Checkbox
