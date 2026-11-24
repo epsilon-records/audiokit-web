@@ -10,9 +10,12 @@ previous commit back.
 1. **Fastest: restore the previous deploy, then lock it.** In the `audiokit` site's Deploys list
    in Netlify, publish the last good production deploy that was built after the cut-over (one
    that serves `/login`, `/auth/callback`, `/credits` and `/settings/billing`). Do not publish a
-   pre-cut-over (static-site) deploy unless the board has first named a working sign-in host and
-   set the billing variables in step 3 to it, because that build's Sign in link points at
-   `console.audiokit.ai`. After publishing, select Lock publishing so a new push
+   pre-cut-over (static-site) deploy unless the board has first made `console.audiokit.ai` (or a
+   new host, with the static build rebuilt so its Sign in link points there) serve sign-in, and
+   set the billing variables in step 3 to that host. The Sign in link is baked into that build and
+   points at `console.audiokit.ai`, so naming a host is not enough. After publishing, check that
+   the Sign in link reaches the working host, that a magic link signs in, and that a Stripe
+   return lands back in the console. Then select Lock publishing so a new push
    to `main` cannot replace it before the fix is ready. This changes production settings, so it
    needs the Oracle or Nate; coding agents don't do it.
 2. **Then fix the source, and don't revert the cut-over merge.** Revert or fix only the offending
@@ -32,7 +35,8 @@ previous commit back.
    the restored deploy serves `/auth/callback`, `/credits` and `/settings/billing`. A rollback to a
    build that lacks those routes (the static site) is not made safe by changing these variables
    alone: that build's own Sign in link points at `console.audiokit.ai`, which is gone. It needs a
-   working sign-in host named by the board first, then the variables pointed at it. Unknown:
+   host that serves sign-in and that the build's Sign in link actually reaches (step 1), then the
+   variables pointed at it. Unknown:
    what that host would be, because nothing in this repo says how `console.audiokit.ai` would be
    recreated.
 4. **Verify.** Request a magic link on `https://audiokit.ai/login`, open it, and confirm
