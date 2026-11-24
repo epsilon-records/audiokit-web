@@ -9,14 +9,14 @@ and the build need no service.
 - Design source: [`docs/console/`](../docs/console/) (PR #9, `akw-console-design`).
 - Stack decision: AudioKit
   [0016](https://github.com/epsilon-records/knowledge/blob/main/audiokit/decisions/0016-console-sveltekit.md)
-  — SvelteKit + Svelte 5, TypeScript, Vite, its own Netlify site.
+  — SvelteKit + Svelte 5, TypeScript, Vite. It no longer has its own Netlify site (see Deploy).
 - Supersedes the closed Next.js scaffold (PR #10): those files are not carried forward.
 
 ## Stack and location
 
 - **Location:** `console/` in this repo, a sibling app to the static site in `src/`. The
   website build (`npm run build` at the repo root) does not touch it, and this app's build does
-  not touch the site. They deploy as two Netlify sites.
+  not touch the site. Only this app is deployed: the static site is kept until the cleanup step.
 - **Stack:** SvelteKit 3 + Svelte 5 (runes) + TypeScript + Vite, with
   [`@sveltejs/adapter-netlify`](https://svelte.dev/docs/kit/adapter-netlify). Tailwind v4 and
   shadcn-svelte for the shared components (knowledge shared 0046), on the way to one app at
@@ -156,7 +156,7 @@ cold start. That is deliberate for a scaffold: there is no database behind it.
 `PUBLIC_BILLING_API_URL` is the billing service root, without a trailing `/v1` (for example
 `https://billing.audiokit.ai`). When it is set, `api-client.ts` uses the HTTP adapter in
 `src/lib/http-adapter.ts`; when it is unset (local dev, tests, the build) the mock adapter in
-`src/lib/mock-adapter.ts` is the default. Set it in the console Netlify site's environment
+`src/lib/mock-adapter.ts` is the default. Set it in the `audiokit` Netlify site's environment
 (Netlify UI or `netlify.toml`); never commit it. See `console/.env.example`.
 
 `src/lib/http-adapter.ts` maps `ConsoleApi` onto the service's real routes (`src/routes/` in
@@ -188,17 +188,23 @@ chromium`), or `PLAYWRIGHT_CHROMIUM_PATH` pointing at a local Chrome.
 
 ## Deploy
 
-The console is its **own Netlify site**, separate from the static site:
+There is no separate console Netlify site any more (AudioKit 0053, EPSILON-169 step C, PR #93).
+audiokit.ai is served by this app, on the one `audiokit` Netlify site linked to this repo:
 
-- Site base directory: `console`.
-- Build command: `npm run build` (from `console/netlify.toml`).
-- Publish directory: `build` (the adapter's default; set explicitly in `vite.config.ts` and
-  `netlify.toml`).
+- The repo-root `netlify.toml` sets `base = "console"`, so Netlify builds this directory.
+  `console/netlify.toml` carries the same build, ignore and header settings in case Netlify reads
+  that file once `base` is set; keep the two equal (`test/netlify-ignore.test.mjs` at the repo
+  root checks it).
+- Build command: `npm run build`. Publish directory: `build` (the adapter's default).
 - The server-side routes run as the adapter's Netlify Function; `static/` assets are served
   from `build/`.
-- `netlify.toml`'s `ignore` skips the build unless this directory or `../contract` changed, so
-  a static-site change doesn't cost a console deploy (`test/netlify-ignore.test.mjs` at the repo
-  root checks it).
+- The `ignore` rule skips the build unless `console/`, `contract/` or the root `netlify.toml`
+  changed, and skips deploy previews unless the branch name ends in `-preview`.
+- `https://audiokit.netlify.app/*` redirects to `https://audiokit.ai`.
+- The billing service sends customers back to this app. Its `CONSOLE_BASE_URL` and
+  `STRIPE_CHECKOUT_*` variables are set on the billing service, not in this repo.
+
+For recovery after a bad deploy, see "Cut-over rollback" in [`docs/runbook.md`](../docs/runbook.md).
 
 ## CI
 

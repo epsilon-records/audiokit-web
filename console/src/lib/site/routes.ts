@@ -12,6 +12,7 @@ export const SITE_PAGES: SitePage[] = [
 	{ path: '/', source: 'index.html' },
 	{ path: '/pricing/', source: 'pricing.html' },
 	{ path: '/privacy/', source: 'privacy.html' },
+	{ path: '/terms/', source: 'terms.html' },
 	{ path: '/docs/', source: 'docs/index.html' },
 	{ path: '/docs/reference/', source: 'reference' },
 	{ path: '/docs/sdks/', source: 'docs/sdks/index.html' },

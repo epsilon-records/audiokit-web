@@ -121,7 +121,11 @@
 			method="POST"
 			action="?/savePreferences"
 			class="{formStack} p-5 max-stack:p-4"
-			use:enhance
+			use:enhance={() =>
+				// No reset after a save: reset() puts each control back to its HTML default, which showed
+				// the low-balance switch as off although it was saved on, and the next save then sent off.
+				({ update }) =>
+					update({ reset: false })}
 		>
 			<Field.Field orientation="horizontal" class="items-start">
 				<Checkbox
@@ -157,6 +161,8 @@
 				</div>
 			</Field.Field>
 			{#if lowBalanceAlerts !== undefined}
+				<!-- Tells the save action this form had the switch, so an unchecked one means "off". -->
+				<input type="hidden" name="lowBalanceAlertsPresent" value="1" />
 				<div class={rowSwitch}>
 					<Switch
 						id="lowBalanceAlerts"

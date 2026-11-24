@@ -30,6 +30,11 @@ function walk(dir: string): string[] {
  * its real name, ak_console_session.
  */
 const PRIVACY_CHANGES: [string, string][] = [
+	// The controller is Epsilon Records LLC, matching the terms (AudioKit 0088, 0090; PR #79).
+	[
+		'is Epsilon Records, Nieuwe',
+		'is Epsilon Records LLC, a company registered in Nevada, USA, with its address at Nieuwe'
+	],
 	[
 		'"description": "What AudioKit collects on audiokit.ai, in the console and through the API,',
 		'"description": "What AudioKit collects on audiokit.ai and through the API,'
@@ -118,6 +123,11 @@ const FEATURE_COPY_CHANGES: Record<string, [string, string][]> = {
 };
 
 const LLMS_CHANGES: [string, string][] = [
+	// The terms page is app-only (AudioKit 0090; ported from PR #79).
+	[
+		'- [Privacy notice](https://audiokit.ai/privacy/)\n',
+		'- [Privacy notice](https://audiokit.ai/privacy/)\n- [Terms of service](https://audiokit.ai/terms/)\n'
+	],
 	[
 		'`stems` (on the roadmap; check capabilities before relying on it)',
 		'`stems` (separates vocals, drums, bass and other instruments)'
@@ -126,6 +136,9 @@ const LLMS_CHANGES: [string, string][] = [
 	// The cut-over (AudioKit 0053): sign-in is on audiokit.ai itself.
 	['(https://console.audiokit.ai/login)', '(https://audiokit.ai/login)']
 ];
+
+/** Pages that exist only in the app: the static site is retired and gets no new pages (AudioKit 0090). */
+const APP_ONLY_PAGES = ['terms.html'];
 
 function withChanges(source: string, changes: [string, string][]): string {
 	for (const [from, to] of changes) {
@@ -145,7 +158,7 @@ describe('the public pages are the static site’s, as they are', () => {
 			walk(appPages)
 				.map((f) => relative(appPages, f))
 				.sort()
-		).toEqual([...files].sort());
+		).toEqual([...files, ...APP_ONLY_PAGES].sort());
 	});
 
 	for (const file of files) {
