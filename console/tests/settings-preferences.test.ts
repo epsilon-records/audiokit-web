@@ -63,6 +63,7 @@ describe('settings: save preferences', () => {
 		client.updateNotificationPreferences.mockImplementation(async (next) => next);
 
 		const off = new FormData();
+		off.set('lowBalanceAlertsPresent', '1');
 		off.set('paymentReceipts', 'on');
 		await save(off);
 		expect(client.updateNotificationPreferences).toHaveBeenLastCalledWith({
@@ -73,6 +74,7 @@ describe('settings: save preferences', () => {
 		});
 
 		const on = new FormData();
+		on.set('lowBalanceAlertsPresent', '1');
 		on.set('lowBalanceAlerts', 'on');
 		await save(on);
 		expect(client.updateNotificationPreferences).toHaveBeenLastCalledWith(
@@ -91,7 +93,28 @@ describe('settings: save preferences', () => {
 
 		// Even a forged field is ignored: there is no switch to have sent it.
 		const form = new FormData();
+		form.set('lowBalanceAlertsPresent', '1');
 		form.set('lowBalanceAlerts', 'on');
+		await save(form);
+		expect(client.updateNotificationPreferences.mock.lastCall?.[0]).not.toHaveProperty(
+			'lowBalanceAlerts'
+		);
+	});
+
+	// #92: a page rendered before billing reported the preference has no switch. Saving it must
+	// leave the stored value alone, although billing reports the preference by now.
+	it('leaves the low-balance preference alone when the form had no switch', async () => {
+		client.updateNotificationPreferences.mockClear();
+		client.getNotificationPreferences.mockResolvedValue({
+			quotaWarnings: true,
+			paymentReceipts: true,
+			productUpdates: false,
+			lowBalanceAlerts: true
+		});
+		client.updateNotificationPreferences.mockImplementation(async (next) => next);
+
+		const form = new FormData();
+		form.set('paymentReceipts', 'on');
 		await save(form);
 		expect(client.updateNotificationPreferences.mock.lastCall?.[0]).not.toHaveProperty(
 			'lowBalanceAlerts'

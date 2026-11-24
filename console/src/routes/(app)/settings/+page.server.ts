@@ -32,9 +32,10 @@ export const actions: Actions = {
 			quotaWarnings: current.quotaWarnings,
 			paymentReceipts: form.get('paymentReceipts') === 'on',
 			productUpdates: form.get('productUpdates') === 'on',
-			// Low-balance alerts (EPSILON-257): only when billing reports the preference, so the form
-			// had the switch. Otherwise it is left out and billing keeps what it has.
-			...(current.lowBalanceAlerts !== undefined
+			// Low-balance alerts (EPSILON-257): only when billing reports the preference and the
+			// submitted form had the switch (its hidden marker). A page rendered before billing
+			// reported it has no switch, and its missing checkbox must not read as "off" (#92).
+			...(current.lowBalanceAlerts !== undefined && form.has('lowBalanceAlertsPresent')
 				? { lowBalanceAlerts: form.get('lowBalanceAlerts') === 'on' }
 				: {})
 		});
