@@ -46,7 +46,8 @@ describe('each prerendered page fits its policy', () => {
 			'index.html',
 			'pricing/index.html',
 			'privacy/index.html',
-			'subscribed/index.html'
+			'subscribed/index.html',
+			'terms/index.html'
 		]);
 	});
 
