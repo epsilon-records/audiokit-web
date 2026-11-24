@@ -21,9 +21,9 @@ scripts/check-contract.mjs checks contract/openapi.yaml against the live contrac
 contract/openapi.yaml the API contract the build falls back to; contract/SOURCE says where it came from
 site.config.mjs       the API base URL, the console URL and the Kit form ID (one place)
 scripts/kit-form.mjs  the product-updates form and the Kit-only privacy blocks
-console/              the signed-in customer console, its own SvelteKit app and Netlify site
+console/              the SvelteKit app audiokit.ai serves: the signed-in console and the public pages
 test/                 plan-consistency, sign-in CTA and contract-drift checks (npm test)
-netlify.toml          build command, publish directory and headers
+netlify.toml          the audiokit.ai build (base = "console"), publish directory and headers
 ```
 
 Each page starts with a `<!-- {json} -->` line: `title`, `description`, `layout` (`site` or `docs`), `nav` (which menu item is current), and optionally `noindex` and `mainClass`. Docs pages get an "On this page" list from their `<h2 id>` headings (and `<h3 id data-toc>`).
@@ -64,7 +64,7 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 `site.config.mjs` holds the two origins the site points at:
 
 - `apiBaseUrl` (`https://api.audiokit.ai`) — every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
-- `consoleUrl` (`https://console.audiokit.ai`) — the customer console. Every sign-in CTA points at `<consoleUrl>/login`.
+- `consoleUrl` (`https://console.audiokit.ai`) — the console's former host. This static build still points its sign-in CTAs at `<consoleUrl>/login`, but it is no longer deployed: on audiokit.ai the app in `console/` renders the public pages, and its CTAs are same-origin `/login` and `/signup`.
 
 ## Product updates signup
 
@@ -81,8 +81,9 @@ The landing page can carry a "Product updates" email signup, a plain HTML POST t
 ## Sign in and sign up
 
 The site sells nothing by itself: every call to action goes to the console — `{{CONSOLE_SIGNUP}}`
-for a new customer (`<consoleUrl>/signup`) and `{{CONSOLE_LOGIN}}` for a returning one
-(`<consoleUrl>/login`). There is no early-access request form, no Netlify Form and no email
+for a new customer and `{{CONSOLE_LOGIN}}` for a returning one. On audiokit.ai these are same-origin
+`/signup` and `/login` (`console/src/lib/server/site/render.ts`); the static build in `scripts/`,
+which is no longer deployed, still fills them with `<consoleUrl>/signup` and `<consoleUrl>/login`. There is no early-access request form, no Netlify Form and no email
 function on this site any more, and `test/signin-cta.test.mjs` keeps it that way.
 
 **Cut-over (AudioKit 0053).** The `audiokit` Netlify site now builds the SvelteKit app in `console/`
@@ -90,7 +91,7 @@ function on this site any more, and `test/signin-cta.test.mjs` keeps it that way
 the signed-in app together. The static pages in `src/` and `scripts/build.mjs` are no longer
 deployed; they stay until the cleanup step, because the app's parity tests compare against them.
 
-The console lives in `console/` in this repo; it used to deploy as its own Netlify site
+The console lives in `console/` in this repo; it used to deploy as its own Netlify site, which no longer exists
 ([AudioKit decisions 0016 and 0021](https://github.com/epsilon-records/knowledge/tree/main/audiokit/decisions));
 see [`console/README.md`](console/README.md) for its routes and auth. Neither screen needs a
 password or an invitation: `/signup` and `/login` both email a magic link, and a link sent to an
