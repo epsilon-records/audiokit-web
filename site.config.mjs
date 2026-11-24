@@ -11,8 +11,10 @@ export default {
   // falling back to contract/openapi.yaml if that fetch fails.
   apiBaseUrl: "https://api.audiokit.ai",
   apiBaseUrlIsPlaceholder: false,
-  // The customer console (decision 0016/0021): its own Netlify site, so every link to it is
-  // absolute. The public site's sign-in CTA points at `${consoleUrl}/login`.
+  // The customer console's former host (decision 0016/0021). Since the cut-over (AudioKit 0053)
+  // audiokit.ai serves the app, and the deployed public pages link to same-origin `/login` and
+  // `/signup` (console/src/lib/server/site/render.ts). This static build is no longer deployed;
+  // it still builds its CTAs as `${consoleUrl}/login`, which test/signin-cta.test.mjs checks.
   consoleUrl: "https://console.audiokit.ai",
   // Kit form ID for the "Product updates" signup on the landing page (shared decision 0027).
   // Digits only, from the Kit form's URL. Leave it empty until the form exists: while empty, the

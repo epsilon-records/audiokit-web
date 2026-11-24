@@ -1,0 +1,30 @@
+# Runbook
+
+## Cut-over rollback (audiokit.ai serves the app)
+
+Since the cut-over (PR #93), the `audiokit` Netlify site builds the app in `console/` and serves
+audiokit.ai. The former console site (`console.audiokit.ai`) no longer exists (AudioKit 0092), so
+there is no old host to fall back to. Recovery means putting a previous `audiokit` deploy or the
+previous commit back.
+
+1. **Fastest: restore the previous deploy.** In the `audiokit` site's Deploys list in Netlify,
+   publish the last good production deploy. This changes production settings, so it needs the
+   Oracle or Nate; coding agents don't do it.
+2. **Then fix the source.** Revert the offending merge on `main` through a PR (reverting the
+   cut-over merge, `00194b4`, would restore the static-site build, because the pre-cut-over
+   root `netlify.toml` is what that commit replaced). Netlify then deploys the revert. Publishing a
+   deploy in step 1 may pause automatic publishing for the site; whether it does is unknown to
+   this repo and not checked here. Check the site's deploy settings before relying on a push.
+3. **Billing variables.** Magic links, Stripe Checkout and the Stripe portal send customers to
+   URLs built from variables on the billing service, which this repo does not change:
+   `CONSOLE_BASE_URL` (now `https://audiokit.ai`), `STRIPE_CHECKOUT_SUCCESS_URL`,
+   `STRIPE_CHECKOUT_CANCEL_URL`, and `STRIPE_PORTAL_RETURN_URL` (unset; derives
+   `https://audiokit.ai/settings/billing`). They point at audiokit.ai, which is where the
+   rollback also serves, so a rollback of the Netlify deploy needs no change to them as long as
+   the restored deploy serves `/auth/callback`, `/credits` and `/settings/billing`. Only a
+   rollback to a build that lacks those routes needs the board to change them on billing.
+   Unknown: whether a different host would be needed (for example a restored
+   `console.audiokit.ai`), because that site is gone and nothing in this repo says how it would
+   be recreated.
+4. **Verify.** Request a magic link on `https://audiokit.ai/login`, open it, and confirm
+   `/auth/callback` lands in the console; load `/`, `/pricing/` and `/docs/`.
