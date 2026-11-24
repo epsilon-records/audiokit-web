@@ -161,6 +161,8 @@
 				</div>
 			</Field.Field>
 			{#if lowBalanceAlerts !== undefined}
+				<!-- Tells the save action this form had the switch, so an unchecked one means "off". -->
+				<input type="hidden" name="lowBalanceAlertsPresent" value="1" />
 				<div class={rowSwitch}>
 					<Switch
 						id="lowBalanceAlerts"
