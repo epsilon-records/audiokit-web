@@ -158,4 +158,13 @@ test("meta CSP extraction reads only active, exact CSP meta elements", () => {
   assert.equal(csp(`<meta http-equiv="content-security-policy-report-only" content="default-src 'self'">`), "");
   assert.equal(csp(`<meta data-http-equiv="content-security-policy" content="default-src 'self'">`), "");
   assert.equal(csp(`<!-- off --><head><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`), "default-src 'self'");
+  assert.equal(
+    csp(`<head><script>const marker = "<!--";</script><meta http-equiv=content-security-policy content=upgrade-insecure-requests></head>`),
+    "upgrade-insecure-requests",
+  );
+  assert.equal(csp(`<head><link title="<meta http-equiv=content-security-policy content=&quot;default-src 'none'&quot;>"></head>`), "");
+  assert.equal(
+    csp(`<head><link title="<meta http-equiv=content-security-policy content=x>"><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`),
+    "default-src 'self'",
+  );
 });
