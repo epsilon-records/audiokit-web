@@ -148,3 +148,14 @@ test("header summary reads the CSP from the header or the page's meta tag", () =
   assert.deepEqual([viaHeader.csp, viaHeader.csp_source, viaHeader.frame_protection], [true, "header", true]);
   assert.equal(headerSummary(h({}), "<html></html>").csp, false);
 });
+
+test("meta CSP extraction reads only active, exact CSP meta elements", () => {
+  const csp = (h) => metaContentSecurityPolicy(h);
+  assert.equal(csp("<head><meta http-equiv=content-security-policy content=upgrade-insecure-requests></head>"), "upgrade-insecure-requests");
+  assert.equal(csp("<meta content='default-src a' HTTP-EQUIV='Content-Security-Policy'>"), "default-src a");
+  assert.equal(csp(`<head><!-- <meta http-equiv="content-security-policy" content="default-src 'self'"> --></head>`), "");
+  assert.equal(csp(`<script>var s='<meta http-equiv="content-security-policy" content="x">'</script>`), "");
+  assert.equal(csp(`<meta http-equiv="content-security-policy-report-only" content="default-src 'self'">`), "");
+  assert.equal(csp(`<meta data-http-equiv="content-security-policy" content="default-src 'self'">`), "");
+  assert.equal(csp(`<!-- off --><head><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`), "default-src 'self'");
+});

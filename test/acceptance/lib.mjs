@@ -275,12 +275,25 @@ export function headerSummary(headers, html = "") {
   };
 }
 
-/** The policy in `<meta http-equiv="content-security-policy" content="...">`, or "" if none. */
+/**
+ * The policy in an active `<meta http-equiv="content-security-policy" content="...">`, or "" if
+ * none. Comments and raw-text elements are skipped, attribute names must match exactly (so
+ * `data-http-equiv` does not count), and quoted and unquoted values are read. A report-only
+ * value is not a policy (browsers ignore it in a meta tag).
+ */
 export function metaContentSecurityPolicy(html) {
-  for (const tag of String(html).match(/<meta\b[^>]*>/gi) ?? []) {
-    if (!/http-equiv\s*=\s*["']?content-security-policy["']?/i.test(tag)) continue;
-    const m = /\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(tag);
-    const value = (m?.[1] ?? m?.[2] ?? "").trim();
+  const active = String(html)
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(/<(script|style|textarea|title|noscript)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ");
+  for (const tag of active.match(/<meta(?=[\s/>])(?:"[^"]*"|'[^']*'|[^>"'])*>/gi) ?? []) {
+    const attrs = {};
+    const re = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+    for (const m of tag.replace(/^<meta/i, "").matchAll(re)) {
+      const name = m[1].toLowerCase();
+      if (!(name in attrs)) attrs[name] = m[2] ?? m[3] ?? m[4] ?? "";
+    }
+    if ((attrs["http-equiv"] ?? "").trim().toLowerCase() !== "content-security-policy") continue;
+    const value = (attrs.content ?? "").trim();
     if (value) return value.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&");
   }
   return "";
