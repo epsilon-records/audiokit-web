@@ -256,13 +256,80 @@ export function pricingFindings(html) {
   };
 }
 
-/** Header-only summary of a page response, for evidence. */
-export function headerSummary(headers) {
+/**
+ * Security-header summary of a page response, for evidence. The Content-Security-Policy may come
+ * from the header or from a `<meta http-equiv>` tag in the page (SvelteKit writes it there).
+ * A meta policy cannot carry `frame-ancestors`, so frame protection counts only the
+ * X-Frame-Options header or a header policy with `frame-ancestors`.
+ */
+export function headerSummary(headers, html = "") {
   const get = (k) => headers.get(k);
+  const headerCsp = get("content-security-policy") ?? "";
+  const metaCsp = metaContentSecurityPolicy(html);
   return {
     hsts: Boolean(get("strict-transport-security")),
-    csp: Boolean(get("content-security-policy")),
+    csp: Boolean(headerCsp || metaCsp),
+    csp_source: headerCsp ? "header" : metaCsp ? "meta" : null,
     x_content_type_options: get("x-content-type-options"),
-    frame_protection: Boolean(get("x-frame-options")) || /frame-ancestors/.test(get("content-security-policy") ?? ""),
+    frame_protection: Boolean(get("x-frame-options")) || /frame-ancestors/.test(headerCsp),
   };
+}
+
+/**
+ * The policy in an active `<meta http-equiv="content-security-policy" content="...">`, or "" if
+ * none. One pass over the HTML tokens: comments and raw-text elements (script, style, textarea,
+ * title) are skipped whole, and tag text inside another tag's quoted attribute is never a tag.
+ * Attribute names must match exactly (`data-http-equiv` does not count), values may be quoted
+ * or not, and a report-only value is not a policy (browsers ignore it in a meta tag).
+ */
+export function metaContentSecurityPolicy(html) {
+  const src = String(html);
+  const rawText = new Set(["script", "style", "textarea", "title"]);
+  let i = 0;
+  while (i < src.length) {
+    const lt = src.indexOf("<", i);
+    if (lt < 0) break;
+    if (src.startsWith("<!--", lt)) {
+      const end = src.indexOf("-->", lt + 4);
+      i = end < 0 ? src.length : end + 3;
+      continue;
+    }
+    const open = /^<([a-zA-Z][^\s/>]*)/.exec(src.slice(lt, lt + 64));
+    if (!open) {
+      i = lt + 1;
+      continue;
+    }
+    const name = open[1].toLowerCase();
+    let j = lt + open[0].length;
+    let quote = "";
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (quote) {
+        if (c === quote) quote = "";
+      } else if (c === '"' || c === "'") {
+        // A quote only opens a value after `=`; a stray one in a tag name or flag is ignored.
+        if (/=\s*$/.test(src.slice(Math.max(lt, j - 8), j))) quote = c;
+      } else if (c === ">") {
+        break;
+      }
+    }
+    const tag = src.slice(lt + open[0].length, j);
+    i = j + 1;
+    if (rawText.has(name)) {
+      const close = new RegExp(`</${name}[\\s/>]`, "i").exec(src.slice(i));
+      i = close ? i + close.index : src.length;
+      continue;
+    }
+    if (name !== "meta") continue;
+    const attrs = {};
+    const re = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+    for (const m of tag.matchAll(re)) {
+      const key = m[1].toLowerCase();
+      if (!(key in attrs)) attrs[key] = m[2] ?? m[3] ?? m[4] ?? "";
+    }
+    if ((attrs["http-equiv"] ?? "").trim().toLowerCase() !== "content-security-policy") continue;
+    const value = (attrs.content ?? "").trim();
+    if (value) return value.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&");
+  }
+  return "";
 }
