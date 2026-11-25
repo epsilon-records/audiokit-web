@@ -142,6 +142,26 @@ describe('mock client: settings', () => {
 		expect((await client.getNotificationPreferences()).quotaWarnings).toBe(false);
 	});
 
+	it('merges notification preferences: an omitted low-balance switch is kept, an explicit value applies', async () => {
+		const client = newClient();
+		expect((await client.getNotificationPreferences()).lowBalanceAlerts).toBe(true);
+		const base = { quotaWarnings: true, paymentReceipts: true, productUpdates: true };
+
+		const omitted = await client.updateNotificationPreferences(base);
+		expect(omitted.lowBalanceAlerts).toBe(true);
+		const explicitUndefined = await client.updateNotificationPreferences({
+			...base,
+			lowBalanceAlerts: undefined
+		});
+		expect(explicitUndefined.lowBalanceAlerts).toBe(true);
+
+		const off = await client.updateNotificationPreferences({ ...base, lowBalanceAlerts: false });
+		expect(off.lowBalanceAlerts).toBe(false);
+		expect((await client.updateNotificationPreferences(base)).lowBalanceAlerts).toBe(false);
+		const on = await client.updateNotificationPreferences({ ...base, lowBalanceAlerts: true });
+		expect(on.lowBalanceAlerts).toBe(true);
+	});
+
 	it('has no billing portal in mock mode', async () => {
 		await expect(newClient().createBillingPortal()).rejects.toMatchObject({
 			code: 'not-supported'

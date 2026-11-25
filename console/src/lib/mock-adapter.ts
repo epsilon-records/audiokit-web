@@ -209,7 +209,12 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		async signOut() {},
 
 		async updateNotificationPreferences(next: NotificationPreferences) {
-			preferences = { ...next };
+			// Merge, like the PATCH the real adapter sends: a field the form leaves out (undefined)
+			// keeps its stored value, while an explicit true or false applies.
+			const defined = Object.fromEntries(
+				Object.entries(next).filter(([, value]) => value !== undefined)
+			);
+			preferences = { ...preferences, ...defined };
 			return { ...preferences };
 		}
 	};
