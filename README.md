@@ -64,7 +64,7 @@ The getting-started guide (`src/pages/docs/index.html`) is hand-written. When th
 `site.config.mjs` holds the two origins the site points at:
 
 - `apiBaseUrl` (`https://api.audiokit.ai`) — every example on the site uses it, and the build reads the hosted contract from `<base URL>/v1/openapi.yaml`, falling back to `contract/openapi.yaml` if that fetch fails.
-- `consoleUrl` (`https://console.audiokit.ai`) — the console's former host. This static build still points its sign-in CTAs at `<consoleUrl>/login`, but it is no longer deployed: on audiokit.ai the app in `console/` renders the public pages, and its CTAs are same-origin `/login` and `/signup`.
+- `consoleUrl` (`https://audiokit.ai`) — the app's host (the console's former host, `console.audiokit.ai`, is gone). This static build still points its sign-in CTAs at `<consoleUrl>/login`, but it is no longer deployed: on audiokit.ai the app in `console/` renders the public pages, and its CTAs are same-origin `/login` and `/signup`.
 
 ## Product updates signup
 

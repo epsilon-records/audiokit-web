@@ -8,8 +8,8 @@ export const siteConfig = {
 	// first, then ../contract/openapi.yaml (src/lib/server/site/contract.ts).
 	apiBaseUrl: 'https://api.audiokit.ai',
 	apiBaseUrlIsPlaceholder: false,
-	// The console's own host, which the privacy notice still names until the cut-over (plan, C).
-	consoleUrl: 'https://console.audiokit.ai',
+	// The app's host (AudioKit 0053): audiokit.ai serves the public pages and the console together.
+	consoleUrl: 'https://audiokit.ai',
 	// Kit form ID for the "Product updates" signup on the home page (shared 0027). Digits only.
 	kitFormId: '10171362',
 	// Keeps the privacy notice's Kit disclosure while Kit holds subscribers.

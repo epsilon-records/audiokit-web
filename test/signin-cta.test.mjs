@@ -31,10 +31,10 @@ const pages = await Promise.all(pageFiles.map(read));
 const allPages = pages.join("\n");
 const build = await read("scripts/build.mjs");
 
-test("the console login URL is the live console's sign-in screen", async () => {
-  // Decision 0021: the console deploys at console.audiokit.ai, and /login is its only way in, so a
-  // CTA pointing anywhere else is a dead end for a customer.
-  assert.equal(config.consoleUrl, "https://console.audiokit.ai");
+test("the console login URL is the live app's sign-in screen", async () => {
+  // AudioKit 0053: the app is served on audiokit.ai (console.audiokit.ai is gone), and /login is
+  // its only way in, so a CTA pointing anywhere else is a dead end for a customer.
+  assert.equal(config.consoleUrl, "https://audiokit.ai");
   assert.equal(new URL(LOGIN).pathname, "/login");
   assert.ok(
     await exists("console/src/routes/login/+page.svelte"),

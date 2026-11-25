@@ -11,11 +11,11 @@ export default {
   // falling back to contract/openapi.yaml if that fetch fails.
   apiBaseUrl: "https://api.audiokit.ai",
   apiBaseUrlIsPlaceholder: false,
-  // The customer console's former host (decision 0016/0021). Since the cut-over (AudioKit 0053)
-  // audiokit.ai serves the app, and the deployed public pages link to same-origin `/login` and
-  // `/signup` (console/src/lib/server/site/render.ts). This static build is no longer deployed;
-  // it still builds its CTAs as `${consoleUrl}/login`, which test/signin-cta.test.mjs checks.
-  consoleUrl: "https://console.audiokit.ai",
+  // The app's host. Since the cut-over (AudioKit 0053) audiokit.ai serves the app, and the deployed
+  // public pages link to same-origin `/login` and `/signup` (console/src/lib/server/site/render.ts).
+  // This static build is no longer deployed; it still builds its CTAs as `${consoleUrl}/login`,
+  // which test/signin-cta.test.mjs checks. Keep it equal to console/src/lib/site/config.ts.
+  consoleUrl: "https://audiokit.ai",
   // Kit form ID for the "Product updates" signup on the landing page (shared decision 0027).
   // Digits only, from the Kit form's URL. Leave it empty until the form exists: while empty, the
   // build renders no form. Never an API key.

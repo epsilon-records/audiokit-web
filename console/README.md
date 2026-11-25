@@ -260,7 +260,7 @@ tests/                   Vitest unit tests
 ## First-party dashboard performance pilot (EPSILON-107)
 
 Default disabled. The browser flag `PUBLIC_APP_METRICS_ENABLED=true` takes effect only
-for a production-context build on `console.audiokit.ai`. `APP_METRICS_ENABLED=true`
+for a production-context build on `audiokit.ai`. `APP_METRICS_ENABLED=true`
 separately enables the relay; billing has its own identically named sink switch.
 `APP_METRICS_SECRET` is a dedicated 32–128 character server-only machine credential
 configured on this site and billing. Never expose it through PUBLIC/VITE variables

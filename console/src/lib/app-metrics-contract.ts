@@ -1,6 +1,6 @@
 /** Versioned wire contract. Only the first route is activated in this slice. */
 export const METRICS_PATH = '/api/app-metrics';
-export const METRICS_ORIGIN = 'https://console.audiokit.ai';
+export const METRICS_ORIGIN = 'https://audiokit.ai';
 export type Metric = 'document_mount_ms' | 'client_navigation_ms';
 export type Sample = { v: 1; route: 'dashboard'; metric: Metric; ms: number };
 export function routeCode(id: string | null | undefined): 'dashboard' | null {
