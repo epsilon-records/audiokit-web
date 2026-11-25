@@ -209,7 +209,8 @@ export function createMockAdapter(options: MockAdapterOptions = {}): ConsoleApi 
 		async signOut() {},
 
 		async updateNotificationPreferences(next: NotificationPreferences) {
-			preferences = { ...next };
+			// Merge, as billing does: a field the form left out keeps its stored value (#105).
+			preferences = { ...preferences, ...next };
 			return { ...preferences };
 		}
 	};
