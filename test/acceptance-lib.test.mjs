@@ -16,6 +16,8 @@ import {
   shorten,
   validateConfig,
   pricingFindings,
+  headerSummary,
+  metaContentSecurityPolicy,
 } from "./acceptance/lib.mjs";
 import { makeToneWav } from "./acceptance/make-fixture.mjs";
 
@@ -129,4 +131,40 @@ test("the smoke suite never submits a job to billing (its POST /v1/jobs was remo
   assert.ok(!/billing\(\s*[`"']\/v1\/jobs[`"'/?]?[^)]*method:\s*"POST"/s.test(src), "no billing(...) POST to /v1/jobs");
   assert.ok(!/billing\(\s*`\/v1\/jobs\/\$\{/.test(src), "job status is read from the API, not billing");
   assert.match(src, /api\("\/v1\/jobs", \{ method: "POST"/);
+});
+
+test("header summary reads the CSP from the header or the page's meta tag", () => {
+  const meta = `<head><meta http-equiv="content-security-policy" content="default-src &#39;self&#39;; frame-ancestors &#39;none&#39;"></head>`;
+  assert.equal(metaContentSecurityPolicy(meta), "default-src 'self'; frame-ancestors 'none'");
+  assert.equal(metaContentSecurityPolicy("<meta charset=utf-8>"), "");
+  const base = { "strict-transport-security": "max-age=1", "x-content-type-options": "nosniff" };
+  const h = (o) => new Headers({ ...base, ...o });
+  const viaMeta = headerSummary(h({}), meta);
+  assert.equal(viaMeta.csp, true);
+  assert.equal(viaMeta.csp_source, "meta");
+  assert.equal(viaMeta.frame_protection, false, "frame-ancestors in a meta tag is ignored by browsers");
+  assert.equal(headerSummary(h({ "x-frame-options": "DENY" }), meta).frame_protection, true);
+  const viaHeader = headerSummary(h({ "content-security-policy": "frame-ancestors 'none'" }), "");
+  assert.deepEqual([viaHeader.csp, viaHeader.csp_source, viaHeader.frame_protection], [true, "header", true]);
+  assert.equal(headerSummary(h({}), "<html></html>").csp, false);
+});
+
+test("meta CSP extraction reads only active, exact CSP meta elements", () => {
+  const csp = (h) => metaContentSecurityPolicy(h);
+  assert.equal(csp("<head><meta http-equiv=content-security-policy content=upgrade-insecure-requests></head>"), "upgrade-insecure-requests");
+  assert.equal(csp("<meta content='default-src a' HTTP-EQUIV='Content-Security-Policy'>"), "default-src a");
+  assert.equal(csp(`<head><!-- <meta http-equiv="content-security-policy" content="default-src 'self'"> --></head>`), "");
+  assert.equal(csp(`<script>var s='<meta http-equiv="content-security-policy" content="x">'</script>`), "");
+  assert.equal(csp(`<meta http-equiv="content-security-policy-report-only" content="default-src 'self'">`), "");
+  assert.equal(csp(`<meta data-http-equiv="content-security-policy" content="default-src 'self'">`), "");
+  assert.equal(csp(`<!-- off --><head><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`), "default-src 'self'");
+  assert.equal(
+    csp(`<head><script>const marker = "<!--";</script><meta http-equiv=content-security-policy content=upgrade-insecure-requests></head>`),
+    "upgrade-insecure-requests",
+  );
+  assert.equal(csp(`<head><link title="<meta http-equiv=content-security-policy content=&quot;default-src 'none'&quot;>"></head>`), "");
+  assert.equal(
+    csp(`<head><link title="<meta http-equiv=content-security-policy content=x>"><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`),
+    "default-src 'self'",
+  );
 });

@@ -9,6 +9,10 @@ import sentryInitUrl from '#lib/public/sentry-init.js?url&no-inline';
 import { analyticsToken } from '#lib/site/analytics-config.js';
 
 export const SENTRY_BUNDLE_VERSION = '11.11.0';
+// The published checksum of bundle.tracing.min.js at exactly that version. The browser refuses the
+// file when it differs, so the two change together: a new version needs its own checksum.
+export const SENTRY_BUNDLE_INTEGRITY =
+	'sha384-DapdIcQEFNZyUqDc8lAPWiXW4AFNGR9Jrx8hZao3kvl7rsrJuHIlezXdpa/dRuWv';
 export const SENTRY_CDN = 'https://browser.sentry-cdn.com';
 export const BEACON_SCRIPT_ORIGIN = 'https://static.cloudflareinsights.com';
 export const BEACON_CONNECT_ORIGIN = 'https://cloudflareinsights.com';
@@ -41,7 +45,7 @@ export function publicHead(indexable: boolean, env: Env = process.env): string {
 	const init = sentryInit(env);
 	if (init) {
 		tags.push(
-			`<script src="${SENTRY_CDN}/${SENTRY_BUNDLE_VERSION}/bundle.tracing.min.js" crossorigin="anonymous"></script>`,
+			`<script src="${SENTRY_CDN}/${SENTRY_BUNDLE_VERSION}/bundle.tracing.min.js" integrity="${SENTRY_BUNDLE_INTEGRITY}" crossorigin="anonymous"></script>`,
 			`<script src="${sentryInitUrl}" data-sentry="${esc(JSON.stringify(init))}"></script>`
 		);
 	}

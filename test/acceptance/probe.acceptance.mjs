@@ -190,12 +190,12 @@ step("public site pages answer, with security headers", async () => {
   const out = {};
   for (const p of ["/", "/pricing/", "/docs/"]) {
     const r = await page(cfg.siteUrl, p);
-    out[p] = { status: r.status, location: r.location, ...headerSummary(r.headers) };
+    out[p] = { status: r.status, location: r.location, ...headerSummary(r.headers, r.text) };
   }
   for (const [p, r] of Object.entries(out)) {
     assert.equal(r.status, 200, `${p} answered ${r.status}`);
     assert.equal(r.hsts, true, `${p} has no Strict-Transport-Security`);
-    assert.equal(r.csp, true, `${p} has no Content-Security-Policy`);
+    assert.equal(r.csp, true, `${p} has no Content-Security-Policy (header or meta tag)`);
     assert.equal(r.x_content_type_options, "nosniff", `${p} X-Content-Type-Options is ${r.x_content_type_options}, not nosniff`);
     assert.equal(r.frame_protection, true, `${p} has neither X-Frame-Options nor a frame-ancestors policy`);
   }
