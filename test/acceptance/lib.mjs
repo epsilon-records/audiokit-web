@@ -256,13 +256,32 @@ export function pricingFindings(html) {
   };
 }
 
-/** Header-only summary of a page response, for evidence. */
-export function headerSummary(headers) {
+/**
+ * Security-header summary of a page response, for evidence. The Content-Security-Policy may come
+ * from the header or from a `<meta http-equiv>` tag in the page (SvelteKit writes it there).
+ * A meta policy cannot carry `frame-ancestors`, so frame protection counts only the
+ * X-Frame-Options header or a header policy with `frame-ancestors`.
+ */
+export function headerSummary(headers, html = "") {
   const get = (k) => headers.get(k);
+  const headerCsp = get("content-security-policy") ?? "";
+  const metaCsp = metaContentSecurityPolicy(html);
   return {
     hsts: Boolean(get("strict-transport-security")),
-    csp: Boolean(get("content-security-policy")),
+    csp: Boolean(headerCsp || metaCsp),
+    csp_source: headerCsp ? "header" : metaCsp ? "meta" : null,
     x_content_type_options: get("x-content-type-options"),
-    frame_protection: Boolean(get("x-frame-options")) || /frame-ancestors/.test(get("content-security-policy") ?? ""),
+    frame_protection: Boolean(get("x-frame-options")) || /frame-ancestors/.test(headerCsp),
   };
+}
+
+/** The policy in `<meta http-equiv="content-security-policy" content="...">`, or "" if none. */
+export function metaContentSecurityPolicy(html) {
+  for (const tag of String(html).match(/<meta\b[^>]*>/gi) ?? []) {
+    if (!/http-equiv\s*=\s*["']?content-security-policy["']?/i.test(tag)) continue;
+    const m = /\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(tag);
+    const value = (m?.[1] ?? m?.[2] ?? "").trim();
+    if (value) return value.replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&");
+  }
+  return "";
 }
