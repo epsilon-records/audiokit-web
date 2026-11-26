@@ -1,0 +1,113 @@
+name: Lighthouse budgets
+
+# Runs Lighthouse (@lhci/cli) against the app in console/, built and served here on the runner
+# with `vite preview`, never against the deployed site. With PUBLIC_BILLING_API_URL empty the app
+# uses its in-memory fixtures, as the browser smoke tests do, so nothing reaches a paid or live
+# service and the job needs no secret.
+#
+# Pages: the public ones only (the list is in .github/lighthouse/lighthouserc.json): the prerendered
+# pages under (site), plus /login and /signup. No signed-in page.
+#
+# Budgets, in the same file, on the median of three runs per page:
+# - Accessibility, best practices and SEO must score 1.00. /login and /signup are deliberately
+#   not indexable, so SEO is not asserted there.
+# - Total page weight must stay under 275 KB.
+# - Performance under 0.80 only warns: the score moves with the runner. The warning shows in the
+#   step log and the scores table in the job summary.
+# Reports go to the run's artifacts only: no public storage, no LHCI server.
+#
+# Cost: only pull requests that change what the public pages are built from, and a newer push
+# cancels the run before it. A dependency-only change does not start it; touch this file or run
+# it by hand (workflow_dispatch) for those.
+# Netlify: this file and .github/lighthouse/** don't redeploy the site, because the `ignore` rule
+# in netlify.toml only watches console/, contract/ and netlify.toml.
+
+on:
+  pull_request:
+    paths:
+      - 'console/src/routes/(site)/**'
+      - 'console/src/routes/login/**'
+      - 'console/src/routes/signup/**'
+      - 'console/src/routes/+layout.svelte'
+      - 'console/src/lib/components/**'
+      - 'console/src/lib/site/**'
+      - 'console/src/lib/public/**'
+      - 'console/src/lib/server/site/**'
+      - console/src/app.html
+      - 'console/src/*.css'
+      - 'console/static/**'
+      - contract/openapi.yaml
+      - .github/workflows/lighthouse.yml
+      - '.github/lighthouse/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LHCI_VERSION: 0.16.1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: console/package-lock.json
+      - name: Install
+        working-directory: console
+        run: npm ci
+
+      - name: Build and start the app
+        working-directory: console
+        env:
+          PUBLIC_BILLING_API_URL: ''
+        run: |
+          npm run build
+          npx vite preview --host 127.0.0.1 --port 4174 --strictPort > "$GITHUB_WORKSPACE/app.log" 2>&1 &
+          for _ in $(seq 60); do
+            curl -fsS -o /dev/null http://127.0.0.1:4174/ && exit 0
+            sleep 1
+          done
+          echo "::error::The app did not come up"
+          cat "$GITHUB_WORKSPACE/app.log"
+          exit 1
+
+      # A page that redirects or is missing would be audited under the wrong name.
+      - name: Every page in the list answers 200
+        run: |
+          failed=0
+          for url in $(jq -r '.ci.collect.url[]' .github/lighthouse/lighthouserc.json); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "$url")
+            if [ "$code" != 200 ]; then
+              echo "::error::$url answered HTTP $code, not 200"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
+      - name: Lighthouse, public pages
+        run: npx --yes @lhci/cli@${{ env.LHCI_VERSION }} autorun --config=.github/lighthouse/lighthouserc.json
+
+      - name: Scores
+        if: ${{ !cancelled() }}
+        run: node .github/lighthouse/summary.mjs lighthouse-report | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse-report
+          path: |
+            lighthouse-report
+            app.log
+          if-no-files-found: ignore
+          retention-days: 7
