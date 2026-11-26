@@ -102,6 +102,20 @@ jobs:
         if: ${{ !cancelled() }}
         run: node .github/lighthouse/summary.mjs lighthouse-report | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Debug layout shifts (temporary, never merged)
+        if: ${{ !cancelled() }}
+        run: |
+          fc-match system-ui; fc-match sans-serif; fc-match monospace; fc-match ui-monospace
+          node -e '
+          const fs=require("fs");const d="lighthouse-report/public";
+          for(const f of fs.readdirSync(d).filter(f=>f.endsWith(".report.json"))){
+            const r=JSON.parse(fs.readFileSync(d+"/"+f));
+            const cls=r.audits["cumulative-layout-shift"].numericValue;
+            console.log(new URL(r.requestedUrl).pathname,"CLS",cls.toFixed(4));
+            for(const i of r.audits["layout-shifts"]?.details?.items??[])
+              console.log("   ",i.score.toFixed(4),i.node.selector,JSON.stringify(i.node.boundingRect),JSON.stringify((i.subItems?.items??[]).map(s=>[s.cause,s.extra?.value])));
+          }'
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
