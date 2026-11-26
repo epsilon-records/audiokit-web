@@ -152,7 +152,7 @@ test("header summary reads the CSP from the header or the page's meta tag", () =
 test("meta CSP extraction reads only active, exact CSP meta elements", () => {
   const csp = (h) => metaContentSecurityPolicy(h);
   assert.equal(csp("<head><meta http-equiv=content-security-policy content=upgrade-insecure-requests></head>"), "upgrade-insecure-requests");
-  assert.equal(csp("<meta content='default-src a' HTTP-EQUIV='Content-Security-Policy'>"), "default-src a");
+  assert.equal(csp("<head><meta content='default-src a' HTTP-EQUIV='Content-Security-Policy'></head>"), "default-src a");
   assert.equal(csp(`<head><!-- <meta http-equiv="content-security-policy" content="default-src 'self'"> --></head>`), "");
   assert.equal(csp(`<script>var s='<meta http-equiv="content-security-policy" content="x">'</script>`), "");
   assert.equal(csp(`<meta http-equiv="content-security-policy-report-only" content="default-src 'self'">`), "");
@@ -167,4 +167,15 @@ test("meta CSP extraction reads only active, exact CSP meta elements", () => {
     csp(`<head><link title="<meta http-equiv=content-security-policy content=x>"><meta http-equiv="content-security-policy" content="default-src 'self'"></head>`),
     "default-src 'self'",
   );
+});
+
+test("meta CSP ignores tags hidden in quoted attributes and outside the document head", () => {
+  const meta = `<meta http-equiv="content-security-policy" content="default-src 'self'">`;
+  const whitespace = " ".repeat(40);
+  const fakeMeta = "<meta http-equiv=content-security-policy content=default-src";
+  assert.equal(metaContentSecurityPolicy(`<head><link title=${whitespace}"> ${fakeMeta}>"></head>`), "");
+  assert.equal(headerSummary(new Headers(), `<head></head><body>${meta}</body>`).csp, false);
+  assert.equal(metaContentSecurityPolicy(`<head><template><template>${meta}</template></template></head>`), "");
+  assert.equal(metaContentSecurityPolicy(`<head><div>${meta}</div></head>`), "");
+  assert.equal(metaContentSecurityPolicy(`<head><template>${meta}</template>${meta}</head>`), "default-src 'self'");
 });

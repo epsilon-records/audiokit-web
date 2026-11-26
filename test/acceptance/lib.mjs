@@ -284,7 +284,11 @@ export function headerSummary(headers, html = "") {
  */
 export function metaContentSecurityPolicy(html) {
   const src = String(html);
-  const rawText = new Set(["script", "style", "textarea", "title"]);
+  const rawText = new Set(["script", "style", "textarea", "title", "noscript"]);
+  const headElements = new Set(["base", "link", "meta", "title", "style", "script", "noscript", "template"]);
+  let inHead = false;
+  let headEnded = false;
+  let templates = 0;
   let i = 0;
   while (i < src.length) {
     const lt = src.indexOf("<", i);
@@ -294,33 +298,57 @@ export function metaContentSecurityPolicy(html) {
       i = end < 0 ? src.length : end + 3;
       continue;
     }
-    const open = /^<([a-zA-Z][^\s/>]*)/.exec(src.slice(lt, lt + 64));
+    const open = /^<(\/?)([a-zA-Z][^\s/>]*)/.exec(src.slice(lt, lt + 64));
     if (!open) {
       i = lt + 1;
       continue;
     }
-    const name = open[1].toLowerCase();
+    const closing = open[1] === "/";
+    const name = open[2].toLowerCase();
     let j = lt + open[0].length;
     let quote = "";
+    let awaitingValue = false;
+    let unquotedValue = false;
     for (; j < src.length; j++) {
       const c = src[j];
       if (quote) {
         if (c === quote) quote = "";
-      } else if (c === '"' || c === "'") {
-        // A quote only opens a value after `=`; a stray one in a tag name or flag is ignored.
-        if (/=\s*$/.test(src.slice(Math.max(lt, j - 8), j))) quote = c;
-      } else if (c === ">") {
-        break;
+        continue;
+      }
+      if (c === ">") break;
+      if (/\s/.test(c)) {
+        unquotedValue = false;
+      } else if (awaitingValue) {
+        awaitingValue = false;
+        if (c === '"' || c === "'") quote = c;
+        else unquotedValue = true;
+      } else if (!unquotedValue && c === "=") {
+        awaitingValue = true;
       }
     }
+    if (j === src.length) break;
     const tag = src.slice(lt + open[0].length, j);
     i = j + 1;
-    if (rawText.has(name)) {
-      const close = new RegExp(`</${name}[\\s/>]`, "i").exec(src.slice(i));
-      i = close ? i + close.index : src.length;
+    if (name === "template") {
+      if (closing) templates = Math.max(0, templates - 1);
+      else templates++;
       continue;
     }
-    if (name !== "meta") continue;
+    if (!closing && rawText.has(name)) {
+      const close = new RegExp(`</${name}[\\s/>]`, "i").exec(src.slice(i));
+      i = close ? i + close.index : src.length;
+    }
+    if (templates) continue;
+    if (!closing && name === "head" && !headEnded) {
+      inHead = true;
+      continue;
+    }
+    if ((closing && name === "head") || (!closing && name === "body") ||
+        (inHead && !closing && !headElements.has(name))) {
+      inHead = false;
+      headEnded = true;
+    }
+    if (!inHead || closing || name !== "meta") continue;
     const attrs = {};
     const re = /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
     for (const m of tag.matchAll(re)) {
