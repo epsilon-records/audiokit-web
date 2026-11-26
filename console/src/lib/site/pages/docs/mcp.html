@@ -15,19 +15,51 @@
     <tr><td>Authentication</td><td class="soft"><p>Your AudioKit API key, as for the HTTP API: <code>Authorization: Bearer &lt;api key&gt;</code>. A missing or unknown key gets HTTP <code>401</code> with <code>{"error": {"code": "unauthorized", "message": …}}</code>, before any MCP handling.</p></td></tr>
     <tr><td>Server</td><td class="soft"><p>Name <code>audiokit</code>, title <code>AudioKit</code>, version = the API version.</p></td></tr>
   </tbody></table></div>
-  <p>Any client that supports Streamable HTTP with a custom header can connect. In a client's JSON config:</p>
-  <div class="panel">
-    <div class="panel-bar"><span>mcp config</span><button class="copy" type="button">Copy</button></div>
+  <p>Use the setup for your client. Keep your API key in a local environment variable or a client secret prompt.</p>
+  <h3>Cursor</h3>
+  <p>Set <code>AUDIOKIT_API_KEY</code> in Cursor’s environment, then add this entry to <code>.cursor/mcp.json</code>. See <a href="https://cursor.com/docs/mcp">Cursor’s MCP docs</a>.</p>
+  <div class="panel"><div class="panel-bar"><span>.cursor/mcp.json</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">{
+  "mcpServers": {
+    "audiokit": {
+      "url": "{{API_BASE}}/mcp",
+      "headers": { "Authorization": "Bearer ${env:AUDIOKIT_API_KEY}" }
+    }
+  }
+}</pre></div>
+  <h3>OpenAI Codex</h3>
+  <p>Set <code>AUDIOKIT_API_KEY</code> in the Codex process environment and add this to <code>~/.codex/config.toml</code>.</p>
+  <div class="panel"><div class="panel-bar"><span>config.toml</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">[mcp_servers.audiokit]
+url = "{{API_BASE}}/mcp"
+bearer_token_env_var = "AUDIOKIT_API_KEY"</pre></div>
+  <h3>VS Code and GitHub Copilot</h3>
+  <p>For VS Code’s Local harness, put this in <code>.vscode/mcp.json</code> and enter the key when prompted.</p>
+  <div class="panel"><div class="panel-bar"><span>.vscode/mcp.json</span><button class="copy" type="button">Copy</button></div>
+<pre class="code">{
+  "inputs": [{ "id": "audiokit-key", "type": "promptString", "description": "AudioKit API key", "password": true }],
+  "servers": {
+    "audiokit": {
+      "type": "http",
+      "url": "{{API_BASE}}/mcp",
+      "headers": { "Authorization": "Bearer ${input:audiokit-key}" }
+    }
+  }
+}</pre></div>
+  <p>For the newer Copilot harness, use the global <code>~/.copilot/mcp-config.json</code> or workspace <code>.mcp.json</code> instead. Use <code>mcpServers</code> and reference the key from the harness environment. See the <a href="https://code.visualstudio.com/docs/agents/reference/mcp-configuration">MCP configuration reference</a>.</p>
+  <div class="panel"><div class="panel-bar"><span>Copilot configuration</span><button class="copy" type="button">Copy</button></div>
 <pre class="code">{
   "mcpServers": {
     "audiokit": {
       "type": "http",
       "url": "{{API_BASE}}/mcp",
-      "headers": { "Authorization": "Bearer ak_..." }
+      "headers": { "Authorization": "Bearer ${AUDIOKIT_API_KEY}" }
     }
   }
-}</pre>
-  </div>
+}</pre></div>
+  <h3>Claude Desktop</h3>
+  <p>In Customize → Connectors, add a custom Web connector named AudioKit with URL <code>{{API_BASE}}/mcp</code>. Choose No sign in, then add a request header named <code>Authorization</code> with <code>Bearer &lt;your key&gt;</code> as its value. See <a href="https://support.claude.com/en/articles/11176164-use-connectors-to-extend-claude-s-capabilities">Claude’s custom connector instructions</a>.</p>
+  <p>After connecting, call <code>health</code> to verify the connection.</p>
   <p>Or with Claude Code:</p>
   <div class="panel">
     <div class="panel-bar"><span>shell</span><button class="copy" type="button">Copy</button></div>

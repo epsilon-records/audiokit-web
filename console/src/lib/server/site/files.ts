@@ -19,7 +19,7 @@ export async function indexablePaths(): Promise<string[]> {
 }
 
 export async function sitemapXml(): Promise<string> {
-	const urls = await indexablePaths();
+	const urls = [...(await indexablePaths()), '/docs/openapi.yaml'].sort();
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${esc(abs(u))}</loc></url>`).join('\n')}

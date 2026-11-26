@@ -14,6 +14,9 @@ Planned, not available yet: denoise, transcription, mastering, consent-gated voi
 
 ## Docs
 
+- [Full documentation](https://audiokit.ai/llms-full.txt)
+- Markdown: [Get started](https://audiokit.ai/docs/index.md), [API reference](https://audiokit.ai/docs/reference.md), [SDKs](https://audiokit.ai/docs/sdks.md), [MCP](https://audiokit.ai/docs/mcp.md)
+
 - [API documentation](https://audiokit.ai/docs/): how a job runs, authentication, webhooks, every operation
 - [API reference](https://audiokit.ai/docs/reference/): every endpoint and schema
 - [OpenAPI 3.1 contract](https://api.audiokit.ai/v1/openapi.yaml): the machine-readable API description; the docs and SDKs are generated from it

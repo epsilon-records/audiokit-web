@@ -144,6 +144,7 @@ describe('sitemap.xml and robots.txt', () => {
 			'https://audiokit.ai/',
 			'https://audiokit.ai/docs/',
 			'https://audiokit.ai/docs/mcp/',
+			'https://audiokit.ai/docs/openapi.yaml',
 			'https://audiokit.ai/docs/reference/',
 			'https://audiokit.ai/docs/sdks/',
 			'https://audiokit.ai/pricing/',
