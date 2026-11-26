@@ -37,6 +37,18 @@
 		toasted = form;
 	});
 
+	function enhancePreferences(node: HTMLFormElement) {
+		// Keep the saved controls in place instead of resetting to their original HTML defaults.
+		const enhancement = enhance(
+			node,
+			() =>
+				({ update }) =>
+					update({ reset: false })
+		);
+		node.dataset.enhanced = 'true';
+		return enhancement;
+	}
+
 	// Delete stays disabled until the typed address matches. The server checks it again.
 	let confirmEmail = $state('');
 	let deleting = $state(false);
@@ -121,11 +133,7 @@
 			method="POST"
 			action="?/savePreferences"
 			class="{formStack} p-5 max-stack:p-4"
-			use:enhance={() =>
-				// No reset after a save: reset() puts each control back to its HTML default, which showed
-				// the low-balance switch as off although it was saved on, and the next save then sent off.
-				({ update }) =>
-					update({ reset: false })}
+			use:enhancePreferences
 		>
 			<Field.Field orientation="horizontal" class="items-start">
 				<Checkbox
