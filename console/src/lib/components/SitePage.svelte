@@ -29,8 +29,7 @@
 
 	let body = $state<HTMLElement | null>(null);
 
-	// The static site's site.js: Copy on code panels (removed where the clipboard is missing),
-	// and the "On this page" list collapsed on small screens. Without scripts the page reads in full.
+	// The static site's site.js: Copy on code panels (removed where the clipboard is missing).
 	$effect(() => {
 		if (!body) return;
 		const timers: ReturnType<typeof setTimeout>[] = [];
@@ -52,9 +51,16 @@
 		};
 	});
 
-	let tocOpen = $state(true);
+	// The "On this page" list: collapsed on small screens, open in the wide layout's side column.
+	// The built HTML has it closed and site.css (.toc:not(.toc-ready)) shows the links in the wide
+	// layout, so the first paint is already right at either width. Opening or closing it here,
+	// after the first paint, moved the whole page body on small screens (#123). Without scripts
+	// the small-screen list still opens on a tap.
+	let tocOpen = $state(false);
+	let tocReady = $state(false);
 	$effect(() => {
-		if (window.matchMedia('(max-width: 900px)').matches) tocOpen = false;
+		tocOpen = !window.matchMedia('(max-width: 900px)').matches;
+		tocReady = true;
 	});
 </script>
 
@@ -100,7 +106,7 @@
 					{/each}
 				</div>
 				{#if page.toc.length}
-					<details class="toc" bind:open={tocOpen}>
+					<details class="toc" class:toc-ready={tocReady} bind:open={tocOpen}>
 						<summary>On this page</summary>
 						<div class="toc-links">
 							{#each page.toc as item (item.id)}

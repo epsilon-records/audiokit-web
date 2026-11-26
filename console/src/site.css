@@ -566,6 +566,15 @@
 .site .toc summary::-webkit-details-marker {
 	display: none;
 }
+/* The list is closed in the built HTML, which is right for the small-screen layout from the first
+   paint. In the wide layout its links show before the page's script opens it (SitePage.svelte,
+   which then sets .toc-ready), so nothing moves at either width (#123). A browser without
+   ::details-content shows them when the script runs, in the side column, where nothing is below. */
+@media not (max-width: 900px) {
+	.site .toc:not(.toc-ready)::details-content {
+		content-visibility: visible;
+	}
+}
 .site .toc-links {
 	display: flex;
 	flex-direction: column;
