@@ -14,12 +14,20 @@ test.beforeEach(async ({ context, baseURL }) => {
 
 // Clicking Save before the page hydrates posts the form natively, with no action response to read.
 async function hydrated(page: import('@playwright/test').Page) {
-	await page.waitForLoadState('networkidle');
+	await expect(page.locator('form[action="?/savePreferences"]')).toHaveAttribute(
+		'data-enhanced',
+		'true'
+	);
 }
 
 // Waits for this save, not an earlier one: the action's own response must report success and the
 // page data it invalidates must have reloaded before the caller checks a control (#101).
 async function save(page: import('@playwright/test').Page) {
+	const toasts = page.locator('[data-sonner-toast]').filter({ hasText: 'Preferences saved.' });
+	await toasts.evaluateAll((nodes) => {
+		for (const node of nodes) node.setAttribute('data-test-previous-save', '');
+	});
+	const newToast = toasts.and(page.locator(':not([data-test-previous-save])'));
 	const action = page.waitForResponse(
 		(response) =>
 			response.request().method() === 'POST' && response.url().includes('?/savePreferences')
@@ -33,7 +41,7 @@ async function save(page: import('@playwright/test').Page) {
 	const result = (await (await action).json()) as { type: string };
 	expect(result.type).toBe('success');
 	expect((await reload).ok()).toBe(true);
-	await expect(page.getByText('Preferences saved.').first()).toBeVisible();
+	await expect(newToast).toBeVisible();
 }
 
 test('settings: saving twice without a change leaves the low-balance switch on', async ({
