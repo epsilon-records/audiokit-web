@@ -6,3 +6,5 @@ acceptance-evidence.jsonl
 acceptance-probe-evidence.jsonl
 test-results/
 playwright-report/
+lighthouse-report/
+.lighthouseci/
