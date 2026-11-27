@@ -1,3 +1,5 @@
+import { parse as parseYaml } from 'yaml';
+
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -93,8 +95,8 @@ describe('the sitemap', () => {
 		...readBuilt('sitemap.xml').matchAll(/<loc>https:\/\/audiokit\.ai([^<]*)<\/loc>/g)
 	].map((m) => m[1]);
 
-	it('lists the same URLs as the static site’s', () => {
-		expect(built).toEqual(oldSitemap);
+	it('lists the HTML pages and the OpenAPI download', () => {
+		expect(built).toEqual([...oldSitemap, '/docs/openapi.yaml'].sort());
 	});
 
 	for (const url of oldSitemap) {
@@ -132,5 +134,40 @@ describe('the plain files', () => {
 	it('builds nothing at the old console’s /pricing', () => {
 		expect(existsSync(join(build, 'pricing.html'))).toBe(false);
 		expect(relative(build, join(build, fileFor('/pricing/')))).toBe('pricing/index.html');
+	});
+});
+
+describe('agent documentation', () => {
+	it('discovers llms.txt from the HTML and tracks every contract operation', () => {
+		expect(readBuilt('index.html')).toContain('type="text/plain" href="/llms.txt"');
+		const operations = readBuilt('llms.txt').split('## Operations')[1].split('Planned')[0];
+		const listed = [...operations.matchAll(/`([a-z_]+)`/g)].map((match) => match[1]);
+		const { components } = parseYaml(readBuilt('docs/openapi.yaml'));
+		expect(listed.sort()).toEqual([...components.schemas.Operation.enum].sort());
+	});
+
+	it('builds each docs twin and includes them in the plain-text bundle', () => {
+		const bundle = readBuilt('llms-full.txt');
+		for (const name of ['index', 'reference', 'sdks', 'mcp']) {
+			const docs = readBuilt(`docs/${name}.md`);
+			expect(docs).toMatch(/^# /m);
+			expect(bundle).toContain(docs);
+		}
+		expect(readBuilt('docs/reference.md')).toContain('/v1/jobs');
+		expect(readBuilt('docs/mcp.md')).toContain('bearer_token_env_var');
+	});
+
+	it('publishes parseable client examples without credentials', () => {
+		const mcp = readBuilt('docs/mcp.md');
+		const configs = [...mcp.matchAll(/```\s*\n(\{[\s\S]*?\})\n```/g)]
+			.map((match) => JSON.parse(match[1]))
+			.filter((config) => config.servers || config.mcpServers);
+		expect(configs).toHaveLength(3);
+		for (const config of configs) {
+			const server = (config.servers ?? config.mcpServers).audiokit;
+			expect(server.url).toBe('https://api.audiokit.ai/mcp');
+			expect(server.headers.Authorization).toMatch(/^Bearer \$\{[^}]+\}$/);
+		}
+		expect(mcp).toContain('No sign in');
 	});
 });

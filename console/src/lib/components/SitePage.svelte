@@ -66,6 +66,7 @@
 
 <svelte:head>
 	<title>{title}</title>
+	<link rel="alternate" type="text/plain" href="/llms.txt" />
 	{#if page.meta.description}<meta name="description" content={page.meta.description} />{/if}
 	{#if canonical}<link rel="canonical" href={canonical} />{/if}
 	{#if page.meta.description}<meta property="og:description" content={page.meta.description} />{/if}

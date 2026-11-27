@@ -165,7 +165,19 @@ describe('the public pages are the static site’s, as they are', () => {
 		it(file, () => {
 			const changes =
 				file === 'privacy.html' ? PRIVACY_CHANGES : (FEATURE_COPY_CHANGES[file] ?? []);
-			expect(read(join(appPages, file))).toBe(withChanges(read(join(staticPages, file)), changes));
+			let current = read(join(appPages, file));
+			let original = withChanges(read(join(staticPages, file)), changes);
+			// Agent setup and discovery are published on the app, which owns the live docs.
+			if (file === 'docs/index.html') {
+				current = current.replace(/<section>\n  <h2 id="agents">[\s\S]*?<\/section>\n\n/, '');
+			}
+			if (file === 'docs/mcp.html') {
+				const setup =
+					/  <p>(?:Use the setup for your client|Any client that supports Streamable HTTP)[\s\S]*?(?=  <p>Or with Claude Code:)/;
+				current = current.replace(setup, '');
+				original = original.replace(setup, '');
+			}
+			expect(current).toBe(original);
 		});
 	}
 });
@@ -181,10 +193,13 @@ describe('the build modules are the static site’s, as they are', () => {
 		it(ours, () => expect(read(join(app, ours))).toBe(read(join(repo, theirs))));
 	}
 
-	it('llms.txt differs only in current feature status', () => {
-		expect(read(join(app, 'src/lib/site/llms.txt'))).toBe(
-			withChanges(read(join(repo, 'src/static/llms.txt')), LLMS_CHANGES)
-		);
+	it('llms.txt differs only in current feature status and agent docs links', () => {
+		expect(
+			read(join(app, 'src/lib/site/llms.txt')).replace(
+				/- \[Full documentation\][^\n]*\n- Markdown:[^\n]*\n\n/,
+				''
+			)
+		).toBe(withChanges(read(join(repo, 'src/static/llms.txt')), LLMS_CHANGES));
 	});
 
 	it('first-touch.js differs only in finding sign-up and sign-in on its own origin', () => {
